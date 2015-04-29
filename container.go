@@ -3,16 +3,16 @@ package goldi
 import "fmt"
 
 type Container struct {
-	definition AppDefinition
-	config     map[string]interface{}
+	typeRegistry TypeRegistry
+	config       map[string]interface{}
 }
 
-func NewContainer(definition AppDefinition, config map[string]interface{}) *Container {
-	return &Container{definition, config}
+func NewContainer(typeRegistry TypeRegistry, config map[string]interface{}) *Container {
+	return &Container{typeRegistry, config}
 }
 
 func (c *Container) Get(typeID string) interface{} {
-	generator, isDefined := c.definition[typeID]
+	generator, isDefined := c.typeRegistry[typeID]
 	if isDefined {
 		return generator.Generate(c.config)
 	}

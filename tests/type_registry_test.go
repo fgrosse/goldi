@@ -8,21 +8,21 @@ import (
 	"github.com/fgrosse/goldi/tests/testAPI"
 )
 
-var _ = Describe("AppDefinition", func() {
+var _ = Describe("TypeRegistry", func() {
 
-	var definition goldi.AppDefinition
+	var registry goldi.TypeRegistry
 
 	BeforeEach(func() {
-		definition = goldi.NewAppDefinition()
+		registry = goldi.NewTypeRegistry()
 	})
 
 	Describe("RegisterType", func() {
 		It("should store the type generator", func() {
 			typeID := "goldi.test_type"
 			generator := &testAPI.MockTypeFactory{}
-			Expect(definition.RegisterType(typeID, generator.NewMockType)).To(Succeed())
+			Expect(registry.RegisterType(typeID, generator.NewMockType)).To(Succeed())
 
-			generatorWrapper, typeIsRegistered := definition[typeID]
+			generatorWrapper, typeIsRegistered := registry[typeID]
 			Expect(typeIsRegistered).To(BeTrue())
 			Expect(generatorWrapper).NotTo(BeNil())
 
@@ -34,8 +34,8 @@ var _ = Describe("AppDefinition", func() {
 		It("should return an error if the type has been defined previously", func() {
 			typeID := "goldi.test_type"
 			generator := &testAPI.MockTypeFactory{}
-			Expect(definition.RegisterType(typeID, generator.NewMockType)).To(Succeed())
-			Expect(definition.RegisterType(typeID, generator.NewMockType)).NotTo(Succeed())
+			Expect(registry.RegisterType(typeID, generator.NewMockType)).To(Succeed())
+			Expect(registry.RegisterType(typeID, generator.NewMockType)).NotTo(Succeed())
 		})
 	})
 })
