@@ -1,0 +1,21 @@
+{
+    "bot-version": "0.9",
+    "dependency": {
+        "folder": "vendor",
+        "packages": [
+            {
+                "name": "github.com/onsi/ginkgo",
+                "type": "git",
+                "version": "branch:master"
+            },
+            {
+                "name": "github.com/onsi/gomega",
+                "type": "git",
+                "version": "branch:master"
+            }
+        ]
+    },
+    "ginkgo": {
+        "folder": "tests"
+    }
+}
