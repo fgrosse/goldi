@@ -19,20 +19,21 @@ var _ = Describe("AppDefinition", func() {
 	Describe("RegisterType", func() {
 		It("should store the type generator", func() {
 			typeID := "goldi.test_type"
-			generator := &testAPI.MockTypeGenerator{}
+			generator := &testAPI.MockTypeFactory{}
 			Expect(definition.RegisterType(typeID, generator.NewMockType)).To(Succeed())
 
 			generatorWrapper, typeIsRegistered := definition[typeID]
 			Expect(typeIsRegistered).To(BeTrue())
 			Expect(generatorWrapper).NotTo(BeNil())
 
-			generatorWrapper.Generate()
+			config := map[string]interface{}{}
+			generatorWrapper.Generate(config)
 			Expect(generator.HasBeenUsed).To(BeTrue())
 		})
 
 		It("should return an error if the type has been defined previously", func() {
 			typeID := "goldi.test_type"
-			generator := &testAPI.MockTypeGenerator{}
+			generator := &testAPI.MockTypeFactory{}
 			Expect(definition.RegisterType(typeID, generator.NewMockType)).To(Succeed())
 			Expect(definition.RegisterType(typeID, generator.NewMockType)).NotTo(Succeed())
 		})

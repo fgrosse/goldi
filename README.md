@@ -25,6 +25,7 @@ A generated documentation is available at [godoc.org][3]
 ## Usage
 
 For usage examples have a look at the [functional tests](tests).
+Its probably best to start by looking at the [container_test.go](tests/container_test.go).
 
 ## Running the tests
 

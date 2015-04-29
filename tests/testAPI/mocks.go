@@ -1,20 +1,23 @@
 package testAPI
 
-type MockType struct{}
+type MockType struct {
+	StringParameter string
+	BoolParameter   bool
+}
 
 func NewMockType() *MockType {
 	return &MockType{}
 }
 
-func NewMockTypeWithArgs(_ string, _ bool) *MockType {
-	return NewMockType()
+func NewMockTypeWithArgs(stringParameter string, boolParameter bool) *MockType {
+	return &MockType{stringParameter, boolParameter}
 }
 
-type MockTypeGenerator struct {
+type MockTypeFactory struct {
 	HasBeenUsed bool
 }
 
-func (g *MockTypeGenerator) NewMockType() *MockType {
+func (g *MockTypeFactory) NewMockType() *MockType {
 	g.HasBeenUsed = true
 	return &MockType{}
 }
