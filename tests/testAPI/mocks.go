@@ -6,6 +6,10 @@ func NewMockType() *MockType {
 	return &MockType{}
 }
 
+func NewMockTypeWithArgs(_ string, _ bool) *MockType {
+	return NewMockType()
+}
+
 type MockTypeGenerator struct {
 	HasBeenUsed bool
 }

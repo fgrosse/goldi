@@ -29,5 +29,12 @@ var _ = Describe("AppDefinition", func() {
 			generatorWrapper.Generate()
 			Expect(generator.HasBeenUsed).To(BeTrue())
 		})
+
+		It("should return an error if the type has been defined previously", func() {
+			typeID := "goldi.test_type"
+			generator := &testAPI.MockTypeGenerator{}
+			Expect(definition.RegisterType(typeID, generator.NewMockType)).To(Succeed())
+			Expect(definition.RegisterType(typeID, generator.NewMockType)).NotTo(Succeed())
+		})
 	})
 })
