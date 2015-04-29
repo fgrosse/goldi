@@ -8,8 +8,8 @@ func NewTypeRegistry() TypeRegistry {
 	return TypeRegistry{}
 }
 
-func (r TypeRegistry) RegisterType(typeID string, generatorFunction interface{}) error {
-	t, err := NewType(generatorFunction)
+func (r TypeRegistry) RegisterType(typeID string, generatorFunction interface{}, arguments ...interface{}) error {
+	t, err := NewType(generatorFunction, arguments...)
 	if err != nil {
 		return err
 	}
