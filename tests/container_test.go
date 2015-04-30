@@ -53,10 +53,11 @@ var _ = Describe("Container", func() {
 		Expect(typeIsRegistered).To(BeTrue())
 		Expect(generatorWrapper).NotTo(BeNil())
 
-		container.Get(typeID)
-		container.Get(typeID)
-		container.Get(typeID)
-		Expect(generator.NrOfCalls).To(Equal(1))
+		firstResult := container.Get(typeID)
+		secondResult := container.Get(typeID)
+		thirdResult := container.Get(typeID)
+		Expect(firstResult == secondResult).To(BeTrue())
+		Expect(firstResult == thirdResult).To(BeTrue())
 	})
 
 	It("should pass static parameters as arguments when generating types", func() {
