@@ -19,7 +19,7 @@ var _ = Describe("TypeRegistry", func() {
 	})
 
 	Describe("RegisterType", func() {
-		It("should store the type generator", func() {
+		It("should store the type", func() {
 			typeID := "goldi.test_type"
 			generator := &testAPI.MockTypeFactory{}
 			Expect(registry.RegisterType(typeID, generator.NewMockType)).To(Succeed())
@@ -32,16 +32,16 @@ var _ = Describe("TypeRegistry", func() {
 			Expect(generator.HasBeenUsed).To(BeTrue())
 		})
 
-		It("should recover panics from NewType", func() {
-			Expect(func() { registry.RegisterType("goldi.test_type", testAPI.NewMockTypeWithArgs) }).NotTo(Panic())
-			Expect(registry.RegisterType("goldi.test_type", testAPI.NewMockTypeWithArgs)).NotTo(Succeed())
-		})
-
-		It("should return an error if the type has been defined previously", func() {
+		It("should return an error if the type has been registered previously", func() {
 			typeID := "goldi.test_type"
 			generator := &testAPI.MockTypeFactory{}
 			Expect(registry.RegisterType(typeID, generator.NewMockType)).To(Succeed())
 			Expect(registry.RegisterType(typeID, generator.NewMockType)).NotTo(Succeed())
+		})
+
+		It("should recover panics from NewType", func() {
+			Expect(func() { registry.RegisterType("goldi.test_type", testAPI.NewMockTypeWithArgs) }).NotTo(Panic())
+			Expect(registry.RegisterType("goldi.test_type", testAPI.NewMockTypeWithArgs)).NotTo(Succeed())
 		})
 
 		It("should pass parameters to the new type", func() {
