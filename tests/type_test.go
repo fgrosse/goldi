@@ -9,84 +9,65 @@ import (
 )
 
 var _ = Describe("Type", func() {
-	var (
-		err     error // just for convenience
-		typeDef *goldi.Type
-	)
+	var typeDef *goldi.Type
 
 	Describe("NewType()", func() {
 		Context("with invalid factory function", func() {
-			It("should return an error if the generator is no function", func() {
-				_, err = goldi.NewType(42)
-				Expect(err).To(HaveOccurred())
+			It("should panic if the generator is no function", func() {
+				Expect(func() { goldi.NewType(42) }).To(Panic())
 			})
 
-			It("should return an error if the generator has no output parameters", func() {
-				_, err = goldi.NewType(func() {})
-				Expect(err).To(HaveOccurred())
+			It("should panic if the generator has no output parameters", func() {
+				Expect(func() { goldi.NewType(func() {}) }).To(Panic())
 			})
 
-			It("should return an error if the generator has more than one output parameter", func() {
-				_, err = goldi.NewType(func() (*testAPI.MockType, *testAPI.MockType) { return nil, nil })
-				Expect(err).To(HaveOccurred())
+			It("should panic if the generator has more than one output parameter", func() {
+				Expect(func() { goldi.NewType(func() (*testAPI.MockType, *testAPI.MockType) { return nil, nil }) }).To(Panic())
 			})
 
-			It("should return an error if the return parameter is no pointer", func() {
-				_, err = goldi.NewType(func() testAPI.MockType { return testAPI.MockType{} })
-				Expect(err).To(HaveOccurred())
+			It("should panic if the return parameter is no pointer", func() {
+				Expect(func() { goldi.NewType(func() testAPI.MockType { return testAPI.MockType{} }) }).To(Panic())
 			})
 
-			It("should not return an error if the return parameter is an interface", func() {
-				_, err = goldi.NewType(func() interface{} { return testAPI.MockType{} })
-				Expect(err).NotTo(HaveOccurred())
+			It("should not panic if the return parameter is an interface", func() {
+				Expect(func() { goldi.NewType(func() interface{} { return testAPI.MockType{} }) }).NotTo(Panic())
 			})
 		})
 
 		Context("with factory functions without arguments", func() {
 			Context("when no factory argument is given", func() {
 				It("should create the type", func() {
-					typeDef, err = goldi.NewType(testAPI.NewMockType)
-					Expect(err).NotTo(HaveOccurred())
+					typeDef = goldi.NewType(testAPI.NewMockType)
 					Expect(typeDef).NotTo(BeNil())
 				})
 			})
 
 			Context("when any argument is given", func() {
-				It("should return an error", func() {
-					typeDef, err = goldi.NewType(testAPI.NewMockType, "foo")
-					Expect(err).To(HaveOccurred())
+				It("should panic", func() {
+					Expect(func() { goldi.NewType(testAPI.NewMockType, "foo") }).To(Panic())
 				})
 			})
 		})
 
 		Context("with factory functions with one or more arguments", func() {
 			Context("when an invalid number of arguments is given", func() {
-				It("should return an error", func() {
-					typeDef, err = goldi.NewType(testAPI.NewMockTypeWithArgs)
-					Expect(err).To(HaveOccurred())
-
-					typeDef, err = goldi.NewType(testAPI.NewMockTypeWithArgs, "foo")
-					Expect(err).To(HaveOccurred())
-
-					typeDef, err = goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", false, 42)
-					Expect(err).To(HaveOccurred())
+				It("should panic", func() {
+					Expect(func() { goldi.NewType(testAPI.NewMockTypeWithArgs) }).To(Panic())
+					Expect(func() { goldi.NewType(testAPI.NewMockTypeWithArgs, "foo") }).To(Panic())
+					Expect(func() { goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", false, 42) }).To(Panic())
 				})
 			})
 
 			Context("when the wrong argument types are given", func() {
-				It("should return an error", func() {
-					typeDef, err = goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", "bar")
-					Expect(err).To(HaveOccurred())
-
-					typeDef, err = goldi.NewType(testAPI.NewMockTypeWithArgs, true, "bar")
-					Expect(err).To(HaveOccurred())
+				It("should panic", func() {
+					Expect(func() { goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", "bar") }).To(Panic())
+					Expect(func() { goldi.NewType(testAPI.NewMockTypeWithArgs, true, "bar") }).To(Panic())
 				})
 			})
 
 			Context("when the correct argument number and types are given", func() {
 				It("should create the type", func() {
-					typeDef, err = goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", true)
-					Expect(err).NotTo(HaveOccurred())
+					typeDef = goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", true)
 					Expect(typeDef).NotTo(BeNil())
 				})
 			})
@@ -98,15 +79,14 @@ var _ = Describe("Type", func() {
 
 		Context("with factory functions without arguments", func() {
 			It("should generate the type", func() {
-				typeDef, err = goldi.NewType(testAPI.NewMockType)
+				typeDef = goldi.NewType(testAPI.NewMockType)
 				Expect(typeDef.Generate(config)).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 			})
 		})
 
 		Context("with factory functions with one or more arguments", func() {
 			It("should generate the type", func() {
-				typeDef, err = goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", true)
-				Expect(err).NotTo(HaveOccurred())
+				typeDef = goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", true)
 
 				generatedType := typeDef.Generate(config)
 				Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))

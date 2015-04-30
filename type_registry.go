@@ -8,12 +8,14 @@ func NewTypeRegistry() TypeRegistry {
 	return TypeRegistry{}
 }
 
-func (r TypeRegistry) RegisterType(typeID string, generatorFunction interface{}, arguments ...interface{}) error {
-	t, err := NewType(generatorFunction, arguments...)
-	if err != nil {
-		return err
-	}
+func (r TypeRegistry) RegisterType(typeID string, generatorFunction interface{}, arguments ...interface{}) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("could not register type: %s", r)
+		}
+	}()
 
+	t := NewType(generatorFunction, arguments...)
 	return r.Register(typeID, t)
 }
 

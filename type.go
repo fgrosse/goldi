@@ -13,50 +13,51 @@ type Type struct {
 	generatorArguments []reflect.Value
 }
 
-func NewType(factoryFunction interface{}, factoryParameters ...interface{}) (t *Type, err error) {
+func NewType(factoryFunction interface{}, factoryParameters ...interface{}) *Type {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("could not register type: %v", r)
+			panic(fmt.Errorf("could not register type: %v", r))
 		}
 	}()
 
 	generatorType := reflect.TypeOf(factoryFunction)
 	if generatorType.Kind() != reflect.Func {
-		return nil, fmt.Errorf("kind was %v, not Func", generatorType.Kind())
+		panic(fmt.Errorf("kind was %v, not Func", generatorType.Kind()))
 	}
 
 	if generatorType.NumOut() != 1 {
-		return nil, fmt.Errorf("invalid number of return parameters: %d", generatorType.NumOut())
+		panic(fmt.Errorf("invalid number of return parameters: %d", generatorType.NumOut()))
 	}
 
 	kindOfGeneratedType := generatorType.Out(0).Kind()
 	if kindOfGeneratedType != reflect.Interface && kindOfGeneratedType != reflect.Ptr {
-		return nil, fmt.Errorf("return parameter is no interface but a %v", kindOfGeneratedType)
+		panic(fmt.Errorf("return parameter is no interface or pointer but a %v", kindOfGeneratedType))
 	}
 
 	if generatorType.NumIn() != len(factoryParameters) {
-		return nil, fmt.Errorf("invalid number of input parameters: got %d but expected %d", generatorType.NumIn(), len(factoryParameters))
+		panic(fmt.Errorf("invalid number of input parameters: got %d but expected %d", generatorType.NumIn(), len(factoryParameters)))
 	}
 
-	t = &Type{generator: reflect.ValueOf(factoryFunction), generatorType: generatorType}
-	t.generatorArguments, err = buildGeneratorCallArguments(generatorType, factoryParameters)
-
-	return t, err
+	return &Type{
+		generator:          reflect.ValueOf(factoryFunction),
+		generatorType:      generatorType,
+		generatorArguments: buildGeneratorCallArguments(generatorType, factoryParameters),
+	}
 }
 
-func buildGeneratorCallArguments(generatorType reflect.Type, factoryParameters []interface{}) ([]reflect.Value, error) {
+func buildGeneratorCallArguments(generatorType reflect.Type, factoryParameters []interface{}) []reflect.Value {
 	args := make([]reflect.Value, len(factoryParameters))
 	for i, argument := range factoryParameters {
 		expectedArgumentType := generatorType.In(i)
 		args[i] = reflect.ValueOf(argument)
 		if args[i].Kind() != expectedArgumentType.Kind() {
 			if stringArg, isString := argument.(string); isString && isParameter(stringArg) == false {
-				return nil, fmt.Errorf("input argument %d is of type %s but needs to be a %s", i+1, args[i].Kind(), expectedArgumentType.Kind())
+				panic(fmt.Errorf("input argument %d is of type %s but needs to be a %s", i+1, args[i].Kind(), expectedArgumentType.Kind()))
 			}
 		}
 	}
 
-	return args, nil
+	return args
 }
 
 func (t *Type) Generate(config map[string]interface{}) interface{} {

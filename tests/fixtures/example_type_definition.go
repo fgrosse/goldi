@@ -1,14 +1,15 @@
 package fixtures
 
 import (
-	"github.com/fgrosse/goldi"
+	. "github.com/fgrosse/goldi"
 	"github.com/fgrosse/goldi/tests/testAPI"
 )
 
-var typeDef = goldi.NewAppDefinition()
+var types = NewTypeRegistry()
 
 func init() {
-	typeDef.RegisterType("goldi.test.foo", testAPI.NewFoo)
-	typeDef.RegisterType("goldi.test.bar", testAPI.NewBar)
-	typeDef.RegisterType("goldi.test.baz", testAPI.NewBaz)
+	types.RegisterType("goldi.test.foo", testAPI.NewFoo)
+	types.RegisterType("goldi.test.bar", testAPI.NewBar)
+
+	types.Register("goldi.test.baz", NewType(testAPI.NewBaz, "Hello", "World!"))
 }

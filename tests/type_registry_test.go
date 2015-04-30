@@ -31,6 +31,11 @@ var _ = Describe("TypeRegistry", func() {
 			Expect(generator.HasBeenUsed).To(BeTrue())
 		})
 
+		It("should recover panics from NewType", func() {
+			Expect(func() { registry.RegisterType("goldi.test_type", testAPI.NewMockTypeWithArgs) }).NotTo(Panic())
+			Expect(registry.RegisterType("goldi.test_type", testAPI.NewMockTypeWithArgs)).NotTo(Succeed())
+		})
+
 		It("should return an error if the type has been defined previously", func() {
 			typeID := "goldi.test_type"
 			generator := &testAPI.MockTypeFactory{}
