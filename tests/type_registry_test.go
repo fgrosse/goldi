@@ -9,8 +9,10 @@ import (
 )
 
 var _ = Describe("TypeRegistry", func() {
-
-	var registry goldi.TypeRegistry
+	var (
+		registry goldi.TypeRegistry
+		config   = map[string]interface{}{} // for test convenience
+	)
 
 	BeforeEach(func() {
 		registry = goldi.NewTypeRegistry()
@@ -26,7 +28,6 @@ var _ = Describe("TypeRegistry", func() {
 			Expect(typeIsRegistered).To(BeTrue())
 			Expect(generatorWrapper).NotTo(BeNil())
 
-			config := map[string]interface{}{}
 			generatorWrapper.Generate(config)
 			Expect(generator.HasBeenUsed).To(BeTrue())
 		})
@@ -41,6 +42,14 @@ var _ = Describe("TypeRegistry", func() {
 			generator := &testAPI.MockTypeFactory{}
 			Expect(registry.RegisterType(typeID, generator.NewMockType)).To(Succeed())
 			Expect(registry.RegisterType(typeID, generator.NewMockType)).NotTo(Succeed())
+		})
+
+		It("should pass parameters to the new type", func() {
+			typeID := "goldi.test_type"
+			Expect(registry.RegisterType(typeID, testAPI.NewMockTypeWithArgs, "foo", true)).To(Succeed())
+			Expect(registry).To(HaveKey(typeID))
+			Expect(registry["goldi.test_type"].Generate(config).(*testAPI.MockType).StringParameter).To(Equal("foo"))
+			Expect(registry["goldi.test_type"].Generate(config).(*testAPI.MockType).BoolParameter).To(Equal(true))
 		})
 	})
 })
