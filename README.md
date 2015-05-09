@@ -1,8 +1,8 @@
 Goldi
 ========
 
-[![Build Status](https://secure.travis-ci.org/FGrosse/goldi.png?branch=master)](http://travis-ci.org/FGrosse/goldi)
-[![GoDoc](https://godoc.org/github.com/FGrosse/goldi?status.svg)](https://godoc.org/github.com/FGrosse/goldi)
+[![Build Status](https://secure.travis-ci.org/fgrosse/goldi.png?branch=master)](http://travis-ci.org/fgrosse/goldi)
+[![GoDoc](https://godoc.org/github.com/fgrosse/goldi?status.svg)](https://godoc.org/github.com/fgrosse/goldi)
 
 A go dependency injection framework.
 
@@ -48,4 +48,4 @@ Please keep in mind that I might not always be able to respond immediately but I
 
 [1]: http://onsi.github.io/ginkgo/
 [2]: http://onsi.github.io/gomega/
-[3]: http://godoc.org/github.com/FGrosse/goldi
+[3]: http://godoc.org/github.com/fgrosse/goldi
