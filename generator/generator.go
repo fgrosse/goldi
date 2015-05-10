@@ -1,4 +1,4 @@
-package goldigen
+package generator
 
 import (
 	"bytes"
@@ -12,11 +12,11 @@ import (
 
 // The Generator is used to generate compilable go code from a yaml configuration
 type Generator struct {
-	Config GeneratorConfig
+	Config Config
 }
 
 // NewGenerator creates a new Generator instance
-func NewGenerator(config GeneratorConfig) *Generator {
+func New(config Config) *Generator {
 	return &Generator{config}
 }
 
@@ -33,7 +33,7 @@ func (g *Generator) Generate(input io.Reader, output io.Writer) error {
 		return err
 	}
 
-	fmt.Fprintf(output, "package %s\n\n", g.Config.PackageName)
+	fmt.Fprintf(output, "package %s\n\n", g.Config.PackageName())
 	g.generateImports(conf, output)
 	g.typeRegistrationFunction(conf, output)
 	return nil
@@ -95,7 +95,7 @@ func (g *Generator) generateImports(conf *TypesConfiguration, output io.Writer) 
 }
 
 func (g *Generator) typeRegistrationFunction(conf *TypesConfiguration, output io.Writer) {
-	fmt.Fprintf(output, "func %s(types goldi.TypeRegistry) {\n", g.Config.FunctionName)
+	fmt.Fprintf(output, "func %s(types goldi.TypeRegistry) {\n", g.Config.FunctionName())
 	typeIDs := make([]string, len(conf.Types))
 	i := 0
 	for typeID, _ := range conf.Types {

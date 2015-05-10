@@ -7,13 +7,13 @@ import (
 
 	"bytes"
 	"fmt"
-	"github.com/fgrosse/goldi/goldigen"
+	"github.com/fgrosse/goldi/generator"
 	"strings"
 )
 
 var _ = Describe("Generator", func() {
 	var (
-		generator   *goldigen.Generator
+		gen         *generator.Generator
 		output      *bytes.Buffer
 		exampleYaml = `
 			types:
@@ -30,33 +30,30 @@ var _ = Describe("Generator", func() {
 	)
 
 	BeforeEach(func() {
-		config := goldigen.GeneratorConfig{
-			PackageName:  "foobar",
-			FunctionName: "RegisterTypes",
-		}
-		generator = goldigen.NewGenerator(config)
+		config := generator.NewConfig("foobar", "RegisterTypes")
+		gen = generator.New(config)
 		output = &bytes.Buffer{}
 	})
 
 	It("should generate valid go code", func() {
-		Expect(generator.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
+		Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 		Expect(output).To(BeValidGoCode())
 	})
 
 	It("should use the given package name", func() {
-		Expect(generator.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
+		Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 		Expect(output).To(DeclarePackage("foobar"))
 	})
 
 	Describe("generating import statements", func() {
 		It("should import the goldi package", func() {
-			Expect(generator.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
+			Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 			Expect(output).To(BeValidGoCode())
 			Expect(output).To(ImportPackage("github.com/fgrosse/goldi"))
 		})
 
 		It("should import the type packages", func() {
-			Expect(generator.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
+			Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 			Expect(output).To(BeValidGoCode())
 			Expect(output).To(ImportPackage("github.com/fgrosse/goldi/tests/testAPI"))
 			Expect(output).To(ImportPackage("github.com/fgrosse/graphigo"))
@@ -64,7 +61,7 @@ var _ = Describe("Generator", func() {
 	})
 
 	It("should define the types in a global function", func() {
-		Expect(generator.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
+		Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 		Expect(output).To(ContainCode(`
 			func RegisterTypes(types goldi.TypeRegistry) {
 				types.RegisterType("goldi.test.foo", testAPI.NewFoo)
@@ -91,7 +88,7 @@ var _ = Describe("Generator", func() {
 		})
 
 		It("should define the types in a global function", func() {
-			Expect(generator.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
+			Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 			Expect(output).To(ContainCode(`
 				func RegisterTypes(types goldi.TypeRegistry) {
 					types.RegisterType("graphigo.client", graphigo.NewClient, "%graphigo.base_url%", 100)
@@ -111,7 +108,7 @@ var _ = Describe("Generator", func() {
 					type: TypeRegistry
 					factory: NewTypeRegistry
 		`
-		Expect(generator.Generate(strings.NewReader(invalidInput), output)).
+		Expect(gen.Generate(strings.NewReader(invalidInput), output)).
 			To(MatchError(`type definition of "bad" is missing the required "package" key`))
 	})
 
@@ -124,7 +121,7 @@ var _ = Describe("Generator", func() {
 					arguments:
             			- "%s"
 		`, "Hello\t\t\tWorld")
-		Expect(generator.Generate(strings.NewReader(input), output)).To(Succeed())
+		Expect(gen.Generate(strings.NewReader(input), output)).To(Succeed())
 		Expect(output).To(ContainCode(fmt.Sprintf(`
 			func RegisterTypes(types goldi.TypeRegistry) {
 				types.RegisterType("test", bar.NewFoo, "%s")

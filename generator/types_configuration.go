@@ -1,4 +1,4 @@
-package goldigen
+package generator
 
 import (
 	"fmt"

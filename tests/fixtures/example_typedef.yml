@@ -15,4 +15,4 @@ types:
         factory: NewMockTypeWithArgs
         arguments:
             - "static parameter"
-            - %test.param2%
+            - "%test.param2%"

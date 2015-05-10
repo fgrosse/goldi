@@ -4,12 +4,12 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/fgrosse/goldi/goldigen"
+	"github.com/fgrosse/goldi/generator"
 )
 
 var _ = Describe("TypeDefinition", func() {
 	It("should return an error if a type definition is missing the factory method", func() {
-		t := goldigen.TypeDefinition{
+		t := generator.TypeDefinition{
 			Package:       "foo/bar",
 			FactoryMethod: "NewBaz",
 		}
@@ -17,7 +17,7 @@ var _ = Describe("TypeDefinition", func() {
 	})
 
 	It("should return all parameters such that they can be used in go code directly", func() {
-		t := goldigen.TypeDefinition{
+		t := generator.TypeDefinition{
 			Package:       "foo/bar",
 			FactoryMethod: "NewBaz",
 			RawArguments: []interface{}{
