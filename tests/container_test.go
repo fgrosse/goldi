@@ -44,7 +44,7 @@ var _ = Describe("Container", func() {
 		Expect(generator.HasBeenUsed).To(BeTrue())
 	})
 
-	It("should build the types as singletons", func() {
+	It("should build the types as singletons (one instance per type ID)", func() {
 		typeID := "goldi.test_type"
 		generator := &testAPI.MockTypeFactory{}
 		Expect(registry.RegisterType(typeID, generator.NewMockType)).To(Succeed())

@@ -13,6 +13,13 @@
                 "type": "git",
                 "version": "a91b9a2e8063d07570320914bfe10a91d9323074"
             }
+        },
+        {
+            "name": "gopkg.in/yaml.v2",
+            "source": {
+                "type": "git",
+                "version": "49c95bdc21843256fb6c4e0d370a05f24a0bf213"
+            }
         }
     ]
 }

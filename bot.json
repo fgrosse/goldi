@@ -12,6 +12,11 @@
                 "name": "github.com/onsi/gomega",
                 "type": "git",
                 "version": "branch:master"
+            },
+            {
+                "name": "gopkg.in/yaml.v2",
+                "type": "git",
+                "version": "branch:master"
             }
         ]
     },
