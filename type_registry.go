@@ -16,15 +16,10 @@ func (r TypeRegistry) RegisterType(typeID string, generatorFunction interface{},
 	}()
 
 	t := NewType(generatorFunction, arguments...)
-	return r.Register(typeID, t)
+	r.Register(typeID, t)
+	return nil
 }
 
-func (r TypeRegistry) Register(typeID string, typeDef *Type) (err error) {
-	_, typeHasAlreadyBeenRegistered := r[typeID]
-	if typeHasAlreadyBeenRegistered {
-		return fmt.Errorf("type %q has already been registered", typeID)
-	}
-
+func (r TypeRegistry) Register(typeID string, typeDef *Type) {
 	r[typeID] = typeDef
-	return nil
 }

@@ -33,9 +33,9 @@ func (m *ImportPackageMatcher) FailureMessage(actual interface{}) (message strin
 		return m.BeValidGoCodeMatcher.FailureMessage(actual)
 	}
 
-	return fmt.Sprintf("Expected output:\n%s\nto import package %q", m.indentSource(), m.ExpectedPackage)
+	return fmt.Sprintf("Expected output:\n%s\nto import package %s", m.indentSource(), m.ExpectedPackage)
 }
 
 func (m *ImportPackageMatcher) NegatedFailureMessage(_ interface{}) (message string) {
-	return fmt.Sprintf("Expected output:\n%s\nnot to import package %q", m.indentSource(), m.ExpectedPackage)
+	return fmt.Sprintf("Expected output:\n%s\nnot to import package %s", m.indentSource(), m.ExpectedPackage)
 }

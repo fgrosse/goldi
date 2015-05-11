@@ -3,14 +3,14 @@ package goldi
 import "fmt"
 
 type Container struct {
-	typeRegistry TypeRegistry
-	config       map[string]interface{}
-	typeCache    map[string]interface{}
+	TypeRegistry
+	config    map[string]interface{}
+	typeCache map[string]interface{}
 }
 
 func NewContainer(registry TypeRegistry, config map[string]interface{}) *Container {
 	return &Container{
-		typeRegistry: registry,
+		TypeRegistry: registry,
 		config:       config,
 		typeCache:    map[string]interface{}{},
 	}
@@ -22,7 +22,7 @@ func (c *Container) Get(typeID string) interface{} {
 		return t
 	}
 
-	generator, isDefined := c.typeRegistry[typeID]
+	generator, isDefined := c.TypeRegistry[typeID]
 	if isDefined == false {
 		panic(fmt.Errorf("could not get type %q : no such type has been defined", typeID))
 	}
