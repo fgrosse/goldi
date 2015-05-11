@@ -2,12 +2,17 @@ package goldi
 
 import "fmt"
 
+// The TypeRegistry is effectively a map of typeID strings to Types
 type TypeRegistry map[string]*Type
 
+// NewTypeRegistry creates a new empty TypeRegistry
 func NewTypeRegistry() TypeRegistry {
 	return TypeRegistry{}
 }
 
+// RegisterType is convenience method for TypeRegistry.Register
+// It creates a new Type from the given generatorFunction and arguments and passes this to TypeRegistry.Register
+// Since the type is created in this function using NewType this can panic under the same conditions as NewType does
 func (r TypeRegistry) RegisterType(typeID string, generatorFunction interface{}, arguments ...interface{}) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -20,6 +25,9 @@ func (r TypeRegistry) RegisterType(typeID string, generatorFunction interface{},
 	return nil
 }
 
+// Register saves a type under the given symbolic typeID so it can be retrieved later.
+// It is perfectly legal to call Register multiple times with the same typeID.
+// In this case you overwrite existing type definitions with new once
 func (r TypeRegistry) Register(typeID string, typeDef *Type) {
 	r[typeID] = typeDef
 }
