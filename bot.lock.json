@@ -13,6 +13,27 @@
                 "type": "git",
                 "version": "a91b9a2e8063d07570320914bfe10a91d9323074"
             }
+        },
+        {
+            "name": "gopkg.in/yaml.v2",
+            "source": {
+                "type": "git",
+                "version": "49c95bdc21843256fb6c4e0d370a05f24a0bf213"
+            }
+        },
+        {
+            "name": "gopkg.in/alecthomas/kingpin.v1",
+            "source": {
+                "type": "git",
+                "version": "55a69a226d28a43b913720f5d765706d49c8fa9e"
+            }
+        },
+        {
+            "name": "github.com/alecthomas/units",
+            "source": {
+                "type": "git",
+                "version": "6b4e7dc5e3143b85ea77909c72caf89416fc2915"
+            }
         }
     ]
 }

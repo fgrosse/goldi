@@ -5,14 +5,19 @@ import (
 	"reflect"
 )
 
-type GeneratorFunction func() interface{}
-
+// A Type holds all information that is necessary to create a new instance of a type ID
 type Type struct {
 	generator          reflect.Value
 	generatorType      reflect.Type
 	generatorArguments []reflect.Value
 }
 
+// NewType creates a new Type and checks if the given factory method can be used get a go type
+//
+// This function will panic if the factoryFunction is no function, returns zero or more than
+// one parameter or the return parameter is no pointer or interface type.
+// If the number of given factoryParameters does not match the number of arguments of the
+// factoryFunction this function will panic as well
 func NewType(factoryFunction interface{}, factoryParameters ...interface{}) *Type {
 	defer func() {
 		if r := recover(); r != nil {
@@ -60,6 +65,8 @@ func buildGeneratorCallArguments(generatorType reflect.Type, factoryParameters [
 	return args
 }
 
+// Generate will instantiate a new instance of the according type.
+// The given configuration is used to resolve parameters that are used in the type factory method
 func (t *Type) Generate(config map[string]interface{}) interface{} {
 	defer func() {
 		if r := recover(); r != nil {

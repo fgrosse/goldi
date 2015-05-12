@@ -44,7 +44,7 @@ var _ = Describe("Container", func() {
 		Expect(generator.HasBeenUsed).To(BeTrue())
 	})
 
-	It("should build the types as singletons", func() {
+	It("should build the types as singletons (one instance per type ID)", func() {
 		typeID := "goldi.test_type"
 		generator := &testAPI.MockTypeFactory{}
 		Expect(registry.RegisterType(typeID, generator.NewMockType)).To(Succeed())
@@ -63,7 +63,7 @@ var _ = Describe("Container", func() {
 	It("should pass static parameters as arguments when generating types", func() {
 		typeID := "goldi.test_type"
 		typeDef := goldi.NewType(testAPI.NewMockTypeWithArgs, "parameter1", true)
-		Expect(registry.Register(typeID, typeDef)).To(Succeed())
+		registry.Register(typeID, typeDef)
 
 		generatedType := container.Get("goldi.test_type")
 		Expect(generatedType).NotTo(BeNil())
@@ -77,7 +77,7 @@ var _ = Describe("Container", func() {
 	It("should be able to use parameters as arguments when generating types", func() {
 		typeID := "goldi.test_type"
 		typeDef := goldi.NewType(testAPI.NewMockTypeWithArgs, "%parameter1%", "%parameter2%")
-		Expect(registry.Register(typeID, typeDef)).To(Succeed())
+		registry.Register(typeID, typeDef)
 
 		config["parameter1"] = "test"
 		config["parameter2"] = true
