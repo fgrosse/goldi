@@ -35,7 +35,7 @@ func main() {
 	goPathChecker := generator.NewGoPathChecker()
 	outputPackageName := goPathChecker.PackageName(*outputPath)
 
-	inputStat, _ := inputFile.Stat()
+	inputStat, _ := (*inputFile).Stat()
 	inputFileName := inputStat.Name()
 
 	logVerboseGeneratorConfig(inputFileName, outputPackageName)
