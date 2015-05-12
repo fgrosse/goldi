@@ -19,7 +19,7 @@ var (
 	functionName  = app.Flag("function", fmt.Sprintf("The name of the generated function that must be called to register your types (default %q)", generator.DefaultFunctionName)).String()
 	noInteraction = app.Flag("nointeraction", "Do not ask for any user input").Default("false").Bool()
 	verbose       = app.Flag("verbose", "Print verbose output").Default("false").Bool()
-	yes           = app.Flag("yes", "Print verbose output").Default("false").Short('y').Bool()
+	yes           = app.Flag("yes", "Answer all questions with yes").Default("false").Short('y').Bool()
 )
 
 func main() {
