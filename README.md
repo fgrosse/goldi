@@ -53,9 +53,9 @@ More detailed usage examples and a list of features will be available eventually
 If you are used to frameworks like Symfony you might want to define your types in an easy to maintain yaml file.
 You can do this using goldigen.
 
-Use `go install` to install the goldigen binary:
+Use `go get` to install the goldigen binary:
 ```
-$ go install github.com/fgrosse/goldi/goldigen
+$ go get github.com/fgrosse/goldi/goldigen
 ```
 This requires [gopkg.in/yaml.v2][4] for the parsing of the yaml files and [Kingpin][6] for the command line flag parsing.
 
