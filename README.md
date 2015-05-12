@@ -34,14 +34,14 @@ config := map[string]interface{}{
 container := goldi.NewContainer(registry, config)
 
 // now define the types you want to build using the di container
-types.RegisterType("logger", NewSimpleLogger)
-types.RegisterType("acme_corp.mailer", NewAwesomeMailer, "first argument", "%some_parameter%")
+container.RegisterType("logger", NewSimpleLogger)
+container.RegisterType("acme_corp.mailer", NewAwesomeMailer, "first argument", "%some_parameter%")
 
 // whoever has access to the container can request these types now
 logger := container.Get("logger").(LoggerInterface)
 
 // in the tests you might want to exchange the registered types with mocks or other implementations
-types.RegisterType("logger", NewNullLogger)
+container.RegisterType("logger", NewNullLogger)
 ```
 
 The types are build lazily. This means that the `logger` will only be created when you ask the container for it the first time. Also all built types are singletons. This means that if you call `container.Get("typeID")`two times you will always get the same instance of whatever `typeID` stands for.
