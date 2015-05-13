@@ -27,3 +27,11 @@ type AwesomeMailer struct {
 func NewAwesomeMailer(arg1, arg2 string) *AwesomeMailer {
 	return &AwesomeMailer{arg1, arg2}
 }
+
+type Renderer struct {
+	logger *LoggerInterface
+}
+
+func NewRenderer(logger *LoggerInterface) *Renderer {
+	return &Renderer{logger}
+}

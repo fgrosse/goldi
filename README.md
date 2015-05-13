@@ -38,6 +38,14 @@ container := goldi.NewContainer(registry, config)
 // now define the types you want to build using the di container
 container.RegisterType("logger", NewSimpleLogger)
 container.RegisterType("acme_corp.mailer", NewAwesomeMailer, "first argument", "%some_parameter%")
+container.RegisterType("renderer", NewRenderer, "@logger")
+
+// once you are done registering all your types you should probably validate the container
+validator := goldi.NewContainerValidator()
+err := validator.Validate(container)
+if err != nil {
+    panic(err)
+}
 
 // whoever has access to the container can request these types now
 logger := container.Get("logger").(LoggerInterface)
