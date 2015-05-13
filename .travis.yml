@@ -18,4 +18,4 @@ script:
   - go test ./tests -cover -coverpkg github.com/fgrosse/goldi -coverprofile goldi.coverprofile
   - go test ./tests/goldigen -cover -coverpkg github.com/fgrosse/goldi/generator -coverprofile goldigen.coverprofile
   - gover
-  - goveralls -coverprofile=gover.coverprofile -repotoken $COVERALLS_TOKEN
+  - goveralls -coverprofile=gover.coverprofile -repotoken $COVERALLS_TOKEN || /bin/true
