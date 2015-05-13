@@ -151,10 +151,9 @@ $ go get github.com/onsi/gomega
 $ ginkgo -r tests
 ```
 
-If you prefer to use `go test` directly you can either switch into the `./tests` directory and run it there or
-run the following from the repository root directory:
+If you prefer to use `go test` directly you can run the following from the repository root directory:
 ```
-$ go test ./tests
+$ go test ./tests/...
 ```
 
 ## Contributing
