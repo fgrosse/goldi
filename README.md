@@ -67,12 +67,7 @@ Use `go get` to install the goldigen binary:
 ```
 $ go get github.com/fgrosse/goldi/goldigen
 ```
-This requires [gopkg.in/yaml.v2][4] for the parsing of the yaml files and [Kingpin][6] for the command line flag parsing.
-
-```
-$ go get gopkg.in/yaml.v2
-$ go get gopkg.in/alecthomas/kingpin.v1
-```
+Goldigen depends on [gopkg.in/yaml.v2][4] for the parsing of the yaml files and [Kingpin][6] for the command line flag parsing.
 
 You then need to define your types like this:
 
