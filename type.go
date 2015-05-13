@@ -56,7 +56,7 @@ func buildGeneratorCallArguments(generatorType reflect.Type, factoryParameters [
 		expectedArgumentType := generatorType.In(i)
 		args[i] = reflect.ValueOf(argument)
 		if args[i].Kind() != expectedArgumentType.Kind() {
-			if stringArg, isString := argument.(string); isString && isParameter(stringArg) == false {
+			if stringArg, isString := argument.(string); isString && isParameterOrTypeReference(stringArg) == false {
 				panic(fmt.Errorf("input argument %d is of type %s but needs to be a %s", i+1, args[i].Kind(), expectedArgumentType.Kind()))
 			}
 		}
@@ -67,7 +67,8 @@ func buildGeneratorCallArguments(generatorType reflect.Type, factoryParameters [
 
 // Generate will instantiate a new instance of the according type.
 // The given configuration is used to resolve parameters that are used in the type factory method
-func (t *Type) Generate(config map[string]interface{}) interface{} {
+// The type registry is used to lazily resolve type references
+func (t *Type) Generate(config map[string]interface{}, registry TypeRegistry) interface{} {
 	defer func() {
 		if r := recover(); r != nil {
 			panic(fmt.Errorf("could not generate type: %v", r))
@@ -76,7 +77,7 @@ func (t *Type) Generate(config map[string]interface{}) interface{} {
 
 	args := make([]reflect.Value, len(t.generatorArguments))
 	for i, argument := range t.generatorArguments {
-		args[i] = t.resolveParameter(argument, t.generatorType.In(i), config)
+		args[i] = t.resolveParameter(argument, t.generatorType.In(i), config, registry)
 	}
 
 	result := t.generator.Call(args)
@@ -87,14 +88,18 @@ func (t *Type) Generate(config map[string]interface{}) interface{} {
 	return result[0].Interface()
 }
 
-func (t *Type) resolveParameter(argument reflect.Value, expectedArgument reflect.Type, config map[string]interface{}) reflect.Value {
+func (t *Type) resolveParameter(argument reflect.Value, expectedArgument reflect.Type, config map[string]interface{}, registry TypeRegistry) reflect.Value {
 	if argument.Kind() != reflect.String {
 		return argument
 	}
 
 	stringArgument := argument.Interface().(string)
-	if isParameter(stringArgument) == false {
+	if isParameterOrTypeReference(stringArgument) == false {
 		return argument
+	}
+
+	if stringArgument[0] == '@' {
+		return resolveTypeReference(stringArgument[1:], config, registry, expectedArgument)
 	}
 
 	parameterName := stringArgument[1 : len(stringArgument)-1]
@@ -106,4 +111,61 @@ func (t *Type) resolveParameter(argument reflect.Value, expectedArgument reflect
 	argument = reflect.New(expectedArgument).Elem()
 	argument.Set(reflect.ValueOf(configuredValue))
 	return argument
+}
+
+func resolveTypeReference(typeID string, config map[string]interface{}, registry TypeRegistry, expectedArgument reflect.Type) reflect.Value {
+	t, typeDefined := registry[typeID]
+	if typeDefined == false {
+		panic(fmt.Errorf("the referenced type \"@%s\" has not been defined", typeID))
+	}
+
+	typeInstance := t.Generate(config, registry)
+	// TODO check if this type is assignable and generate helpful error message if not
+	argument := reflect.New(expectedArgument).Elem()
+	argument.Set(reflect.ValueOf(typeInstance))
+	return argument
+}
+
+// typeReferenceArguments is an internal function that returns all generator arguments that are type references
+func (t *Type) typeReferenceArguments() []string {
+	var typeRefParameters []string
+	for _, argument := range t.generatorArguments {
+		stringArgument := argument.Interface().(string)
+		if isTypeReference(stringArgument) {
+			typeRefParameters = append(typeRefParameters, stringArgument[1:])
+		}
+	}
+	return typeRefParameters
+}
+
+// parameterArguments is an internal function that returns all generator arguments that are parameters
+func (t *Type) parameterArguments() []string {
+	var parameterArguments []string
+	for _, argument := range t.generatorArguments {
+		stringArgument := argument.Interface().(string)
+		if isParameter(stringArgument) {
+			parameterArguments = append(parameterArguments, stringArgument[1:len(stringArgument)-1])
+		}
+	}
+	return parameterArguments
+}
+
+func isParameterOrTypeReference(p string) bool {
+	return isParameter(p) || isTypeReference(p)
+}
+
+func isParameter(p string) bool {
+	if len(p) < 2 {
+		return false
+	}
+
+	return p[0] == '%' && p[len(p)-1] == '%'
+}
+
+func isTypeReference(p string) bool {
+	if len(p) < 2 {
+		return false
+	}
+
+	return p[0] == '@'
 }
