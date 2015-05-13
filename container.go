@@ -2,7 +2,7 @@ package goldi
 
 import "fmt"
 
-// Container is the dependency injection that can be used by your application to define and get types
+// Container is the dependency injection container that can be used by your application to define and get types.
 //
 // Basically this is just a TypeRegistry with access to the application configuration and the knowledge
 // of how to build individual services. Additionally this implements the laziness of the DI using a simple in memory type cache
@@ -42,7 +42,7 @@ func (c *Container) Get(typeID string) interface{} {
 		panic(fmt.Errorf("could not get type %q : no such type has been defined", typeID))
 	}
 
-	t = generator.Generate(c.config)
+	t = generator.Generate(c.config, c.TypeRegistry)
 	c.typeCache[typeID] = t
 	return t
 }

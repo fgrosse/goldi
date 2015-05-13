@@ -75,12 +75,19 @@ var _ = Describe("Type", func() {
 	})
 
 	Describe("Generate()", func() {
-		config := map[string]interface{}{}
+		var (
+			config       = map[string]interface{}{}
+			typeRegistry goldi.TypeRegistry
+		)
+
+		BeforeEach(func() {
+			typeRegistry = goldi.NewTypeRegistry()
+		})
 
 		Context("with factory functions without arguments", func() {
 			It("should generate the type", func() {
 				typeDef = goldi.NewType(testAPI.NewMockType)
-				Expect(typeDef.Generate(config)).To(BeAssignableToTypeOf(&testAPI.MockType{}))
+				Expect(typeDef.Generate(config, typeRegistry)).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 			})
 		})
 
@@ -88,12 +95,26 @@ var _ = Describe("Type", func() {
 			It("should generate the type", func() {
 				typeDef = goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", true)
 
-				generatedType := typeDef.Generate(config)
+				generatedType := typeDef.Generate(config, typeRegistry)
 				Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 
 				generatedMock := generatedType.(*testAPI.MockType)
 				Expect(generatedMock.StringParameter).To(Equal("foo"))
 				Expect(generatedMock.BoolParameter).To(Equal(true))
+			})
+
+			Context("when a type reference is given", func() {
+				It("should generate the type", func() {
+					err := typeRegistry.RegisterType("foo", testAPI.NewMockType)
+					Expect(err).NotTo(HaveOccurred())
+
+					typeDef = goldi.NewType(testAPI.NewTypeForServiceInjection, "@foo")
+					generatedType := typeDef.Generate(config, typeRegistry)
+					Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.TypeForServiceInjection{}))
+
+					generatedMock := generatedType.(*testAPI.TypeForServiceInjection)
+					Expect(generatedMock.InjectedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
+				})
 			})
 		})
 	})

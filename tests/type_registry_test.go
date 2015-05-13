@@ -28,7 +28,7 @@ var _ = Describe("TypeRegistry", func() {
 			Expect(typeIsRegistered).To(BeTrue())
 			Expect(generatorWrapper).NotTo(BeNil())
 
-			generatorWrapper.Generate(config)
+			generatorWrapper.Generate(config, registry)
 			Expect(generator.HasBeenUsed).To(BeTrue())
 		})
 
@@ -41,8 +41,8 @@ var _ = Describe("TypeRegistry", func() {
 			typeID := "goldi.test_type"
 			Expect(registry.RegisterType(typeID, testAPI.NewMockTypeWithArgs, "foo", true)).To(Succeed())
 			Expect(registry).To(HaveKey(typeID))
-			Expect(registry["goldi.test_type"].Generate(config).(*testAPI.MockType).StringParameter).To(Equal("foo"))
-			Expect(registry["goldi.test_type"].Generate(config).(*testAPI.MockType).BoolParameter).To(Equal(true))
+			Expect(registry["goldi.test_type"].Generate(config, registry).(*testAPI.MockType).StringParameter).To(Equal("foo"))
+			Expect(registry["goldi.test_type"].Generate(config, registry).(*testAPI.MockType).BoolParameter).To(Equal(true))
 		})
 	})
 })

@@ -21,3 +21,11 @@ func (g *MockTypeFactory) NewMockType() *MockType {
 	g.HasBeenUsed = true
 	return &MockType{}
 }
+
+type TypeForServiceInjection struct {
+	InjectedType *MockType
+}
+
+func NewTypeForServiceInjection(injectedType *MockType) *TypeForServiceInjection {
+	return &TypeForServiceInjection{injectedType}
+}

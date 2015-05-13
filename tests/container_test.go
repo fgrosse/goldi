@@ -90,4 +90,21 @@ var _ = Describe("Container", func() {
 		Expect(generatedMock.StringParameter).To(Equal(config["parameter1"]))
 		Expect(generatedMock.BoolParameter).To(Equal(config["parameter2"]))
 	})
+
+	It("should be able to inject already defined types into other types", func() {
+		injectedTypeID := "goldi.injected_type"
+		typeDef1 := goldi.NewType(testAPI.NewMockType)
+		registry.Register(injectedTypeID, typeDef1)
+
+		otherTypeID := "goldi.main_type"
+		typeDef2 := goldi.NewType(testAPI.NewTypeForServiceInjection, "@goldi.injected_type")
+		registry.Register(otherTypeID, typeDef2)
+
+		generatedType := container.Get("goldi.main_type")
+		Expect(generatedType).NotTo(BeNil())
+		Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.TypeForServiceInjection{}))
+
+		generatedMock := generatedType.(*testAPI.TypeForServiceInjection)
+		Expect(generatedMock.InjectedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
+	})
 })
