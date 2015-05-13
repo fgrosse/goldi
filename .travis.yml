@@ -11,7 +11,7 @@ install:
   - go install github.com/fgrosse/grobot/bot
   - export GOPATH=$PWD/vendor:$(cd ../../../.. ; pwd)
   - export PATH=$PWD/vendor/bin:$(cd ../../../../bin ; pwd):$PATH
-  - go env
   - bot install
+  - env
 
-script: bot test
+script: $PWD/vendor/bin/ginkgo -r tests --randomizeAllSpecs --failOnPending --randomizeSuites --race
