@@ -148,7 +148,7 @@ You can execute the tests running:
 ```
 $ go get github.com/onsi/ginkgo/ginkgo
 $ go get github.com/onsi/gomega
-$ ginkgo tests
+$ ginkgo -r tests
 ```
 
 If you prefer to use `go test` directly you can either switch into the `./tests` directory and run it there or
