@@ -7,13 +7,15 @@ go:
   - tip
 
 install:
-  - go get github.com/fgrosse/grobot/bot
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/modocache/gover
+  - go get github.com/mattn/goveralls
   - go get github.com/onsi/ginkgo/ginkgo
   - go get github.com/onsi/gomega
-  - export GOPATH=$PWD/vendor:$(cd ../../../.. ; pwd)
-  - export PATH=$PWD/vendor/bin:$(cd ../../../../bin ; pwd):$PATH
-  - bot -debug install
-  - ls -l $PWD/vendor/bin
-  - which ginkgo
+  - go get -v ./...
 
-script: $PWD/vendor/bin/ginkgo -r tests --randomizeAllSpecs --failOnPending --randomizeSuites --race
+script:
+  - go test ./tests -cover -coverpkg github.com/fgrosse/goldi -coverprofile goldi.coverprofile
+  - go test ./tests/goldigen -cover -coverpkg github.com/fgrosse/goldi/generator -coverprofile goldigen.coverprofile
+  - gover
+  - goveralls -coverprofile=gover.coverprofile -repotoken $COVERALLS_TOKEN
