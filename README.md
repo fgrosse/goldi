@@ -27,6 +27,8 @@ No additional dependencies are required to use the library.
 First you need to define the types you are going to use later
 
 ```go
+import "github.com/fgrosse/goldi"
+
 // create a new container when your application loads
 registry := goldi.NewTypeRegistry()
 config := map[string]interface{}{
