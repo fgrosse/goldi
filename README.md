@@ -87,7 +87,7 @@ types:
             - "@logger"             # You can also reference other types 
 
     time.clock:
-        package: github.com/fgrosse/goldi-example/lib
+        package: github.com/fgrosse/goldi-example/lib/mytime
         type: Clock
         factory: NewSystemClock
 ```
@@ -105,6 +105,7 @@ package lib
 
 import (
 	"github.com/fgrosse/goldi"
+	"github.com/fgrosse/goldi-example/lib/mytime"
 )
 
 // RegisterTypes registers all types that have been defined in the file "types.yml"
@@ -115,7 +116,7 @@ import (
 func RegisterTypes(types goldi.TypeRegistry) {
 	types.RegisterType("logger", NewSimpleLogger)
 	types.RegisterType("my_fancy.client", NewDefaultClient, "%client_base_url%", "@logger")
-	types.RegisterType("time.clock", NewSystemClock)
+	types.RegisterType("time.clock", mytime.NewSystemClock)
 }
 ```
 
