@@ -2,7 +2,9 @@ Goldi
 ========
 
 [![Build Status](https://secure.travis-ci.org/fgrosse/goldi.png?branch=master)](http://travis-ci.org/fgrosse/goldi)
+[![Coverage Status](https://coveralls.io/repos/fgrosse/goldi/badge.svg?branch=master)](https://coveralls.io/r/fgrosse/goldi?branch=master)
 [![GoDoc](https://godoc.org/github.com/fgrosse/goldi?status.svg)](https://godoc.org/github.com/fgrosse/goldi)
+[![license](https://img.shields.io/badge/license-MIT-4183c4.svg)](https://github.com/fgrosse/goldi/blob/master/LICENSE)
 
 **Go**ldi: **l**azy **d**ependency **i**njection framework for go.
 

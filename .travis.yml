@@ -7,11 +7,15 @@ go:
   - tip
 
 install:
-  - go get github.com/fgrosse/grobot
-  - go install github.com/fgrosse/grobot/bot
-  - export GOPATH=$PWD/vendor:$(cd ../../../.. ; pwd)
-  - export PATH=$PWD/vendor/bin:$(cd ../../../../bin ; pwd):$PATH
-  - go env
-  - bot install
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/modocache/gover
+  - go get github.com/mattn/goveralls
+  - go get github.com/onsi/ginkgo/ginkgo
+  - go get github.com/onsi/gomega
+  - go get -v ./...
 
-script: bot test
+script:
+  - go test ./tests -cover -coverpkg github.com/fgrosse/goldi -coverprofile goldi.coverprofile
+  - go test ./tests/goldigen -cover -coverpkg github.com/fgrosse/goldi/generator -coverprofile goldigen.coverprofile
+  - gover
+  - goveralls -coverprofile=gover.coverprofile -repotoken $COVERALLS_TOKEN
