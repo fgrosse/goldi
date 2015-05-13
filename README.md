@@ -83,7 +83,8 @@ types:
         type: Client
         factory: NewDefaultClient
         arguments:
-            - "%client_base_url%"   #  As in the API you can use parameters here
+            - "%client_base_url%"   # As in the API you can use parameters here
+            - "@logger"             # You can also reference other types 
 
     time.clock:
         package: github.com/fgrosse/goldi-example/lib
@@ -113,7 +114,7 @@ import (
 // See https://github.com/FGrosse/goldi for what is going on here.
 func RegisterTypes(types goldi.TypeRegistry) {
 	types.RegisterType("logger", NewSimpleLogger)
-	types.RegisterType("my_fancy.client", NewDefaultClient, "%client_base_url%")
+	types.RegisterType("my_fancy.client", NewDefaultClient, "%client_base_url%", "@logger")
 	types.RegisterType("time.clock", NewSystemClock)
 }
 ```
@@ -130,9 +131,9 @@ Now all you need to to is to create the di container as you would just using the
 RegisterTypes(container)
 ```
 
-If you have a serious error in your type registration (like returning more than one result from your type factory method) goldi will panic.
+If you have a serious error in your type registration (like returning more than one result from your type factory method) goldi will panic. Additionally you should use the `ContainerValidator` to check for any undefined parameters or circular type dependencies.
 
-Note that using goldigen and the necessary `go generate` is completely optional. If you do not like the idea of having an extra build step for your application you can still use goldis API.
+Note that using goldigen is completely optional. If you do not like the idea of having an extra build step for your application just use goldis API directly.
 
 ## Source Code Documentation
 
