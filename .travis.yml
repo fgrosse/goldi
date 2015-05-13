@@ -7,11 +7,13 @@ go:
   - tip
 
 install:
-  - go get github.com/fgrosse/grobot
-  - go install github.com/fgrosse/grobot/bot
+  - go get github.com/fgrosse/grobot/bot
+  - go get github.com/onsi/ginkgo/ginkgo
+  - go get github.com/onsi/gomega
   - export GOPATH=$PWD/vendor:$(cd ../../../.. ; pwd)
   - export PATH=$PWD/vendor/bin:$(cd ../../../../bin ; pwd):$PATH
-  - bot install
-  - env
+  - bot -debug install
+  - ls -l $PWD/vendor/bin
+  - which ginkgo
 
 script: $PWD/vendor/bin/ginkgo -r tests --randomizeAllSpecs --failOnPending --randomizeSuites --race
