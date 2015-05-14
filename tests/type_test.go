@@ -4,6 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"errors"
 	"github.com/fgrosse/goldi"
 	"github.com/fgrosse/goldi/tests/testAPI"
 )
@@ -104,16 +105,37 @@ var _ = Describe("Type", func() {
 			})
 
 			Context("when a type reference is given", func() {
-				It("should generate the type", func() {
-					err := typeRegistry.RegisterType("foo", testAPI.NewMockType)
-					Expect(err).NotTo(HaveOccurred())
+				Context("and its type matches the function signature", func() {
+					It("should generate the type", func() {
+						err := typeRegistry.RegisterType("foo", testAPI.NewMockType)
+						Expect(err).NotTo(HaveOccurred())
 
-					typeDef = goldi.NewType(testAPI.NewTypeForServiceInjection, "@foo")
-					generatedType := typeDef.Generate(config, typeRegistry)
-					Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.TypeForServiceInjection{}))
+						typeDef = goldi.NewType(testAPI.NewTypeForServiceInjection, "@foo")
+						generatedType := typeDef.Generate(config, typeRegistry)
+						Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.TypeForServiceInjection{}))
 
-					generatedMock := generatedType.(*testAPI.TypeForServiceInjection)
-					Expect(generatedMock.InjectedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
+						generatedMock := generatedType.(*testAPI.TypeForServiceInjection)
+						Expect(generatedMock.InjectedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
+					})
+				})
+
+				Context("and its type does not match the function signature", func() {
+					It("should panic with a helpful error message", func() {
+						err := typeRegistry.RegisterType("foo", testAPI.NewFoo)
+						Expect(err).NotTo(HaveOccurred())
+
+						typeDef = goldi.NewType(testAPI.NewTypeForServiceInjection, "@foo")
+
+						defer func() {
+							r := recover()
+							Expect(r).NotTo(BeNil(), "Expected Generate to panic")
+							Expect(r).To(BeAssignableToTypeOf(errors.New("")))
+							err := r.(error)
+							Expect(err.Error()).To(Equal("could not generate type: the referenced type \"@foo\" (type *testAPI.Foo) can not be passed as argument 1 to the function signature github.com/fgrosse/goldi/tests/testAPI.NewTypeForServiceInjection(*testAPI.MockType)"))
+						}()
+
+						typeDef.Generate(config, typeRegistry)
+					})
 				})
 			})
 		})

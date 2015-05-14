@@ -3,6 +3,7 @@ package goldi
 import (
 	"fmt"
 	"reflect"
+	"runtime"
 )
 
 // A Type holds all information that is necessary to create a new instance of a type ID
@@ -77,7 +78,7 @@ func (t *Type) Generate(config map[string]interface{}, registry TypeRegistry) in
 
 	args := make([]reflect.Value, len(t.generatorArguments))
 	for i, argument := range t.generatorArguments {
-		args[i] = t.resolveParameter(argument, t.generatorType.In(i), config, registry)
+		args[i] = t.resolveParameter(i, argument, t.generatorType.In(i), config, registry)
 	}
 
 	result := t.generator.Call(args)
@@ -88,7 +89,7 @@ func (t *Type) Generate(config map[string]interface{}, registry TypeRegistry) in
 	return result[0].Interface()
 }
 
-func (t *Type) resolveParameter(argument reflect.Value, expectedArgument reflect.Type, config map[string]interface{}, registry TypeRegistry) reflect.Value {
+func (t *Type) resolveParameter(i int, argument reflect.Value, expectedArgument reflect.Type, config map[string]interface{}, registry TypeRegistry) reflect.Value {
 	if argument.Kind() != reflect.String {
 		return argument
 	}
@@ -99,7 +100,7 @@ func (t *Type) resolveParameter(argument reflect.Value, expectedArgument reflect
 	}
 
 	if stringArgument[0] == '@' {
-		return resolveTypeReference(stringArgument[1:], config, registry, expectedArgument)
+		return t.resolveTypeReference(i, stringArgument[1:], config, registry, expectedArgument)
 	}
 
 	parameterName := stringArgument[1 : len(stringArgument)-1]
@@ -113,13 +114,21 @@ func (t *Type) resolveParameter(argument reflect.Value, expectedArgument reflect
 	return argument
 }
 
-func resolveTypeReference(typeID string, config map[string]interface{}, registry TypeRegistry, expectedArgument reflect.Type) reflect.Value {
-	t, typeDefined := registry[typeID]
+func (t *Type) resolveTypeReference(i int, typeID string, config map[string]interface{}, registry TypeRegistry, expectedArgument reflect.Type) reflect.Value {
+	referencedType, typeDefined := registry[typeID]
 	if typeDefined == false {
 		panic(fmt.Errorf("the referenced type \"@%s\" has not been defined", typeID))
 	}
 
-	typeInstance := t.Generate(config, registry)
+	typeInstance := referencedType.Generate(config, registry)
+	if reflect.TypeOf(typeInstance).AssignableTo(expectedArgument) == false {
+		factoryName := runtime.FuncForPC(t.generator.Pointer()).Name()
+		err := fmt.Errorf("the referenced type \"@%s\" (type %T) can not be passed as argument %d to the function signature %s(%s)",
+			typeID, typeInstance, i+1, factoryName, expectedArgument.String(),
+		)
+		panic(err)
+	}
+
 	// TODO check if this type is assignable and generate helpful error message if not
 	argument := reflect.New(expectedArgument).Elem()
 	argument.Set(reflect.ValueOf(typeInstance))
