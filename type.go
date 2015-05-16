@@ -30,14 +30,14 @@ func NewType(factoryFunction interface{}, factoryParameters ...interface{}) *Typ
 	}()
 
 	factoryType := reflect.TypeOf(factoryFunction)
-
-	switch factoryType.Kind() {
-	case reflect.Ptr:
+	kind := factoryType.Kind()
+	switch {
+	case kind == reflect.Ptr && factoryType.Elem().Kind() == reflect.Struct:
 		return newTypeFromStruct(factoryFunction, factoryType, factoryParameters)
-	case reflect.Func:
+	case kind == reflect.Func:
 		return newTypeFromFactoryFunction(factoryFunction, factoryType, factoryParameters)
 	default:
-		panic(fmt.Errorf("the given factory function must either be a function or a struct (given %q)", factoryType.Kind()))
+		panic(fmt.Errorf("the given factory function must either be a function or a pointer to a struct (given %q)", factoryType.Kind()))
 	}
 }
 
@@ -101,6 +101,10 @@ func (t *Type) Generate(config map[string]interface{}, registry TypeRegistry) in
 			panic(fmt.Errorf("could not generate type: %v", r))
 		}
 	}()
+
+	if t.factory.IsValid() == false {
+		panic("this type is not initialized. Did you use NewType to create it?")
+	}
 
 	if t.isFactoryMethod {
 		return t.generateFromFactory(config, registry)

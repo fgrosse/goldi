@@ -19,6 +19,11 @@ var _ = Describe("Type", func() {
 				Expect(func() { goldi.NewType(42) }).To(Panic())
 			})
 
+			It("should panic if the generator is a pointer to something other than a struct", func() {
+				something := "Hello Pointer World!"
+				Expect(func() { goldi.NewType(&something) }).To(Panic())
+			})
+
 			It("should panic if the generator has no output parameters", func() {
 				Expect(func() { goldi.NewType(func() {}) }).To(Panic())
 			})
@@ -93,6 +98,19 @@ var _ = Describe("Type", func() {
 
 		BeforeEach(func() {
 			typeRegistry = goldi.NewTypeRegistry()
+		})
+
+		It("should panic if Generate is called on an uninitialized type", func() {
+			typeDef = &goldi.Type{}
+			defer func() {
+				r := recover()
+				Expect(r).NotTo(BeNil(), "Expected Generate to panic")
+				Expect(r).To(BeAssignableToTypeOf(errors.New("")))
+				err := r.(error)
+				Expect(err.Error()).To(Equal("could not generate type: this type is not initialized. Did you use NewType to create it?"))
+			}()
+
+			typeDef.Generate(config, typeRegistry)
 		})
 
 		Context("with a type factory", func() {
