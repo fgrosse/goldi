@@ -87,6 +87,18 @@ var _ = Describe("Type", func() {
 				typeDef = goldi.NewType(&testAPI.MockType{})
 				Expect(typeDef).NotTo(BeNil())
 			})
+
+			It("should panic if more factory arguments where provided than the struct has fields", func() {
+				defer func() {
+					r := recover()
+					Expect(r).NotTo(BeNil(), "Expected Generate to panic")
+					Expect(r).To(BeAssignableToTypeOf(errors.New("")))
+					err := r.(error)
+					Expect(err.Error()).To(Equal("could not register type: the struct MockType has only 2 fields but 3 arguments where provided"))
+				}()
+
+				typeDef = goldi.NewType(&testAPI.MockType{}, "foo", true, "bar")
+			})
 		})
 	})
 
@@ -113,7 +125,7 @@ var _ = Describe("Type", func() {
 			typeDef.Generate(config, typeRegistry)
 		})
 
-		Context("with a type factory", func() {
+		Context("with a struct factory", func() {
 			Context("without arguments", func() {
 				It("should generate the type", func() {
 					typeDef = goldi.NewType(&testAPI.MockType{})
@@ -161,19 +173,6 @@ var _ = Describe("Type", func() {
 					generatedMock := generatedType.(*testAPI.MockType)
 					Expect(generatedMock.StringParameter).To(Equal("TEST"))
 					Expect(generatedMock.BoolParameter).To(Equal(true))
-				})
-
-				It("should panic if more factory arguments where provided than the struct has fields", func() {
-					typeDef = goldi.NewType(&testAPI.MockType{}, "foo", true, "bar")
-					defer func() {
-						r := recover()
-						Expect(r).NotTo(BeNil(), "Expected Generate to panic")
-						Expect(r).To(BeAssignableToTypeOf(errors.New("")))
-						err := r.(error)
-						Expect(err.Error()).To(Equal("could not generate type: the struct testAPI.MockType has only 2 fields but 3 arguments where provided on type registration"))
-					}()
-
-					typeDef.Generate(config, typeRegistry)
 				})
 			})
 		})

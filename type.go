@@ -8,7 +8,8 @@ import (
 	"strings"
 )
 
-// A Type holds all information that is necessary to create a new instance of a type ID
+// A Type holds all information that is necessary to create a new instance of a type ID.
+// It implements the TypeFactory interface.
 type Type struct {
 	factory          reflect.Value
 	factoryType      reflect.Type
@@ -44,6 +45,12 @@ func NewType(factoryFunction interface{}, factoryParameters ...interface{}) *Typ
 }
 
 func newTypeFromStruct(structFactory interface{}, generatedType reflect.Type, parameters []interface{}) *Type {
+	if generatedType.Elem().NumField() < len(parameters) {
+		panic(fmt.Errorf("the struct %s has only %d fields but %d arguments where provided",
+			generatedType.Elem().Name(), generatedType.Elem().NumField(), len(parameters),
+		))
+	}
+
 	args := make([]reflect.Value, len(parameters))
 	for i, argument := range parameters {
 		args[i] = reflect.ValueOf(argument)
@@ -191,13 +198,6 @@ func (t *Type) invalidReferencedTypeErr(typeID string, typeInstance interface{},
 }
 
 func (t *Type) generateFromStruct(config map[string]interface{}, registry TypeRegistry) interface{} {
-	if t.factory.Elem().NumField() < len(t.factoryArguments) {
-		// TODO we can easily move this check up to NewType to fail fast
-		panic(fmt.Errorf("the struct %T has only %d fields but %d arguments where provided on type registration",
-			t.factory.Elem().Interface(), t.factory.Elem().NumField(), len(t.factoryArguments),
-		))
-	}
-
 	args := make([]reflect.Value, len(t.factoryArguments))
 	for i, argument := range t.factoryArguments {
 		expectedArgument := t.factory.Elem().Field(i).Type()
