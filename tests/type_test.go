@@ -124,14 +124,14 @@ var _ = Describe("Type", func() {
 						err := typeRegistry.RegisterType("foo", testAPI.NewFoo)
 						Expect(err).NotTo(HaveOccurred())
 
-						typeDef = goldi.NewType(testAPI.NewTypeForServiceInjection, "@foo")
+						typeDef = goldi.NewType(testAPI.NewTypeForServiceInjectionWithArgs, "@foo", "arg1", "arg2", true)
 
 						defer func() {
 							r := recover()
 							Expect(r).NotTo(BeNil(), "Expected Generate to panic")
 							Expect(r).To(BeAssignableToTypeOf(errors.New("")))
 							err := r.(error)
-							Expect(err.Error()).To(Equal("could not generate type: the referenced type \"@foo\" (type *testAPI.Foo) can not be passed as argument 1 to the function signature github.com/fgrosse/goldi/tests/testAPI.NewTypeForServiceInjection(*testAPI.MockType)"))
+							Expect(err.Error()).To(Equal("could not generate type: the referenced type \"@foo\" (type *testAPI.Foo) can not be passed as argument 1 to the function signature testAPI.NewTypeForServiceInjectionWithArgs(*testAPI.MockType, string, string, bool)"))
 						}()
 
 						typeDef.Generate(config, typeRegistry)

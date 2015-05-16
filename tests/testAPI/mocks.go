@@ -29,3 +29,7 @@ type TypeForServiceInjection struct {
 func NewTypeForServiceInjection(injectedType *MockType) *TypeForServiceInjection {
 	return &TypeForServiceInjection{injectedType}
 }
+
+func NewTypeForServiceInjectionWithArgs(injectedType *MockType, name, location string, flag bool) *TypeForServiceInjection {
+	return &TypeForServiceInjection{injectedType}
+}

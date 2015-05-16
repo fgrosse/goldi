@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+	"strings"
 )
 
 // A Type holds all information that is necessary to create a new instance of a type ID
@@ -122,17 +123,32 @@ func (t *Type) resolveTypeReference(i int, typeID string, config map[string]inte
 
 	typeInstance := referencedType.Generate(config, registry)
 	if reflect.TypeOf(typeInstance).AssignableTo(expectedArgument) == false {
-		factoryName := runtime.FuncForPC(t.generator.Pointer()).Name()
-		err := fmt.Errorf("the referenced type \"@%s\" (type %T) can not be passed as argument %d to the function signature %s(%s)",
-			typeID, typeInstance, i+1, factoryName, expectedArgument.String(),
-		)
-		panic(err)
+		panic(t.invalidReferencedTypeErr(typeID, typeInstance, i))
 	}
 
 	// TODO check if this type is assignable and generate helpful error message if not
 	argument := reflect.New(expectedArgument).Elem()
 	argument.Set(reflect.ValueOf(typeInstance))
 	return argument
+}
+
+func (t *Type) invalidReferencedTypeErr(typeID string, typeInstance interface{}, i int) error {
+	factoryName := runtime.FuncForPC(t.generator.Pointer()).Name()
+	factoryNameParts := strings.Split(factoryName, "/")
+	factoryName = factoryNameParts[len(factoryNameParts)-1]
+
+	n := t.generator.Type().NumIn()
+	factoryArguments := make([]string, n)
+	for i := 0; i < n; i++ {
+		arg := t.generator.Type().In(i)
+		factoryArguments[i] = arg.String()
+	}
+
+	err := fmt.Errorf("the referenced type \"@%s\" (type %T) can not be passed as argument %d to the function signature %s(%s)",
+		typeID, typeInstance, i+1, factoryName, strings.Join(factoryArguments, ", "),
+	)
+
+	return err
 }
 
 // typeReferenceArguments is an internal function that returns all generator arguments that are type references
