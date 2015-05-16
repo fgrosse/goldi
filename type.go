@@ -9,9 +9,9 @@ import (
 
 // A Type holds all information that is necessary to create a new instance of a type ID
 type Type struct {
-	generator          reflect.Value
-	generatorType      reflect.Type
-	generatorArguments []reflect.Value
+	factory          reflect.Value
+	factoryType      reflect.Type
+	factoryArguments []reflect.Value
 }
 
 // NewType creates a new Type and checks if the given factory method can be used get a go type
@@ -27,35 +27,35 @@ func NewType(factoryFunction interface{}, factoryParameters ...interface{}) *Typ
 		}
 	}()
 
-	generatorType := reflect.TypeOf(factoryFunction)
-	if generatorType.Kind() != reflect.Func {
-		panic(fmt.Errorf("kind was %v, not Func", generatorType.Kind()))
+	factoryType := reflect.TypeOf(factoryFunction)
+	if factoryType.Kind() != reflect.Func {
+		panic(fmt.Errorf("kind was %v, not Func", factoryType.Kind()))
 	}
 
-	if generatorType.NumOut() != 1 {
-		panic(fmt.Errorf("invalid number of return parameters: %d", generatorType.NumOut()))
+	if factoryType.NumOut() != 1 {
+		panic(fmt.Errorf("invalid number of return parameters: %d", factoryType.NumOut()))
 	}
 
-	kindOfGeneratedType := generatorType.Out(0).Kind()
+	kindOfGeneratedType := factoryType.Out(0).Kind()
 	if kindOfGeneratedType != reflect.Interface && kindOfGeneratedType != reflect.Ptr {
 		panic(fmt.Errorf("return parameter is no interface or pointer but a %v", kindOfGeneratedType))
 	}
 
-	if generatorType.NumIn() != len(factoryParameters) {
-		panic(fmt.Errorf("invalid number of input parameters: got %d but expected %d", generatorType.NumIn(), len(factoryParameters)))
+	if factoryType.NumIn() != len(factoryParameters) {
+		panic(fmt.Errorf("invalid number of input parameters: got %d but expected %d", factoryType.NumIn(), len(factoryParameters)))
 	}
 
 	return &Type{
-		generator:          reflect.ValueOf(factoryFunction),
-		generatorType:      generatorType,
-		generatorArguments: buildGeneratorCallArguments(generatorType, factoryParameters),
+		factory:          reflect.ValueOf(factoryFunction),
+		factoryType:      factoryType,
+		factoryArguments: buildFactoryCallArguments(factoryType, factoryParameters),
 	}
 }
 
-func buildGeneratorCallArguments(generatorType reflect.Type, factoryParameters []interface{}) []reflect.Value {
+func buildFactoryCallArguments(factoryType reflect.Type, factoryParameters []interface{}) []reflect.Value {
 	args := make([]reflect.Value, len(factoryParameters))
 	for i, argument := range factoryParameters {
-		expectedArgumentType := generatorType.In(i)
+		expectedArgumentType := factoryType.In(i)
 		args[i] = reflect.ValueOf(argument)
 		if args[i].Kind() != expectedArgumentType.Kind() {
 			if stringArg, isString := argument.(string); isString && isParameterOrTypeReference(stringArg) == false {
@@ -77,14 +77,14 @@ func (t *Type) Generate(config map[string]interface{}, registry TypeRegistry) in
 		}
 	}()
 
-	args := make([]reflect.Value, len(t.generatorArguments))
-	for i, argument := range t.generatorArguments {
-		args[i] = t.resolveParameter(i, argument, t.generatorType.In(i), config, registry)
+	args := make([]reflect.Value, len(t.factoryArguments))
+	for i, argument := range t.factoryArguments {
+		args[i] = t.resolveParameter(i, argument, t.factoryType.In(i), config, registry)
 	}
 
-	result := t.generator.Call(args)
+	result := t.factory.Call(args)
 	if len(result) == 0 {
-		panic(fmt.Errorf("no return parameter found. Seems like you did not use goldi.NewTypeGenerator to create this TypeGenerator"))
+		panic(fmt.Errorf("no return parameter found. Seems like you did not use goldi.NewType to create this Type"))
 	}
 
 	return result[0].Interface()
@@ -126,21 +126,20 @@ func (t *Type) resolveTypeReference(i int, typeID string, config map[string]inte
 		panic(t.invalidReferencedTypeErr(typeID, typeInstance, i))
 	}
 
-	// TODO check if this type is assignable and generate helpful error message if not
 	argument := reflect.New(expectedArgument).Elem()
 	argument.Set(reflect.ValueOf(typeInstance))
 	return argument
 }
 
 func (t *Type) invalidReferencedTypeErr(typeID string, typeInstance interface{}, i int) error {
-	factoryName := runtime.FuncForPC(t.generator.Pointer()).Name()
+	factoryName := runtime.FuncForPC(t.factory.Pointer()).Name()
 	factoryNameParts := strings.Split(factoryName, "/")
 	factoryName = factoryNameParts[len(factoryNameParts)-1]
 
-	n := t.generator.Type().NumIn()
+	n := t.factory.Type().NumIn()
 	factoryArguments := make([]string, n)
 	for i := 0; i < n; i++ {
-		arg := t.generator.Type().In(i)
+		arg := t.factory.Type().In(i)
 		factoryArguments[i] = arg.String()
 	}
 
@@ -151,10 +150,10 @@ func (t *Type) invalidReferencedTypeErr(typeID string, typeInstance interface{},
 	return err
 }
 
-// typeReferenceArguments is an internal function that returns all generator arguments that are type references
+// typeReferenceArguments is an internal function that returns all factory arguments that are type references
 func (t *Type) typeReferenceArguments() []string {
 	var typeRefParameters []string
-	for _, argument := range t.generatorArguments {
+	for _, argument := range t.factoryArguments {
 		stringArgument := argument.Interface().(string)
 		if isTypeReference(stringArgument) {
 			typeRefParameters = append(typeRefParameters, stringArgument[1:])
@@ -163,10 +162,10 @@ func (t *Type) typeReferenceArguments() []string {
 	return typeRefParameters
 }
 
-// parameterArguments is an internal function that returns all generator arguments that are parameters
+// parameterArguments is an internal function that returns all factory arguments that are parameters
 func (t *Type) parameterArguments() []string {
 	var parameterArguments []string
-	for _, argument := range t.generatorArguments {
+	for _, argument := range t.factoryArguments {
 		stringArgument := argument.Interface().(string)
 		if isParameter(stringArgument) {
 			parameterArguments = append(parameterArguments, stringArgument[1:len(stringArgument)-1])
