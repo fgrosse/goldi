@@ -39,5 +39,9 @@ var _ = Describe("Usage example from README.md", func() {
 
 		// in the tests you might want to exchange the registered types with mocks or other implementations
 		container.RegisterType("logger", NewNullLogger)
+
+		// if you already have an instance you want to be used you can inject it directly
+		myLogger := NewNullLogger()
+		container.InjectInstance("logger", myLogger)
 	})
 })

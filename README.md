@@ -59,6 +59,10 @@ logger := container.Get("logger").(LoggerInterface)
 
 // in the tests you might want to exchange the registered types with mocks or other implementations
 container.RegisterType("logger", NewNullLogger)
+
+// if you already have an instance you want to be used you can inject it directly
+myLogger := NewNullLogger()
+container.InjectInstance("logger", myLogger)
 ```
 
 The types are build lazily. This means that the `logger` will only be created when you ask the container for it the first time. Also all built types are singletons. This means that if you call `container.Get("typeID")`two times you will always get the same instance of whatever `typeID` stands for.
