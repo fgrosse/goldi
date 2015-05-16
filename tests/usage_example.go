@@ -17,8 +17,13 @@ var _ = Describe("Usage example from README.md", func() {
 		container := goldi.NewContainer(registry, config)
 
 		// now define the types you want to build using the di container
-		container.RegisterType("logger", NewSimpleLogger)
+		// you can use simple structs in case you do not have a factory function
+		container.RegisterType("logger", &SimpleLogger{})
+
+		// you can also use factory functions and parameters
 		container.RegisterType("acme_corp.mailer", NewAwesomeMailer, "first argument", "%some_parameter%")
+
+		// dynamic or static parameters and references to other services can be used as arguments
 		container.RegisterType("renderer", NewRenderer, "@logger")
 
 		// once you are done registering all your types you should probably validate the container
