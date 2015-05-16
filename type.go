@@ -2,6 +2,7 @@ package goldi
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"runtime"
 	"strings"
@@ -12,6 +13,7 @@ type Type struct {
 	factory          reflect.Value
 	factoryType      reflect.Type
 	factoryArguments []reflect.Value
+	isFactoryMethod  bool
 }
 
 // NewType creates a new Type and checks if the given factory method can be used get a go type
@@ -28,10 +30,32 @@ func NewType(factoryFunction interface{}, factoryParameters ...interface{}) *Typ
 	}()
 
 	factoryType := reflect.TypeOf(factoryFunction)
-	if factoryType.Kind() != reflect.Func {
-		panic(fmt.Errorf("kind was %v, not Func", factoryType.Kind()))
+
+	switch factoryType.Kind() {
+	case reflect.Ptr:
+		return newTypeFromStruct(factoryFunction, factoryType, factoryParameters)
+	case reflect.Func:
+		return newTypeFromFactoryFunction(factoryFunction, factoryType, factoryParameters)
+	default:
+		panic(fmt.Errorf("the given factory function must either be a function or a struct (given %q)", factoryType.Kind()))
+	}
+}
+
+func newTypeFromStruct(structFactory interface{}, generatedType reflect.Type, parameters []interface{}) *Type {
+	args := make([]reflect.Value, len(parameters))
+	for i, argument := range parameters {
+		args[i] = reflect.ValueOf(argument)
 	}
 
+	return &Type{
+		factory:          reflect.ValueOf(structFactory),
+		isFactoryMethod:  false,
+		factoryType:      generatedType,
+		factoryArguments: args,
+	}
+}
+
+func newTypeFromFactoryFunction(function interface{}, factoryType reflect.Type, parameters []interface{}) *Type {
 	if factoryType.NumOut() != 1 {
 		panic(fmt.Errorf("invalid number of return parameters: %d", factoryType.NumOut()))
 	}
@@ -41,14 +65,15 @@ func NewType(factoryFunction interface{}, factoryParameters ...interface{}) *Typ
 		panic(fmt.Errorf("return parameter is no interface or pointer but a %v", kindOfGeneratedType))
 	}
 
-	if factoryType.NumIn() != len(factoryParameters) {
-		panic(fmt.Errorf("invalid number of input parameters: got %d but expected %d", factoryType.NumIn(), len(factoryParameters)))
+	if factoryType.NumIn() != len(parameters) {
+		panic(fmt.Errorf("invalid number of input parameters: got %d but expected %d", factoryType.NumIn(), len(parameters)))
 	}
 
 	return &Type{
-		factory:          reflect.ValueOf(factoryFunction),
+		factory:          reflect.ValueOf(function),
+		isFactoryMethod:  true,
 		factoryType:      factoryType,
-		factoryArguments: buildFactoryCallArguments(factoryType, factoryParameters),
+		factoryArguments: buildFactoryCallArguments(factoryType, parameters),
 	}
 }
 
@@ -77,6 +102,14 @@ func (t *Type) Generate(config map[string]interface{}, registry TypeRegistry) in
 		}
 	}()
 
+	if t.isFactoryMethod {
+		return t.generateFromFactory(config, registry)
+	} else {
+		return t.generateFromStruct(config, registry)
+	}
+}
+
+func (t *Type) generateFromFactory(config map[string]interface{}, registry TypeRegistry) interface{} {
 	args := make([]reflect.Value, len(t.factoryArguments))
 	for i, argument := range t.factoryArguments {
 		args[i] = t.resolveParameter(i, argument, t.factoryType.In(i), config, registry)
@@ -84,7 +117,7 @@ func (t *Type) Generate(config map[string]interface{}, registry TypeRegistry) in
 
 	result := t.factory.Call(args)
 	if len(result) == 0 {
-		panic(fmt.Errorf("no return parameter found. Seems like you did not use goldi.NewType to create this Type"))
+		panic(fmt.Errorf("no return parameter found. this should never ever happen ò.Ó"))
 	}
 
 	return result[0].Interface()
@@ -148,6 +181,28 @@ func (t *Type) invalidReferencedTypeErr(typeID string, typeInstance interface{},
 	)
 
 	return err
+}
+
+func (t *Type) generateFromStruct(config map[string]interface{}, registry TypeRegistry) interface{} {
+	if t.factory.Elem().NumField() < len(t.factoryArguments) {
+		panic(fmt.Errorf("the struct %T has only %d fields but %d arguments where provided on type registration",
+			t.factory.Elem().Interface(), t.factory.Elem().NumField(), len(t.factoryArguments),
+		))
+	}
+
+	args := make([]reflect.Value, len(t.factoryArguments))
+	for i, argument := range t.factoryArguments {
+		expectedArgument := t.factory.Elem().Field(i).Type()
+		args[i] = t.resolveParameter(i, argument, expectedArgument, config, registry)
+	}
+
+	factory := reflect.New(t.factory.Elem().Type())
+	n := int(math.Min(float64(factory.Elem().NumField()), float64(len(args))))
+	for i := 0; i < n; i++ {
+		factory.Elem().Field(i).Set(args[i])
+	}
+
+	return factory.Interface()
 }
 
 // typeReferenceArguments is an internal function that returns all factory arguments that are type references
