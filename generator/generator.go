@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const Version = "0.5.0"
+const Version = "0.6.0"
 
 // The Generator is used to generate compilable go code from a yaml configuration
 type Generator struct {
