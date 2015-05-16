@@ -69,7 +69,6 @@ var _ = Describe("GoPathChecker", func() {
 				checker := generator.NewGoPathChecker()
 				Expect(checker.PackageName("../testAPI/goldi.go")).To(Equal("github.com/fgrosse/goldi/tests/testAPI"))
 			})
-
 		})
 	})
 })

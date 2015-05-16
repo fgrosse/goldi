@@ -8,7 +8,8 @@ import (
 	"strings"
 )
 
-// A Type holds all information that is necessary to create a new instance of a type ID
+// A Type holds all information that is necessary to create a new instance of a type ID.
+// It implements the TypeFactory interface.
 type Type struct {
 	factory          reflect.Value
 	factoryType      reflect.Type
@@ -18,10 +19,12 @@ type Type struct {
 
 // NewType creates a new Type and checks if the given factory method can be used get a go type
 //
-// This function will panic if the factoryFunction is no function, returns zero or more than
-// one parameter or the return parameter is no pointer or interface type.
-// If the number of given factoryParameters does not match the number of arguments of the
-// factoryFunction this function will panic as well
+// This function will panic if the factoryFunction:
+//   - is no function or pointer to a struct,
+//   - returns zero or more than one parameter
+//   - the return parameter is no pointer or interface type.
+//   - the number of given factoryParameters does not match the number of arguments of the
+//     factoryFunction (factory function only)
 func NewType(factoryFunction interface{}, factoryParameters ...interface{}) *Type {
 	defer func() {
 		if r := recover(); r != nil {
@@ -42,6 +45,12 @@ func NewType(factoryFunction interface{}, factoryParameters ...interface{}) *Typ
 }
 
 func newTypeFromStruct(structFactory interface{}, generatedType reflect.Type, parameters []interface{}) *Type {
+	if generatedType.Elem().NumField() < len(parameters) {
+		panic(fmt.Errorf("the struct %s has only %d fields but %d arguments where provided",
+			generatedType.Elem().Name(), generatedType.Elem().NumField(), len(parameters),
+		))
+	}
+
 	args := make([]reflect.Value, len(parameters))
 	for i, argument := range parameters {
 		args[i] = reflect.ValueOf(argument)
@@ -121,6 +130,7 @@ func (t *Type) generateFromFactory(config map[string]interface{}, registry TypeR
 
 	result := t.factory.Call(args)
 	if len(result) == 0 {
+		// in theory this condition can never evaluate to true since we check the number of return arguments in NewType
 		panic(fmt.Errorf("no return parameter found. this should never ever happen ò.Ó"))
 	}
 
@@ -188,12 +198,6 @@ func (t *Type) invalidReferencedTypeErr(typeID string, typeInstance interface{},
 }
 
 func (t *Type) generateFromStruct(config map[string]interface{}, registry TypeRegistry) interface{} {
-	if t.factory.Elem().NumField() < len(t.factoryArguments) {
-		panic(fmt.Errorf("the struct %T has only %d fields but %d arguments where provided on type registration",
-			t.factory.Elem().Interface(), t.factory.Elem().NumField(), len(t.factoryArguments),
-		))
-	}
-
 	args := make([]reflect.Value, len(t.factoryArguments))
 	for i, argument := range t.factoryArguments {
 		expectedArgument := t.factory.Elem().Field(i).Type()

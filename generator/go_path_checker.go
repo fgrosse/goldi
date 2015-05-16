@@ -21,8 +21,10 @@ func (c *GoPathChecker) PackageName(outputPath string) string {
 
 	outputPath, err := filepath.Abs(outputPath)
 	if err != nil {
-		panic(fmt.Errorf("Could not get absolut file path from %q", outputPath))
+		// this can only happen if go has trouble determining the current working directory on this OS
+		panic(fmt.Errorf("Could not get absolut file path from %q: %s", outputPath, err))
 	}
+
 	outputDir := filepath.Dir(outputPath)
 	for _, goPath := range strings.Split(goPaths, ":") {
 		goPath = goPath + "/src/"
