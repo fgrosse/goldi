@@ -3,7 +3,7 @@ package goldi
 import "fmt"
 
 // The TypeRegistry is effectively a map of typeID strings to Types
-type TypeRegistry map[string]*Type
+type TypeRegistry map[string]TypeFactory
 
 // NewTypeRegistry creates a new empty TypeRegistry
 func NewTypeRegistry() TypeRegistry {
@@ -28,6 +28,19 @@ func (r TypeRegistry) RegisterType(typeID string, generatorFunction interface{},
 // Register saves a type under the given symbolic typeID so it can be retrieved later.
 // It is perfectly legal to call Register multiple times with the same typeID.
 // In this case you overwrite existing type definitions with new once
-func (r TypeRegistry) Register(typeID string, typeDef *Type) {
+func (r TypeRegistry) Register(typeID string, typeDef TypeFactory) {
 	r[typeID] = typeDef
+}
+
+// TODO write docu
+func (r TypeRegistry) InjectInstance(typeID string, instance interface{}) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("could not inject type: %s", r)
+		}
+	}()
+
+	factory := NewTypeInstanceFactory(instance)
+	r.Register(typeID, factory)
+	return nil
 }

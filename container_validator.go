@@ -27,16 +27,18 @@ func (v *ContainerValidator) Validate(container *Container) (err error) {
 		}
 	}()
 
-	for typeID, typeDef := range container.TypeRegistry {
+	for typeID, typeFactory := range container.TypeRegistry {
 		// reset the validation type cache
 		v.checkedTypes = StringSet{}
 
-		if err = v.validateTypeParameters(typeID, typeDef, container); err != nil {
-			return err
-		}
+		if typeDef, isType := typeFactory.(*Type); isType {
+			if err = v.validateTypeParameters(typeID, typeDef, container); err != nil {
+				return err
+			}
 
-		if err = v.validateTypeReferences(typeID, typeDef, container); err != nil {
-			return err
+			if err = v.validateTypeReferences(typeID, typeDef, container); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -60,14 +62,14 @@ func (v *ContainerValidator) validateTypeReferences(typeID string, typeDef *Type
 			continue
 		}
 
-		referencedType, err := v.checkTypeIsDefined(typeID, referencedTypeID, container)
+		referencedTypeFactory, err := v.checkTypeIsDefined(typeID, referencedTypeID, container)
 		if err != nil {
 			return err
 		}
 
 		v.circularDependencyCheckMap = StringSet{}
 		v.circularDependencyCheckMap.Set(typeID)
-		if err = v.checkCircularDependency(referencedType, referencedTypeID, container); err != nil {
+		if err = v.checkCircularDependency(referencedTypeFactory, referencedTypeID, container); err != nil {
 			return err
 		}
 
@@ -76,7 +78,7 @@ func (v *ContainerValidator) validateTypeReferences(typeID string, typeDef *Type
 	return nil
 }
 
-func (v *ContainerValidator) checkTypeIsDefined(typeID, referencedTypeID string, container *Container) (*Type, error) {
+func (v *ContainerValidator) checkTypeIsDefined(typeID, referencedTypeID string, container *Container) (TypeFactory, error) {
 	typeDef, isDefined := container.TypeRegistry[referencedTypeID]
 	if isDefined == false {
 		return nil, fmt.Errorf("type %q references unkown type %q", typeID, referencedTypeID)
@@ -85,8 +87,13 @@ func (v *ContainerValidator) checkTypeIsDefined(typeID, referencedTypeID string,
 	return typeDef, nil
 }
 
-func (v *ContainerValidator) checkCircularDependency(t *Type, typeID string, container *Container) error {
-	typeRefParameters := t.typeReferenceArguments()
+func (v *ContainerValidator) checkCircularDependency(typeFactory TypeFactory, typeID string, container *Container) error {
+	typeDef, isType := typeFactory.(*Type)
+	if isType == false {
+		return nil
+	}
+
+	typeRefParameters := typeDef.typeReferenceArguments()
 	for _, referencedTypeID := range typeRefParameters {
 		referencedType, err := v.checkTypeIsDefined(typeID, referencedTypeID, container)
 		if err != nil {

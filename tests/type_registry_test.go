@@ -4,6 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"fmt"
 	"github.com/fgrosse/goldi"
 	"github.com/fgrosse/goldi/tests/testAPI"
 )
@@ -21,15 +22,15 @@ var _ = Describe("TypeRegistry", func() {
 	Describe("RegisterType", func() {
 		It("should store the type", func() {
 			typeID := "goldi.test_type"
-			generator := &testAPI.MockTypeFactory{}
-			Expect(registry.RegisterType(typeID, generator.NewMockType)).To(Succeed())
+			factory := &testAPI.MockTypeFactory{}
+			Expect(registry.RegisterType(typeID, factory.NewMockType)).To(Succeed())
 
-			generatorWrapper, typeIsRegistered := registry[typeID]
+			factoryWrapper, typeIsRegistered := registry[typeID]
 			Expect(typeIsRegistered).To(BeTrue())
-			Expect(generatorWrapper).NotTo(BeNil())
+			Expect(factoryWrapper).NotTo(BeNil())
 
-			generatorWrapper.Generate(config, registry)
-			Expect(generator.HasBeenUsed).To(BeTrue())
+			factoryWrapper.Generate(config, registry)
+			Expect(factory.HasBeenUsed).To(BeTrue())
 		})
 
 		It("should recover panics from NewType", func() {
@@ -43,6 +44,27 @@ var _ = Describe("TypeRegistry", func() {
 			Expect(registry).To(HaveKey(typeID))
 			Expect(registry["goldi.test_type"].Generate(config, registry).(*testAPI.MockType).StringParameter).To(Equal("foo"))
 			Expect(registry["goldi.test_type"].Generate(config, registry).(*testAPI.MockType).BoolParameter).To(Equal(true))
+		})
+	})
+
+	Describe("InjectInstance", func() {
+		It("should store the type instance", func() {
+			typeID := "goldi.test_type"
+			fooInstance := testAPI.NewFoo()
+			Expect(registry.InjectInstance(typeID, fooInstance)).To(Succeed())
+
+			factory, typeIsRegistered := registry[typeID]
+			Expect(typeIsRegistered).To(BeTrue())
+			Expect(factory).NotTo(BeNil())
+
+			generateResult := factory.Generate(config, registry)
+			Expect(generateResult == fooInstance).To(BeTrue(),
+				fmt.Sprintf("generateResult (%p) should point to the same instance as fooInstance (%p)", generateResult, fooInstance),
+			)
+		})
+
+		It("should recover panics from NewTypeInstanceFactory", func() {
+			Expect(registry.InjectInstance("goldi.test_type", nil)).NotTo(Succeed())
 		})
 	})
 })
