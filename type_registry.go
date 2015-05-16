@@ -32,7 +32,7 @@ func (r TypeRegistry) Register(typeID string, typeDef TypeFactory) {
 	r[typeID] = typeDef
 }
 
-// TODO write docu
+// InjectInstance enables you to inject type instances.
 func (r TypeRegistry) InjectInstance(typeID string, instance interface{}) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
