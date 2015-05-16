@@ -2,7 +2,7 @@ package goldi
 
 import "fmt"
 
-// The TypeRegistry is effectively a map of typeID strings to Types
+// The TypeRegistry is effectively a map of typeID strings to TypeFactory
 type TypeRegistry map[string]TypeFactory
 
 // NewTypeRegistry creates a new empty TypeRegistry
@@ -12,7 +12,7 @@ func NewTypeRegistry() TypeRegistry {
 
 // RegisterType is convenience method for TypeRegistry.Register
 // It creates a new Type from the given generatorFunction and arguments and passes this to TypeRegistry.Register
-// Since the type is created in this function using NewType this can panic under the same conditions as NewType does
+// If the underlying Type can not be built with the given arguments (e.g. NewType panics) an error is returned
 func (r TypeRegistry) RegisterType(typeID string, generatorFunction interface{}, arguments ...interface{}) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -33,6 +33,7 @@ func (r TypeRegistry) Register(typeID string, typeDef TypeFactory) {
 }
 
 // InjectInstance enables you to inject type instances.
+// If instance is nil an error is returned
 func (r TypeRegistry) InjectInstance(typeID string, instance interface{}) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
