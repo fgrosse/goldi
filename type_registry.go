@@ -51,7 +51,7 @@ func (r TypeRegistry) InjectInstance(typeID string, instance interface{}) (err e
 		}
 	}()
 
-	factory := NewTypeInstanceFactory(instance)
+	factory := NewInstanceType(instance)
 	r.Register(typeID, factory)
 	return nil
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/fgrosse/goldi/tests/testAPI"
 )
 
-var _ = Describe("TypeInstanceFactory", func() {
+var _ = Describe("InstanceType", func() {
 
 	var (
 		config   map[string]interface{}
@@ -21,14 +21,14 @@ var _ = Describe("TypeInstanceFactory", func() {
 		registry = goldi.NewTypeRegistry()
 	})
 
-	It("should panic if NewTypeInstanceFactory is called with nil", func() {
-		Expect(func() { goldi.NewTypeInstanceFactory(nil) }).To(Panic())
+	It("should panic if NewInstanceType is called with nil", func() {
+		Expect(func() { goldi.NewInstanceType(nil) }).To(Panic())
 	})
 
 	Describe("Generate", func() {
 		It("should always return the given instance", func() {
 			instance := testAPI.NewFoo()
-			factory := goldi.NewTypeInstanceFactory(instance)
+			factory := goldi.NewInstanceType(instance)
 
 			for i := 0; i < 3; i++ {
 				generateResult := factory.Generate(config, registry)
@@ -39,7 +39,7 @@ var _ = Describe("TypeInstanceFactory", func() {
 		})
 
 		It("should panic if is called with nil", func() {
-			factory := &goldi.TypeInstanceFactory{}
+			factory := &goldi.InstanceType{}
 			Expect(func() { factory.Generate(config, registry) }).To(Panic())
 		})
 	})

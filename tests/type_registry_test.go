@@ -116,7 +116,7 @@ var _ = Describe("TypeRegistry", func() {
 			)
 		})
 
-		It("should recover panics from NewTypeInstanceFactory", func() {
+		It("should recover panics from NewInstanceType", func() {
 			Expect(registry.InjectInstance("goldi.test_type", nil)).NotTo(Succeed())
 		})
 	})
