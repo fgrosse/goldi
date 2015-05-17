@@ -85,9 +85,7 @@ func (t *Type) Arguments() []interface{} {
 }
 
 // Generate will instantiate a new instance of the according type.
-// The given configuration is used to resolve parameters that are used in the type factory method
-// The type registry is used to lazily resolve type references
-func (t *Type) Generate(config map[string]interface{}, registry TypeRegistry) interface{} {
+func (t *Type) Generate(parameterResolver *ParameterResolver) interface{} {
 	defer func() {
 		if r := recover(); r != nil {
 			panic(fmt.Errorf("could not generate type: %v", r))
@@ -98,11 +96,7 @@ func (t *Type) Generate(config map[string]interface{}, registry TypeRegistry) in
 		panic("this type is not initialized. Did you use NewType to create it?")
 	}
 
-	args := make([]reflect.Value, len(t.factoryArguments))
-	for i, argument := range t.factoryArguments {
-		args[i] = t.resolveParameter(i, argument, t.factoryType.In(i), config, registry)
-	}
-
+	args := t.generateFactoryArguments(parameterResolver)
 	result := t.factory.Call(args)
 	if len(result) == 0 {
 		// in theory this condition can never evaluate to true since we check the number of return arguments in NewType
@@ -112,47 +106,24 @@ func (t *Type) Generate(config map[string]interface{}, registry TypeRegistry) in
 	return result[0].Interface()
 }
 
-func (t *Type) resolveParameter(i int, argument reflect.Value, expectedArgument reflect.Type, config map[string]interface{}, registry TypeRegistry) reflect.Value {
-	if argument.Kind() != reflect.String {
-		return argument
+func (t *Type) generateFactoryArguments(parameterResolver *ParameterResolver) []reflect.Value {
+	args := make([]reflect.Value, len(t.factoryArguments))
+	var err error
+
+	for i, argument := range t.factoryArguments {
+		args[i], err = parameterResolver.Resolve(argument, t.factoryType.In(i))
+
+		switch errorType := err.(type) {
+		case nil:
+			continue
+		case TypeReferenceError:
+			panic(t.invalidReferencedTypeErr(errorType.TypeID, errorType.TypeInstance, i))
+		default:
+			panic(err)
+		}
 	}
 
-	stringArgument := argument.Interface().(string)
-	if isParameterOrTypeReference(stringArgument) == false {
-		return argument
-	}
-
-	if isTypeReference(stringArgument) {
-		return t.resolveTypeReference(i, stringArgument[1:], config, registry, expectedArgument)
-	}
-
-	parameterName := stringArgument[1 : len(stringArgument)-1]
-	configuredValue, isConfigured := config[parameterName]
-	if isConfigured == false {
-		// TEST: test this for improved code coverage
-		return argument
-	}
-
-	argument = reflect.New(expectedArgument).Elem()
-	argument.Set(reflect.ValueOf(configuredValue))
-	return argument
-}
-
-func (t *Type) resolveTypeReference(i int, typeID string, config map[string]interface{}, registry TypeRegistry, expectedArgument reflect.Type) reflect.Value {
-	referencedType, typeDefined := registry[typeID]
-	if typeDefined == false {
-		// TEST: test this for improved code coverage
-		panic(fmt.Errorf("the referenced type \"@%s\" has not been defined", typeID))
-	}
-
-	typeInstance := referencedType.Generate(config, registry)
-	if reflect.TypeOf(typeInstance).AssignableTo(expectedArgument) == false {
-		panic(t.invalidReferencedTypeErr(typeID, typeInstance, i))
-	}
-
-	argument := reflect.New(expectedArgument).Elem()
-	argument.Set(reflect.ValueOf(typeInstance))
-	return argument
+	return args
 }
 
 func (t *Type) invalidReferencedTypeErr(typeID string, typeInstance interface{}, i int) error {
@@ -172,26 +143,4 @@ func (t *Type) invalidReferencedTypeErr(typeID string, typeInstance interface{},
 	)
 
 	return err
-}
-
-func isParameterOrTypeReference(p string) bool {
-	return isParameter(p) || isTypeReference(p)
-}
-
-func isParameter(p string) bool {
-	if len(p) < 2 {
-		// TEST: test this for improved code coverage
-		return false
-	}
-
-	return p[0] == '%' && p[len(p)-1] == '%'
-}
-
-func isTypeReference(p string) bool {
-	if len(p) < 2 {
-		// TEST: test this for improved code coverage
-		return false
-	}
-
-	return p[0] == '@'
 }

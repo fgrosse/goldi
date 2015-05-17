@@ -23,7 +23,7 @@ func NewInstanceType(instance interface{}) *InstanceType {
 
 // Generate fulfills the TypeFactory interface and will always return the type instance of this factory.
 // It will panic if the instance is nil
-func (t *InstanceType) Generate(_ map[string]interface{}, _ TypeRegistry) interface{} {
+func (t *InstanceType) Generate(_ *ParameterResolver) interface{} {
 	if t.Instance == nil {
 		panic(fmt.Errorf("refused to return nil on InstanceType.Generate. Seems like you did not use NewInstanceType"))
 	}

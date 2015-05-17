@@ -10,15 +10,12 @@ import (
 )
 
 var _ = Describe("InstanceType", func() {
-
-	var (
-		config   map[string]interface{}
-		registry goldi.TypeRegistry
-	)
+	var resolver *goldi.ParameterResolver
 
 	BeforeEach(func() {
-		config = map[string]interface{}{}
-		registry = goldi.NewTypeRegistry()
+		config := map[string]interface{}{}
+		registry := goldi.NewTypeRegistry()
+		resolver = goldi.NewParameterResolver(config, registry)
 	})
 
 	It("should panic if NewInstanceType is called with nil", func() {
@@ -38,7 +35,7 @@ var _ = Describe("InstanceType", func() {
 			factory := goldi.NewInstanceType(instance)
 
 			for i := 0; i < 3; i++ {
-				generateResult := factory.Generate(config, registry)
+				generateResult := factory.Generate(resolver)
 				Expect(generateResult == instance).To(BeTrue(),
 					fmt.Sprintf("generateResult (%p) should point to the same instance as instance (%p)", generateResult, instance),
 				)
@@ -47,7 +44,7 @@ var _ = Describe("InstanceType", func() {
 
 		It("should panic if is called with nil", func() {
 			factory := &goldi.InstanceType{}
-			Expect(func() { factory.Generate(config, registry) }).To(Panic())
+			Expect(func() { factory.Generate(resolver) }).To(Panic())
 		})
 	})
 

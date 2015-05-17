@@ -8,16 +8,18 @@ import "fmt"
 // of how to build individual services. Additionally this implements the laziness of the DI using a simple in memory type cache
 type Container struct {
 	TypeRegistry
-	config    map[string]interface{}
-	typeCache map[string]interface{}
+	config            map[string]interface{}
+	parameterResolver *ParameterResolver
+	typeCache         map[string]interface{}
 }
 
 // NewContainer creates a new container instance using the provided arguments
 func NewContainer(registry TypeRegistry, config map[string]interface{}) *Container {
 	return &Container{
-		TypeRegistry: registry,
-		config:       config,
-		typeCache:    map[string]interface{}{},
+		TypeRegistry:      registry,
+		config:            config,
+		parameterResolver: NewParameterResolver(config, registry),
+		typeCache:         map[string]interface{}{},
 	}
 }
 
@@ -42,7 +44,7 @@ func (c *Container) Get(typeID string) interface{} {
 		panic(fmt.Errorf("could not get type %q : no such type has been defined", typeID))
 	}
 
-	t = generator.Generate(c.config, c.TypeRegistry)
+	t = generator.Generate(c.parameterResolver)
 	c.typeCache[typeID] = t
 	return t
 }

@@ -67,9 +67,7 @@ func (t *StructType) Arguments() []interface{} {
 }
 
 // Generate will instantiate a new instance of the according type.
-// The given configuration is used to resolve parameters that are used in the type factory method
-// The type registry is used to lazily resolve type references
-func (t *StructType) Generate(config map[string]interface{}, registry TypeRegistry) interface{} {
+func (t *StructType) Generate(parameterResolver *ParameterResolver) interface{} {
 	defer func() {
 		if r := recover(); r != nil {
 			panic(fmt.Errorf("could not generate type: %v", r))
@@ -80,8 +78,7 @@ func (t *StructType) Generate(config map[string]interface{}, registry TypeRegist
 		panic("this struct type is not initialized. Did you use NewStructType to create it?")
 	}
 
-	args := t.generateTypeFields(config, registry)
-
+	args := t.generateTypeFields(parameterResolver)
 	newStructInstance := reflect.New(t.structType)
 	for i := 0; i < len(args); i++ {
 		newStructInstance.Elem().Field(i).Set(args[i])
@@ -90,56 +87,25 @@ func (t *StructType) Generate(config map[string]interface{}, registry TypeRegist
 	return newStructInstance.Interface()
 }
 
-func (t *StructType) generateTypeFields(config map[string]interface{}, registry TypeRegistry) []reflect.Value {
+func (t *StructType) generateTypeFields(parameterResolver *ParameterResolver) []reflect.Value {
 	args := make([]reflect.Value, len(t.structFields))
+	var err error
+
 	for i, argument := range t.structFields {
 		expectedArgument := t.structType.Field(i).Type
-		args[i] = t.resolveParameter(i, argument, expectedArgument, config, registry)
+		args[i], err = parameterResolver.Resolve(argument, expectedArgument)
+
+		switch errorType := err.(type) {
+		case nil:
+			continue
+		case TypeReferenceError:
+			panic(t.invalidReferencedTypeErr(errorType.TypeID, errorType.TypeInstance, i))
+		default:
+			panic(err)
+		}
 	}
 
 	return args
-}
-
-// TODO: refactor this out into a parameter resolver (inject via Generate)
-func (t *StructType) resolveParameter(i int, argument reflect.Value, expectedArgument reflect.Type, config map[string]interface{}, registry TypeRegistry) reflect.Value {
-	if argument.Kind() != reflect.String {
-		return argument
-	}
-
-	stringArgument := argument.Interface().(string)
-	if isParameterOrTypeReference(stringArgument) == false {
-		return argument
-	}
-
-	if stringArgument[0] == '@' {
-		return t.resolveTypeReference(i, stringArgument[1:], config, registry, expectedArgument)
-	}
-
-	parameterName := stringArgument[1 : len(stringArgument)-1]
-	configuredValue, isConfigured := config[parameterName]
-	if isConfigured == false {
-		return argument
-	}
-
-	argument = reflect.New(expectedArgument).Elem()
-	argument.Set(reflect.ValueOf(configuredValue))
-	return argument
-}
-
-func (t *StructType) resolveTypeReference(i int, typeID string, config map[string]interface{}, registry TypeRegistry, expectedArgument reflect.Type) reflect.Value {
-	referencedType, typeDefined := registry[typeID]
-	if typeDefined == false {
-		panic(fmt.Errorf("the referenced type \"@%s\" has not been defined", typeID))
-	}
-
-	typeInstance := referencedType.Generate(config, registry)
-	if reflect.TypeOf(typeInstance).AssignableTo(expectedArgument) == false {
-		panic(t.invalidReferencedTypeErr(typeID, typeInstance, i))
-	}
-
-	argument := reflect.New(expectedArgument).Elem()
-	argument.Set(reflect.ValueOf(typeInstance))
-	return argument
 }
 
 func (t *StructType) invalidReferencedTypeErr(typeID string, typeInstance interface{}, i int) error {

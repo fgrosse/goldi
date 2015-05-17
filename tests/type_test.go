@@ -94,10 +94,12 @@ var _ = Describe("Type", func() {
 		var (
 			config       = map[string]interface{}{}
 			typeRegistry goldi.TypeRegistry
+			resolver     *goldi.ParameterResolver
 		)
 
 		BeforeEach(func() {
 			typeRegistry = goldi.NewTypeRegistry()
+			resolver = goldi.NewParameterResolver(config, typeRegistry)
 		})
 
 		It("should panic if Generate is called on an uninitialized type", func() {
@@ -110,13 +112,13 @@ var _ = Describe("Type", func() {
 				Expect(err.Error()).To(Equal("could not generate type: this type is not initialized. Did you use NewType to create it?"))
 			}()
 
-			typeDef.Generate(config, typeRegistry)
+			typeDef.Generate(resolver)
 		})
 
 		Context("without factory function arguments", func() {
 			It("should generate the type", func() {
 				typeDef = goldi.NewType(testAPI.NewMockType)
-				Expect(typeDef.Generate(config, typeRegistry)).To(BeAssignableToTypeOf(&testAPI.MockType{}))
+				Expect(typeDef.Generate(resolver)).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 			})
 		})
 
@@ -124,7 +126,7 @@ var _ = Describe("Type", func() {
 			It("should generate the type", func() {
 				typeDef = goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", true)
 
-				generatedType := typeDef.Generate(config, typeRegistry)
+				generatedType := typeDef.Generate(resolver)
 				Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 
 				generatedMock := generatedType.(*testAPI.MockType)
@@ -138,7 +140,7 @@ var _ = Describe("Type", func() {
 						typeRegistry.RegisterType("foo", testAPI.NewMockType)
 						typeDef = goldi.NewType(testAPI.NewTypeForServiceInjection, "@foo")
 
-						generatedType := typeDef.Generate(config, typeRegistry)
+						generatedType := typeDef.Generate(resolver)
 						Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.TypeForServiceInjection{}))
 
 						generatedMock := generatedType.(*testAPI.TypeForServiceInjection)
@@ -159,7 +161,7 @@ var _ = Describe("Type", func() {
 							Expect(err.Error()).To(Equal("could not generate type: the referenced type \"@foo\" (type *testAPI.Foo) can not be passed as argument 1 to the function signature testAPI.NewTypeForServiceInjectionWithArgs(*testAPI.MockType, string, string, bool)"))
 						}()
 
-						typeDef.Generate(config, typeRegistry)
+						typeDef.Generate(resolver)
 					})
 				})
 			})

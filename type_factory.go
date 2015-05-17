@@ -10,7 +10,5 @@ type TypeFactory interface {
 	Arguments() []interface{}
 
 	// Generate will instantiate a new instance of the according type.
-	// The given configuration is used to resolve parameters.
-	// The type registry can be used to lazily resolve type references.
-	Generate(config map[string]interface{}, registry TypeRegistry) interface{}
+	Generate(parameterResolver *ParameterResolver) interface{}
 }
