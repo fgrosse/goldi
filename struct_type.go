@@ -6,7 +6,7 @@ import (
 )
 
 // A StructType holds all information that is necessary to create a new instance of some struct type.
-// It implements the TypeFactory interface.
+// StructType implements the TypeFactory interface.
 type StructType struct {
 	structType   reflect.Type
 	structFields []reflect.Value
@@ -134,7 +134,6 @@ func (t *StructType) resolveTypeReference(i int, typeID string, config map[strin
 }
 
 func (t *StructType) invalidReferencedTypeErr(typeID string, typeInstance interface{}, i int) error {
-	// TODO write test for this
 	err := fmt.Errorf("the referenced type \"@%s\" (type %T) can not be used as field %d for struct type %v",
 		typeID, typeInstance, i+1, t.structType,
 	)

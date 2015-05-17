@@ -12,6 +12,13 @@ import (
 var _ = Describe("Type", func() {
 	var typeDef *goldi.Type
 
+	It("should implement the TypeFactory interface", func() {
+		var factory goldi.TypeFactory
+		factory = goldi.NewType(testAPI.NewFoo)
+		// if this compiles the test passes (next expectation only to make compiler happy)
+		Expect(factory).NotTo(BeNil())
+	})
+
 	Describe("NewType()", func() {
 		Context("with invalid factory function", func() {
 			It("should panic if the generator is no function", func() {

@@ -8,7 +8,7 @@ import (
 )
 
 // A Type holds all information that is necessary to create a new instance of a type.
-// It implements the TypeFactory interface.
+// Type implements the TypeFactory interface.
 type Type struct {
 	factory          reflect.Value
 	factoryType      reflect.Type

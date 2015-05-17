@@ -43,4 +43,11 @@ var _ = Describe("InstanceType", func() {
 			Expect(func() { factory.Generate(config, registry) }).To(Panic())
 		})
 	})
+
+	It("should implement the TypeFactory interface", func() {
+		var factory goldi.TypeFactory
+		factory = goldi.NewInstanceType("foo")
+		// if this compiles the test passes (next expectation only to make compiler happy)
+		Expect(factory).NotTo(BeNil())
+	})
 })

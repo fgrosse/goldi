@@ -13,6 +13,13 @@ import (
 var _ = Describe("StructType", func() {
 	var typeDef *goldi.StructType
 
+	It("should implement the TypeFactory interface", func() {
+		var factory goldi.TypeFactory
+		factory = goldi.NewStructType(testAPI.Foo{})
+		// if this compiles the test passes (next expectation only to make compiler happy)
+		Expect(factory).NotTo(BeNil())
+	})
+
 	Describe("NewStructType()", func() {
 		Context("with invalid arguments", func() {
 			It("should panic if the generator is no struct or pointer to a struct", func() {
@@ -129,6 +136,38 @@ var _ = Describe("StructType", func() {
 				generatedMock := generatedType.(*testAPI.MockType)
 				Expect(generatedMock.StringParameter).To(Equal("TEST"))
 				Expect(generatedMock.BoolParameter).To(Equal(true))
+			})
+
+			Context("when a type reference is given", func() {
+				Context("and its type matches the struct field type", func() {
+					It("should generate the type", func() {
+						typeRegistry.RegisterType("foo", testAPI.NewMockType)
+						typeDef = goldi.NewStructType(testAPI.TypeForServiceInjection{}, "@foo")
+
+						generatedType := typeDef.Generate(config, typeRegistry)
+						Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.TypeForServiceInjection{}))
+
+						generatedMock := generatedType.(*testAPI.TypeForServiceInjection)
+						Expect(generatedMock.InjectedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
+					})
+				})
+
+				Context("and its type does not match the function signature", func() {
+					It("should panic with a helpful error message", func() {
+						typeRegistry.RegisterType("foo", testAPI.NewFoo)
+						typeDef = goldi.NewStructType(testAPI.TypeForServiceInjection{}, "@foo")
+
+						defer func() {
+							r := recover()
+							Expect(r).NotTo(BeNil(), "Expected Generate to panic")
+							Expect(r).To(BeAssignableToTypeOf(errors.New("")))
+							err := r.(error)
+							Expect(err.Error()).To(Equal("could not generate type: the referenced type \"@foo\" (type *testAPI.Foo) can not be used as field 1 for struct type testAPI.TypeForServiceInjection"))
+						}()
+
+						typeDef.Generate(config, typeRegistry)
+					})
+				})
 			})
 		})
 	})
