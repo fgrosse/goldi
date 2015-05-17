@@ -1,6 +1,9 @@
 package goldi
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
 // The TypeRegistry is effectively a map of typeID strings to TypeFactory
 type TypeRegistry map[string]TypeFactory
@@ -11,18 +14,25 @@ func NewTypeRegistry() TypeRegistry {
 }
 
 // RegisterType is convenience method for TypeRegistry.Register
-// It creates a new Type from the given generatorFunction and arguments and passes this to TypeRegistry.Register
-// If the underlying Type can not be built with the given arguments (e.g. NewType panics) an error is returned
-func (r TypeRegistry) RegisterType(typeID string, generatorFunction interface{}, arguments ...interface{}) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("could not register type: %s", r)
-		}
-	}()
+// It creates a new Type from the given factory and its arguments and passes this to TypeRegistry.Register
+// This function panics if the given generator function and arguments can not be used to create a new type factory.
+func (r TypeRegistry) RegisterType(typeID string, factory interface{}, arguments ...interface{}) {
+	var typeFactory TypeFactory
 
-	t := NewType(generatorFunction, arguments...)
-	r.Register(typeID, t)
-	return nil
+	factoryType := reflect.TypeOf(factory)
+	kind := factoryType.Kind()
+	switch {
+	case kind == reflect.Struct:
+		fallthrough
+	case kind == reflect.Ptr && factoryType.Elem().Kind() == reflect.Struct:
+		typeFactory = NewStructType(factory, arguments...)
+	case kind == reflect.Func:
+		typeFactory = NewType(factory, arguments...)
+	default:
+		panic(fmt.Errorf("could not register type %q: could not determine TypeFactory for factory type %T", factory))
+	}
+
+	r.Register(typeID, typeFactory)
 }
 
 // Register saves a type under the given symbolic typeID so it can be retrieved later.

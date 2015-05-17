@@ -2,29 +2,26 @@ package goldi
 
 import (
 	"fmt"
-	"math"
 	"reflect"
 	"runtime"
 	"strings"
 )
 
-// A Type holds all information that is necessary to create a new instance of a type ID.
+// A Type holds all information that is necessary to create a new instance of a type.
 // It implements the TypeFactory interface.
 type Type struct {
 	factory          reflect.Value
 	factoryType      reflect.Type
 	factoryArguments []reflect.Value
-	isFactoryMethod  bool
 }
 
-// NewType creates a new Type and checks if the given factory method can be used get a go type
+// NewType creates a new Type.
 //
-// This function will panic if the factoryFunction:
-//   - is no function or pointer to a struct,
-//   - returns zero or more than one parameter
-//   - the return parameter is no pointer or interface type.
-//   - the number of given factoryParameters does not match the number of arguments of the
-//     factoryFunction (factory function only)
+// This function will panic if:
+//   - the factoryFunction is no function,
+//   - the factoryFunction returns zero or more than one parameter
+//   - the factoryFunctions return parameter is no pointer or interface type.
+//   - the number of given factoryParameters does not match the number of arguments of the factoryFunction
 func NewType(factoryFunction interface{}, factoryParameters ...interface{}) *Type {
 	defer func() {
 		if r := recover(); r != nil {
@@ -35,32 +32,10 @@ func NewType(factoryFunction interface{}, factoryParameters ...interface{}) *Typ
 	factoryType := reflect.TypeOf(factoryFunction)
 	kind := factoryType.Kind()
 	switch {
-	case kind == reflect.Ptr && factoryType.Elem().Kind() == reflect.Struct:
-		return newTypeFromStruct(factoryFunction, factoryType, factoryParameters)
 	case kind == reflect.Func:
 		return newTypeFromFactoryFunction(factoryFunction, factoryType, factoryParameters)
 	default:
-		panic(fmt.Errorf("the given factory function must either be a function or a pointer to a struct (given %q)", factoryType.Kind()))
-	}
-}
-
-func newTypeFromStruct(structFactory interface{}, generatedType reflect.Type, parameters []interface{}) *Type {
-	if generatedType.Elem().NumField() < len(parameters) {
-		panic(fmt.Errorf("the struct %s has only %d fields but %d arguments where provided",
-			generatedType.Elem().Name(), generatedType.Elem().NumField(), len(parameters),
-		))
-	}
-
-	args := make([]reflect.Value, len(parameters))
-	for i, argument := range parameters {
-		args[i] = reflect.ValueOf(argument)
-	}
-
-	return &Type{
-		factory:          reflect.ValueOf(structFactory),
-		isFactoryMethod:  false,
-		factoryType:      generatedType,
-		factoryArguments: args,
+		panic(fmt.Errorf("the given factoryFunction must be a function (given %q)", factoryType.Kind()))
 	}
 }
 
@@ -80,7 +55,6 @@ func newTypeFromFactoryFunction(function interface{}, factoryType reflect.Type, 
 
 	return &Type{
 		factory:          reflect.ValueOf(function),
-		isFactoryMethod:  true,
 		factoryType:      factoryType,
 		factoryArguments: buildFactoryCallArguments(factoryType, parameters),
 	}
@@ -115,11 +89,18 @@ func (t *Type) Generate(config map[string]interface{}, registry TypeRegistry) in
 		panic("this type is not initialized. Did you use NewType to create it?")
 	}
 
-	if t.isFactoryMethod {
-		return t.generateFromFactory(config, registry)
-	} else {
-		return t.generateFromStruct(config, registry)
+	args := make([]reflect.Value, len(t.factoryArguments))
+	for i, argument := range t.factoryArguments {
+		args[i] = t.resolveParameter(i, argument, t.factoryType.In(i), config, registry)
 	}
+
+	result := t.factory.Call(args)
+	if len(result) == 0 {
+		// in theory this condition can never evaluate to true since we check the number of return arguments in NewType
+		panic(fmt.Errorf("no return parameter found. this should never ever happen ò.Ó"))
+	}
+
+	return result[0].Interface()
 }
 
 func (t *Type) generateFromFactory(config map[string]interface{}, registry TypeRegistry) interface{} {
@@ -183,10 +164,10 @@ func (t *Type) invalidReferencedTypeErr(typeID string, typeInstance interface{},
 	factoryNameParts := strings.Split(factoryName, "/")
 	factoryName = factoryNameParts[len(factoryNameParts)-1]
 
-	n := t.factory.Type().NumIn()
+	n := t.factoryType.NumIn()
 	factoryArguments := make([]string, n)
 	for i := 0; i < n; i++ {
-		arg := t.factory.Type().In(i)
+		arg := t.factoryType.In(i)
 		factoryArguments[i] = arg.String()
 	}
 
@@ -195,22 +176,6 @@ func (t *Type) invalidReferencedTypeErr(typeID string, typeInstance interface{},
 	)
 
 	return err
-}
-
-func (t *Type) generateFromStruct(config map[string]interface{}, registry TypeRegistry) interface{} {
-	args := make([]reflect.Value, len(t.factoryArguments))
-	for i, argument := range t.factoryArguments {
-		expectedArgument := t.factory.Elem().Field(i).Type()
-		args[i] = t.resolveParameter(i, argument, expectedArgument, config, registry)
-	}
-
-	factory := reflect.New(t.factory.Elem().Type())
-	n := int(math.Min(float64(factory.Elem().NumField()), float64(len(args))))
-	for i := 0; i < n; i++ {
-		factory.Elem().Field(i).Set(args[i])
-	}
-
-	return factory.Interface()
 }
 
 // typeReferenceArguments is an internal function that returns all factory arguments that are type references

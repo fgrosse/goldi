@@ -4,7 +4,7 @@ type Foo struct{}
 type Bar struct{}
 
 type Baz struct {
-	parameter1, parameter2 string
+	Parameter1, Parameter2 string
 }
 
 func NewFoo() *Foo {

@@ -26,14 +26,14 @@ var _ = Describe("Container", func() {
 	})
 
 	It("should resolve simple types", func() {
-		Expect(registry.RegisterType("goldi.test_type", testAPI.NewMockType)).To(Succeed())
+		registry.RegisterType("goldi.test_type", testAPI.NewMockType)
 		Expect(container.Get("goldi.test_type")).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 	})
 
 	It("should build the types lazily", func() {
 		typeID := "goldi.test_type"
 		generator := &testAPI.MockTypeFactory{}
-		Expect(registry.RegisterType(typeID, generator.NewMockType)).To(Succeed())
+		registry.RegisterType(typeID, generator.NewMockType)
 
 		generatorWrapper, typeIsRegistered := registry[typeID]
 		Expect(typeIsRegistered).To(BeTrue())
@@ -47,7 +47,7 @@ var _ = Describe("Container", func() {
 	It("should build the types as singletons (one instance per type ID)", func() {
 		typeID := "goldi.test_type"
 		generator := &testAPI.MockTypeFactory{}
-		Expect(registry.RegisterType(typeID, generator.NewMockType)).To(Succeed())
+		registry.RegisterType(typeID, generator.NewMockType)
 
 		generatorWrapper, typeIsRegistered := registry[typeID]
 		Expect(typeIsRegistered).To(BeTrue())
