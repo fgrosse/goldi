@@ -76,7 +76,7 @@ func buildFactoryCallArguments(factoryType reflect.Type, factoryParameters []int
 }
 
 // Arguments returns all factory parameters from NewType
-// TODO write test
+// TEST: write tests
 func (t *Type) Arguments() []interface{} {
 	args := make([]interface{}, len(t.factoryArguments))
 	for i, argument := range t.factoryArguments {

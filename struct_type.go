@@ -47,7 +47,7 @@ func newTypeFromStruct(generatedType reflect.Type, parameters []interface{}) *St
 
 	args := make([]reflect.Value, len(parameters))
 	for i, argument := range parameters {
-		// TODO check argument types
+		// TODO: check argument types
 		args[i] = reflect.ValueOf(argument)
 	}
 
@@ -58,7 +58,7 @@ func newTypeFromStruct(generatedType reflect.Type, parameters []interface{}) *St
 }
 
 // Arguments returns all struct parameters from NewStructType
-// TODO write test
+// TEST: write tests
 func (t *StructType) Arguments() []interface{} {
 	args := make([]interface{}, len(t.structFields))
 	for i, argument := range t.structFields {
@@ -101,7 +101,7 @@ func (t *StructType) generateTypeFields(config map[string]interface{}, registry 
 	return args
 }
 
-// TODO refactor this out into a parameter resolver
+// TODO: refactor this out into a parameter resolver (inject via Generate)
 func (t *StructType) resolveParameter(i int, argument reflect.Value, expectedArgument reflect.Type, config map[string]interface{}, registry TypeRegistry) reflect.Value {
 	if argument.Kind() != reflect.String {
 		return argument

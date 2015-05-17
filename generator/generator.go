@@ -38,6 +38,8 @@ func (g *Generator) Generate(input io.Reader, output io.Writer, inputName, outpu
 	g.generateImports(conf, output, outputPackageName)
 	g.generateGoldiGenComment(inputName, output)
 	g.generateTypeRegistrationFunction(conf, output, outputPackageName)
+
+	// TODO: once done check if the output is valid go code
 	return nil
 }
 
@@ -106,6 +108,7 @@ func (g *Generator) generateGoldiGenComment(inputName string, output io.Writer) 
 	fmt.Fprintf(output, "// See https://github.com/fgrosse/goldi for what is going on here.\n")
 }
 
+// TODO the function should defer panic handling and return an error if a panic occurred during type registration
 func (g *Generator) generateTypeRegistrationFunction(conf *TypesConfiguration, output io.Writer, outputPackageName string) {
 	fmt.Fprintf(output, "func %s(types goldi.TypeRegistry) {\n", g.Config.FunctionName())
 	typeIDs := make([]string, len(conf.Types))
@@ -118,6 +121,7 @@ func (g *Generator) generateTypeRegistrationFunction(conf *TypesConfiguration, o
 
 	var factoryMethod string
 	for _, typeID := range typeIDs {
+		// TODO if no factory is given use the type
 		typeDef := conf.Types[typeID]
 		if typeDef.Package == outputPackageName {
 			factoryMethod = typeDef.FactoryMethod

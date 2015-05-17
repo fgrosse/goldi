@@ -19,6 +19,7 @@ func (t *TypeDefinition) Validate(typeID string) error {
 		return err
 	}
 
+	// TODO this field is only required if no type is given
 	if err := t.requireField("factory", t.FactoryMethod, typeID); err != nil {
 		return err
 	}
