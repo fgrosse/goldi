@@ -82,6 +82,14 @@ var _ = Describe("Type", func() {
 		})
 	})
 
+	Describe("Arguments()", func() {
+		It("should return all factory arguments", func() {
+			args := []interface{}{"foo", true}
+			typeDef = goldi.NewType(testAPI.NewMockTypeWithArgs, args...)
+			Expect(typeDef.Arguments()).To(Equal(args))
+		})
+	})
+
 	Describe("Generate()", func() {
 		var (
 			config       = map[string]interface{}{}

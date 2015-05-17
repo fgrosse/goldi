@@ -25,6 +25,13 @@ var _ = Describe("InstanceType", func() {
 		Expect(func() { goldi.NewInstanceType(nil) }).To(Panic())
 	})
 
+	Describe("Arguments()", func() {
+		It("should return an empty list", func() {
+			typeDef := goldi.NewInstanceType(testAPI.NewFoo())
+			Expect(typeDef.Arguments()).To(BeEmpty())
+		})
+	})
+
 	Describe("Generate", func() {
 		It("should always return the given instance", func() {
 			instance := testAPI.NewFoo()

@@ -69,6 +69,7 @@ func (v *ContainerValidator) validateTypeReferences(typeID string, container *Co
 	typeRefParameters := v.typeReferenceArguments(allArguments)
 	for _, referencedTypeID := range typeRefParameters {
 		if v.checkedTypes.Contains(referencedTypeID) {
+			// TEST: test this for improved code coverage
 			continue
 		}
 
@@ -115,6 +116,7 @@ func (v *ContainerValidator) checkCircularDependency(typeFactory TypeFactory, ty
 	for _, referencedTypeID := range typeRefParameters {
 		referencedType, err := v.checkTypeIsDefined(typeID, referencedTypeID, container)
 		if err != nil {
+			// TEST: test this for improved code coverage
 			return nil
 		}
 

@@ -59,6 +59,14 @@ var _ = Describe("StructType", func() {
 		})
 	})
 
+	Describe("Arguments()", func() {
+		It("should return all factory arguments", func() {
+			args := []interface{}{"foo", true}
+			typeDef = goldi.NewStructType(testAPI.MockType{}, args...)
+			Expect(typeDef.Arguments()).To(Equal(args))
+		})
+	})
+
 	Describe("Generate()", func() {
 		var (
 			config       = map[string]interface{}{}

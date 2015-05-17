@@ -76,7 +76,6 @@ func buildFactoryCallArguments(factoryType reflect.Type, factoryParameters []int
 }
 
 // Arguments returns all factory parameters from NewType
-// TEST: write tests
 func (t *Type) Arguments() []interface{} {
 	args := make([]interface{}, len(t.factoryArguments))
 	for i, argument := range t.factoryArguments {
@@ -113,21 +112,6 @@ func (t *Type) Generate(config map[string]interface{}, registry TypeRegistry) in
 	return result[0].Interface()
 }
 
-func (t *Type) generateFromFactory(config map[string]interface{}, registry TypeRegistry) interface{} {
-	args := make([]reflect.Value, len(t.factoryArguments))
-	for i, argument := range t.factoryArguments {
-		args[i] = t.resolveParameter(i, argument, t.factoryType.In(i), config, registry)
-	}
-
-	result := t.factory.Call(args)
-	if len(result) == 0 {
-		// in theory this condition can never evaluate to true since we check the number of return arguments in NewType
-		panic(fmt.Errorf("no return parameter found. this should never ever happen ò.Ó"))
-	}
-
-	return result[0].Interface()
-}
-
 func (t *Type) resolveParameter(i int, argument reflect.Value, expectedArgument reflect.Type, config map[string]interface{}, registry TypeRegistry) reflect.Value {
 	if argument.Kind() != reflect.String {
 		return argument
@@ -145,6 +129,7 @@ func (t *Type) resolveParameter(i int, argument reflect.Value, expectedArgument 
 	parameterName := stringArgument[1 : len(stringArgument)-1]
 	configuredValue, isConfigured := config[parameterName]
 	if isConfigured == false {
+		// TEST: test this for improved code coverage
 		return argument
 	}
 
@@ -156,6 +141,7 @@ func (t *Type) resolveParameter(i int, argument reflect.Value, expectedArgument 
 func (t *Type) resolveTypeReference(i int, typeID string, config map[string]interface{}, registry TypeRegistry, expectedArgument reflect.Type) reflect.Value {
 	referencedType, typeDefined := registry[typeID]
 	if typeDefined == false {
+		// TEST: test this for improved code coverage
 		panic(fmt.Errorf("the referenced type \"@%s\" has not been defined", typeID))
 	}
 
@@ -194,6 +180,7 @@ func isParameterOrTypeReference(p string) bool {
 
 func isParameter(p string) bool {
 	if len(p) < 2 {
+		// TEST: test this for improved code coverage
 		return false
 	}
 
@@ -202,6 +189,7 @@ func isParameter(p string) bool {
 
 func isTypeReference(p string) bool {
 	if len(p) < 2 {
+		// TEST: test this for improved code coverage
 		return false
 	}
 

@@ -58,7 +58,6 @@ func newTypeFromStruct(generatedType reflect.Type, parameters []interface{}) *St
 }
 
 // Arguments returns all struct parameters from NewStructType
-// TEST: write tests
 func (t *StructType) Arguments() []interface{} {
 	args := make([]interface{}, len(t.structFields))
 	for i, argument := range t.structFields {
