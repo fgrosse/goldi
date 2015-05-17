@@ -30,22 +30,21 @@ func (v *ContainerValidator) Validate(container *Container) (err error) {
 	for typeID, typeFactory := range container.TypeRegistry {
 		// reset the validation type cache
 		v.checkedTypes = StringSet{}
+		allArguments := typeFactory.Arguments()
 
-		if typeDef, isType := typeFactory.(*Type); isType {
-			if err = v.validateTypeParameters(typeID, typeDef, container); err != nil {
-				return err
-			}
+		if err = v.validateTypeParameters(typeID, container, allArguments); err != nil {
+			return err
+		}
 
-			if err = v.validateTypeReferences(typeID, typeDef, container); err != nil {
-				return err
-			}
+		if err = v.validateTypeReferences(typeID, container, allArguments); err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
-func (v *ContainerValidator) validateTypeParameters(typeID string, typeDef *Type, container *Container) error {
-	typeParameters := typeDef.parameterArguments()
+func (v *ContainerValidator) validateTypeParameters(typeID string, container *Container, allArguments []interface{}) error {
+	typeParameters := v.parameterArguments(allArguments)
 	for _, parameterName := range typeParameters {
 		_, isParameterDefined := container.config[parameterName]
 		if isParameterDefined == false {
@@ -55,10 +54,22 @@ func (v *ContainerValidator) validateTypeParameters(typeID string, typeDef *Type
 	return nil
 }
 
-func (v *ContainerValidator) validateTypeReferences(typeID string, typeDef *Type, container *Container) error {
-	typeRefParameters := typeDef.typeReferenceArguments()
+func (v *ContainerValidator) parameterArguments(allArguments []interface{}) []string {
+	var parameterArguments []string
+	for _, argument := range allArguments {
+		stringArgument, isString := argument.(string)
+		if isString && isParameter(stringArgument) {
+			parameterArguments = append(parameterArguments, stringArgument[1:len(stringArgument)-1])
+		}
+	}
+	return parameterArguments
+}
+
+func (v *ContainerValidator) validateTypeReferences(typeID string, container *Container, allArguments []interface{}) error {
+	typeRefParameters := v.typeReferenceArguments(allArguments)
 	for _, referencedTypeID := range typeRefParameters {
 		if v.checkedTypes.Contains(referencedTypeID) {
+			// TEST: test this for improved code coverage
 			continue
 		}
 
@@ -78,6 +89,17 @@ func (v *ContainerValidator) validateTypeReferences(typeID string, typeDef *Type
 	return nil
 }
 
+func (v *ContainerValidator) typeReferenceArguments(allArguments []interface{}) []string {
+	var typeRefParameters []string
+	for _, argument := range allArguments {
+		stringArgument, isString := argument.(string)
+		if isString && isTypeReference(stringArgument) {
+			typeRefParameters = append(typeRefParameters, stringArgument[1:])
+		}
+	}
+	return typeRefParameters
+}
+
 func (v *ContainerValidator) checkTypeIsDefined(typeID, referencedTypeID string, container *Container) (TypeFactory, error) {
 	typeDef, isDefined := container.TypeRegistry[referencedTypeID]
 	if isDefined == false {
@@ -88,15 +110,13 @@ func (v *ContainerValidator) checkTypeIsDefined(typeID, referencedTypeID string,
 }
 
 func (v *ContainerValidator) checkCircularDependency(typeFactory TypeFactory, typeID string, container *Container) error {
-	typeDef, isType := typeFactory.(*Type)
-	if isType == false {
-		return nil
-	}
+	allArguments := typeFactory.Arguments()
+	typeRefParameters := v.typeReferenceArguments(allArguments)
 
-	typeRefParameters := typeDef.typeReferenceArguments()
 	for _, referencedTypeID := range typeRefParameters {
 		referencedType, err := v.checkTypeIsDefined(typeID, referencedTypeID, container)
 		if err != nil {
+			// TEST: test this for improved code coverage
 			return nil
 		}
 
