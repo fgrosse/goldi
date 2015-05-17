@@ -14,7 +14,7 @@ func NewTypeRegistry() TypeRegistry {
 }
 
 // RegisterType is convenience method for TypeRegistry.Register
-// It creates a new Type from the given factory and its arguments and passes this to TypeRegistry.Register
+// It tries to create the correct TypeFactory and passes this to TypeRegistry.Register
 // This function panics if the given generator function and arguments can not be used to create a new type factory.
 func (r TypeRegistry) RegisterType(typeID string, factory interface{}, arguments ...interface{}) {
 	var typeFactory TypeFactory

@@ -75,6 +75,16 @@ func buildFactoryCallArguments(factoryType reflect.Type, factoryParameters []int
 	return args
 }
 
+// Arguments returns all factory parameters from NewType
+// TODO write test
+func (t *Type) Arguments() []interface{} {
+	args := make([]interface{}, len(t.factoryArguments))
+	for i, argument := range t.factoryArguments {
+		args[i] = argument.Interface()
+	}
+	return args
+}
+
 // Generate will instantiate a new instance of the according type.
 // The given configuration is used to resolve parameters that are used in the type factory method
 // The type registry is used to lazily resolve type references
@@ -128,7 +138,7 @@ func (t *Type) resolveParameter(i int, argument reflect.Value, expectedArgument 
 		return argument
 	}
 
-	if stringArgument[0] == '@' {
+	if isTypeReference(stringArgument) {
 		return t.resolveTypeReference(i, stringArgument[1:], config, registry, expectedArgument)
 	}
 
@@ -176,30 +186,6 @@ func (t *Type) invalidReferencedTypeErr(typeID string, typeInstance interface{},
 	)
 
 	return err
-}
-
-// typeReferenceArguments is an internal function that returns all factory arguments that are type references
-func (t *Type) typeReferenceArguments() []string {
-	var typeRefParameters []string
-	for _, argument := range t.factoryArguments {
-		stringArgument := argument.Interface().(string)
-		if isTypeReference(stringArgument) {
-			typeRefParameters = append(typeRefParameters, stringArgument[1:])
-		}
-	}
-	return typeRefParameters
-}
-
-// parameterArguments is an internal function that returns all factory arguments that are parameters
-func (t *Type) parameterArguments() []string {
-	var parameterArguments []string
-	for _, argument := range t.factoryArguments {
-		stringArgument := argument.Interface().(string)
-		if isParameter(stringArgument) {
-			parameterArguments = append(parameterArguments, stringArgument[1:len(stringArgument)-1])
-		}
-	}
-	return parameterArguments
 }
 
 func isParameterOrTypeReference(p string) bool {

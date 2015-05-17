@@ -57,6 +57,16 @@ func newTypeFromStruct(generatedType reflect.Type, parameters []interface{}) *St
 	}
 }
 
+// Arguments returns all struct parameters from NewStructType
+// TODO write test
+func (t *StructType) Arguments() []interface{} {
+	args := make([]interface{}, len(t.structFields))
+	for i, argument := range t.structFields {
+		args[i] = argument.Interface()
+	}
+	return args
+}
+
 // Generate will instantiate a new instance of the according type.
 // The given configuration is used to resolve parameters that are used in the type factory method
 // The type registry is used to lazily resolve type references
@@ -139,30 +149,4 @@ func (t *StructType) invalidReferencedTypeErr(typeID string, typeInstance interf
 	)
 
 	return err
-}
-
-// typeReferenceArguments is an internal function that returns all factory arguments that are type references
-// TODO the container validator needs this. refactor this code duplication!
-func (t *StructType) typeReferenceArguments() []string {
-	var typeRefParameters []string
-	for _, argument := range t.structFields {
-		stringArgument := argument.Interface().(string)
-		if isTypeReference(stringArgument) {
-			typeRefParameters = append(typeRefParameters, stringArgument[1:])
-		}
-	}
-	return typeRefParameters
-}
-
-// parameterArguments is an internal function that returns all factory arguments that are parameters
-// TODO the container validator needs this. refactor this code duplication!
-func (t *StructType) parameterArguments() []string {
-	var parameterArguments []string
-	for _, argument := range t.structFields {
-		stringArgument := argument.Interface().(string)
-		if isParameter(stringArgument) {
-			parameterArguments = append(parameterArguments, stringArgument[1:len(stringArgument)-1])
-		}
-	}
-	return parameterArguments
 }
