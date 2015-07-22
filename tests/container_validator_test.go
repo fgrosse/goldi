@@ -77,4 +77,26 @@ var _ = Describe("ContainerValidator", func() {
 
 		Expect(validator.Validate(container)).To(Succeed())
 	})
+
+	Describe("MustValidate", func() {
+		It("should panic if an error occurs", func() {
+			typeDef := goldi.NewType(testAPI.NewMockTypeWithArgs, "hello world", "%param%")
+			registry.Register("goldi.main_type", typeDef)
+
+			Expect(func() {validator.MustValidate(container)}).To(Panic())
+		})
+
+		It("should not panic if everything is ok", func() {
+			config["param"] = true
+			injectedTypeID := "goldi.injected_type"
+			typeDef1 := goldi.NewType(testAPI.NewMockTypeWithArgs, "hello world", "%param%")
+			registry.Register(injectedTypeID, typeDef1)
+
+			otherTypeID := "goldi.main_type"
+			typeDef2 := goldi.NewType(testAPI.NewTypeForServiceInjection, "@goldi.injected_type")
+			registry.Register(otherTypeID, typeDef2)
+
+			Expect(func() {validator.MustValidate(container)}).NotTo(Panic())
+		})
+	})
 })

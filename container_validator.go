@@ -16,6 +16,13 @@ func NewContainerValidator() *ContainerValidator {
 	return &ContainerValidator{}
 }
 
+// MustValidate behaves exactly as ContainerValidator.Validate but panics if an error occurrs
+func (v *ContainerValidator) MustValidate(container *Container) {
+	if err := v.Validate(container); err != nil {
+		panic(err)
+	}
+}
+
 // Validate checks if the given container contains any type that fails any of the following checks:
 // * it uses a parameter that has not been defined
 // * it references a type that has not been defined
