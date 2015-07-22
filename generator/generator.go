@@ -121,13 +121,8 @@ func (g *Generator) generateTypeRegistrationFunction(conf *TypesConfiguration, o
 
 	var factoryMethod string
 	for _, typeID := range typeIDs {
-		// TODO if no factory is given use the type
 		typeDef := conf.Types[typeID]
-		if typeDef.Package == outputPackageName {
-			factoryMethod = typeDef.FactoryMethod
-		} else {
-			factoryMethod = fmt.Sprintf("%s.%s", typeDef.PackageName(), typeDef.FactoryMethod)
-		}
+		factoryMethod = typeDef.Factory(outputPackageName)
 
 		arguments := []string{
 			fmt.Sprintf("%q", typeID),

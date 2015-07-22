@@ -13,15 +13,34 @@ type TypeDefinition struct {
 	RawArguments  []interface{} `yaml:"arguments,omitempty"`
 }
 
+func (t *TypeDefinition) Factory(outputPackageName string) string {
+	var factoryMethod string
+
+	if t.FactoryMethod != "" {
+		factoryMethod = t.FactoryMethod
+		if t.Package != outputPackageName {
+			factoryMethod = fmt.Sprintf("%s.%s", t.PackageName(), t.FactoryMethod)
+		}
+	} else if t.TypeName != "" {
+		factoryMethod = fmt.Sprintf("%s{}", t.TypeName)
+		if t.Package != outputPackageName {
+			factoryMethod = fmt.Sprintf("%s.%s{}", t.PackageName(), t.TypeName)
+		}
+	}
+
+	return factoryMethod
+}
+
 // Validate checks if this type definition contains all required fields
 func (t *TypeDefinition) Validate(typeID string) error {
 	if err := t.requireField("package", t.Package, typeID); err != nil {
 		return err
 	}
 
-	// TODO this field is only required if no type is given
-	if err := t.requireField("factory", t.FactoryMethod, typeID); err != nil {
-		return err
+	if t.TypeName == "" {
+		if err := t.requireField("factory", t.FactoryMethod, typeID); err != nil {
+			return err
+		}
 	}
 
 	return nil

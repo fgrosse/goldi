@@ -8,7 +8,32 @@ import (
 )
 
 var _ = Describe("TypeDefinition", func() {
-	It("should return an error if a type definition is missing the factory method", func() {
+	Describe("Validate", func() {
+		It("should not return an error if the definition contains a factory method", func() {
+			t := generator.TypeDefinition{
+				Package:       "foo/bar",
+				FactoryMethod: "NewBaz",
+			}
+			Expect(t.Validate("foobar")).To(Succeed())
+		})
+
+		It("should not return an error if the definition contains a type name", func() {
+			t := generator.TypeDefinition{
+				Package:  "foo/bar",
+				TypeName: "Baz",
+			}
+			Expect(t.Validate("foobar")).To(Succeed())
+		})
+
+		It("should return an error if the definition contains neither a factory method nor a type name", func() {
+			t := generator.TypeDefinition{
+				Package: "foo/bar",
+			}
+			Expect(t.Validate("foobar")).NotTo(Succeed())
+		})
+	})
+
+	It("should return the package name", func() {
 		t := generator.TypeDefinition{
 			Package:       "foo/bar",
 			FactoryMethod: "NewBaz",
@@ -38,5 +63,25 @@ var _ = Describe("TypeDefinition", func() {
 		Expect(arguments[3]).To(Equal(`3.1415`))
 		Expect(arguments[4]).To(Equal(`"%some_parameter%"`))
 		Expect(arguments[5]).To(Equal("\"Hello\t\tWorld\""))
+	})
+
+	Describe("Factory", func() {
+		It("should return the factory function", func() {
+			t := generator.TypeDefinition{
+				Package:       "foo/bar",
+				FactoryMethod: "NewBaz",
+			}
+			Expect(t.Factory("some/package/lib")).To(Equal("bar.NewBaz"))
+			Expect(t.Factory("foo/bar")).To(Equal("NewBaz"))
+		})
+
+		It("should return the type struct if no factory function is given", func() {
+			t := generator.TypeDefinition{
+				Package:  "foo/bar",
+				TypeName: "Baz",
+			}
+			Expect(t.Factory("some/package/lib")).To(Equal("bar.Baz{}"))
+			Expect(t.Factory("foo/bar")).To(Equal("Baz{}"))
+		})
 	})
 })

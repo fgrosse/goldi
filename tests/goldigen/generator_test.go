@@ -28,6 +28,10 @@ var _ = Describe("Generator", func() {
 					package: github.com/fgrosse/graphigo
 					type:    Graphigo
 					factory: NewClient
+
+				simple.struct:
+					package: github.com/fgrosse/foobar
+					type:    MyStruct
 		`
 	)
 
@@ -74,6 +78,7 @@ var _ = Describe("Generator", func() {
 			func RegisterTypes(types goldi.TypeRegistry) {
 				types.RegisterType("goldi.test.foo", NewFoo)
 				types.RegisterType("graphigo.client", graphigo.NewClient)
+				types.RegisterType("simple.struct", foobar.MyStruct{})
 			}
 		`))
 	})
