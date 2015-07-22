@@ -4,7 +4,6 @@ import "fmt"
 
 // InstanceType is a trivial implementation of the TypeFactory interface.
 // It will always `generate` the same instance of some previously instantiated type.
-// StructType implements the TypeFactory interface.
 type InstanceType struct {
 
 	// The Instance that this factory is going to return on each call to Generate
