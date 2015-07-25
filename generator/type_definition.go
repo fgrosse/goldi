@@ -22,9 +22,9 @@ func (t *TypeDefinition) Factory(outputPackageName string) string {
 			factoryMethod = fmt.Sprintf("%s.%s", t.PackageName(), t.FactoryMethod)
 		}
 	} else if t.TypeName != "" {
-		factoryMethod = fmt.Sprintf("%s{}", t.TypeName)
+		factoryMethod = fmt.Sprintf("new(%s)", t.TypeName)
 		if t.Package != outputPackageName {
-			factoryMethod = fmt.Sprintf("%s.%s{}", t.PackageName(), t.TypeName)
+			factoryMethod = fmt.Sprintf("new(%s.%s)", t.PackageName(), t.TypeName)
 		}
 	}
 

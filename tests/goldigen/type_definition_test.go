@@ -80,8 +80,8 @@ var _ = Describe("TypeDefinition", func() {
 				Package:  "foo/bar",
 				TypeName: "Baz",
 			}
-			Expect(t.Factory("some/package/lib")).To(Equal("bar.Baz{}"))
-			Expect(t.Factory("foo/bar")).To(Equal("Baz{}"))
+			Expect(t.Factory("some/package/lib")).To(Equal("new(bar.Baz)"))
+			Expect(t.Factory("foo/bar")).To(Equal("new(Baz)"))
 		})
 	})
 })
