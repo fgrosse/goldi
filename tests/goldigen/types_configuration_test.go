@@ -86,5 +86,21 @@ var _ = Describe("TypesConfiguration", func() {
 				Expect(c.Packages()).To(ContainElement("bar/test/package2"))
 			})
 		})
+
+		Context("with packages from the arguments appearing in the configuration", func() {
+			It("should return the packages", func() {
+				c := generator.TypesConfiguration{
+					Types: map[string]generator.TypeDefinition{
+						"some_goldi_type": generator.TypeDefinition{
+							Package: "github.com/fgrosse/goldi",
+						},
+					},
+				}
+
+				packages := c.Packages("github.com/fgrosse/goldi")
+				Expect(packages).To(HaveLen(1))
+				Expect(packages).To(ContainElement("github.com/fgrosse/goldi"))
+			})
+		})
 	})
 })

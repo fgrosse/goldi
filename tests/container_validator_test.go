@@ -99,4 +99,11 @@ var _ = Describe("ContainerValidator", func() {
 			Expect(func() {validator.MustValidate(container)}).NotTo(Panic())
 		})
 	})
+
+	Describe("TypeIsDefinedConstraint", func() {
+		It("should return an error if a type is not defined", func() {
+			constraint := goldi.NewTypeIsDefinedConstraint("this_type.does.not.exist")
+			Expect(constraint.Validate(container)).NotTo(Succeed())
+		})
+	})
 })

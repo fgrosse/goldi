@@ -36,11 +36,11 @@ func main() {
 	outputPackageName := *packageName
 	if outputPackageName == "" {
 		goPathChecker := generator.NewGoPathChecker(*verbose)
-		outputPackageName := goPathChecker.PackageName(*outputPath)
+		outputPackageName = goPathChecker.PackageName(*outputPath)
 		log("Package name for output path %q is %q", *outputPath, outputPackageName)
 	}
 
-	config := generator.NewConfig(*packageName, *functionName)
+	config := generator.NewConfig(outputPackageName, *functionName)
 	gen := generator.New(config)
 	output := &bytes.Buffer{}
 

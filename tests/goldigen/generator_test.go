@@ -30,7 +30,7 @@ var _ = Describe("Generator", func() {
 					factory: NewClient
 
 				simple.struct:
-					package: github.com/fgrosse/foobar
+					package: github.com/fgrosse/servo/example
 					type:    MyStruct
 
 				http_handler:
@@ -73,6 +73,12 @@ var _ = Describe("Generator", func() {
 			Expect(output).To(BeValidGoCode())
 			Expect(output).NotTo(ImportPackage(outputPackageName))
 		})
+
+		It("should not import type packages multuple times", func() {
+			Expect(gen.Generate(strings.NewReader(exampleYaml), output, inputName, outputPackageName)).To(Succeed())
+			Expect(output).To(BeValidGoCode())
+			Expect(output).To(ImportPackage("github.com/fgrosse/servo/example"))
+		})
 	})
 
 	It("should define the types in a global function", func() {
@@ -83,7 +89,7 @@ var _ = Describe("Generator", func() {
 				types.RegisterType("goldi.test.foo", NewFoo)
 				types.RegisterType("graphigo.client", graphigo.NewClient)
 				types.Register("http_handler", goldi.NewFuncType(example.HandleHTTP))
-				types.RegisterType("simple.struct", new(foobar.MyStruct))
+				types.RegisterType("simple.struct", new(example.MyStruct))
 			}
 		`))
 	})

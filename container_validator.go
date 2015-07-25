@@ -1,19 +1,33 @@
 package goldi
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/fgrosse/goldi/util"
+)
 
-// The ContainerValidator can be used to determine whether a Container is valid.
-// A Container is said to be valid if it does not define any type that depends on a
-// undefined parameter and does not reference any unregistered type.
-// Additionally goldi does not allow you to define circular type references.
-type ContainerValidator struct {
-	checkedTypes               StringSet
-	circularDependencyCheckMap StringSet
+type ValidationConstraint interface {
+	Validate(*Container) error
 }
 
-// NewContainerValidator creates a new ContainerValidator
+// The ContainerValidator can be used to determine whether a container passes a set of validation constraints.
+type ContainerValidator struct {
+	constraints []ValidationConstraint
+}
+
+// NewContainerValidator creates a new ContainerValidator.
+// The validator will be initialized with the TypeParametersConstraint and TypeReferencesConstraint
 func NewContainerValidator() *ContainerValidator {
-	return &ContainerValidator{}
+	return &ContainerValidator{
+		constraints: []ValidationConstraint{
+			new(TypeParametersConstraint),
+			new(TypeReferencesConstraint),
+		},
+	}
+}
+
+// Add another constraint to this validator
+func (v *ContainerValidator) Add(constraint ValidationConstraint) {
+	v.constraints = append(v.constraints, constraint)
 }
 
 // MustValidate behaves exactly as ContainerValidator.Validate but panics if an error occurs
@@ -23,10 +37,7 @@ func (v *ContainerValidator) MustValidate(container *Container) {
 	}
 }
 
-// Validate checks if the given container contains any type that fails any of the following checks:
-// * it uses a parameter that has not been defined
-// * it references a type that has not been defined
-// * there is a circular dependency to other types (FooType requires BarType requires BazType requires FooType to be built)
+// Validate checks if the given container passes all constraints that are registered at the ContainerValidator.
 func (v *ContainerValidator) Validate(container *Container) (err error) {
 	defer func() {
 		if err != nil {
@@ -34,24 +45,30 @@ func (v *ContainerValidator) Validate(container *Container) (err error) {
 		}
 	}()
 
-	for typeID, typeFactory := range container.TypeRegistry {
-		// reset the validation type cache
-		v.checkedTypes = StringSet{}
-		allArguments := typeFactory.Arguments()
-
-		if err = v.validateTypeParameters(typeID, container, allArguments); err != nil {
-			return err
-		}
-
-		if err = v.validateTypeReferences(typeID, container, allArguments); err != nil {
+	for _, constraint := range v.constraints {
+		if err := constraint.Validate(container); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-func (v *ContainerValidator) validateTypeParameters(typeID string, container *Container, allArguments []interface{}) error {
-	typeParameters := v.parameterArguments(allArguments)
+type TypeParametersConstraint struct{}
+
+func (c *TypeParametersConstraint) Validate(container *Container) (err error) {
+	for typeID, typeFactory := range container.TypeRegistry {
+		allArguments := typeFactory.Arguments()
+		if err = c.validateTypeParameters(typeID, container, allArguments); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *TypeParametersConstraint) validateTypeParameters(typeID string, container *Container, allArguments []interface{}) error {
+	typeParameters := c.parameterArguments(allArguments)
 	for _, parameterName := range typeParameters {
 		_, isParameterDefined := container.config[parameterName]
 		if isParameterDefined == false {
@@ -61,7 +78,7 @@ func (v *ContainerValidator) validateTypeParameters(typeID string, container *Co
 	return nil
 }
 
-func (v *ContainerValidator) parameterArguments(allArguments []interface{}) []string {
+func (c *TypeParametersConstraint) parameterArguments(allArguments []interface{}) []string {
 	var parameterArguments []string
 	for _, argument := range allArguments {
 		stringArgument, isString := argument.(string)
@@ -72,31 +89,50 @@ func (v *ContainerValidator) parameterArguments(allArguments []interface{}) []st
 	return parameterArguments
 }
 
-func (v *ContainerValidator) validateTypeReferences(typeID string, container *Container, allArguments []interface{}) error {
-	typeRefParameters := v.typeReferenceArguments(allArguments)
+type TypeReferencesConstraint struct {
+	checkedTypes               util.StringSet
+	circularDependencyCheckMap util.StringSet
+}
+
+func (c *TypeReferencesConstraint) Validate(container *Container) (err error) {
+	for typeID, typeFactory := range container.TypeRegistry {
+		// reset the validation type cache
+		c.checkedTypes = util.StringSet{}
+		allArguments := typeFactory.Arguments()
+
+		if err = c.validateTypeReferences(typeID, container, allArguments); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *TypeReferencesConstraint) validateTypeReferences(typeID string, container *Container, allArguments []interface{}) error {
+	typeRefParameters := c.typeReferenceArguments(allArguments)
 	for _, referencedTypeID := range typeRefParameters {
-		if v.checkedTypes.Contains(referencedTypeID) {
+		if c.checkedTypes.Contains(referencedTypeID) {
 			// TEST: test this for improved code coverage
 			continue
 		}
 
-		referencedTypeFactory, err := v.checkTypeIsDefined(typeID, referencedTypeID, container)
+		referencedTypeFactory, err := c.checkTypeIsDefined(typeID, referencedTypeID, container)
 		if err != nil {
 			return err
 		}
 
-		v.circularDependencyCheckMap = StringSet{}
-		v.circularDependencyCheckMap.Set(typeID)
-		if err = v.checkCircularDependency(referencedTypeFactory, referencedTypeID, container); err != nil {
+		c.circularDependencyCheckMap = util.StringSet{}
+		c.circularDependencyCheckMap.Set(typeID)
+		if err = c.checkCircularDependency(referencedTypeFactory, referencedTypeID, container); err != nil {
 			return err
 		}
 
-		v.checkedTypes.Set(referencedTypeID)
+		c.checkedTypes.Set(referencedTypeID)
 	}
 	return nil
 }
 
-func (v *ContainerValidator) typeReferenceArguments(allArguments []interface{}) []string {
+func (c *TypeReferencesConstraint) typeReferenceArguments(allArguments []interface{}) []string {
 	var typeRefParameters []string
 	for _, argument := range allArguments {
 		stringArgument, isString := argument.(string)
@@ -107,7 +143,7 @@ func (v *ContainerValidator) typeReferenceArguments(allArguments []interface{}) 
 	return typeRefParameters
 }
 
-func (v *ContainerValidator) checkTypeIsDefined(typeID, referencedTypeID string, container *Container) (TypeFactory, error) {
+func (c *TypeReferencesConstraint) checkTypeIsDefined(typeID, referencedTypeID string, container *Container) (TypeFactory, error) {
 	typeDef, isDefined := container.TypeRegistry[referencedTypeID]
 	if isDefined == false {
 		return nil, fmt.Errorf("type %q references unkown type %q", typeID, referencedTypeID)
@@ -116,26 +152,42 @@ func (v *ContainerValidator) checkTypeIsDefined(typeID, referencedTypeID string,
 	return typeDef, nil
 }
 
-func (v *ContainerValidator) checkCircularDependency(typeFactory TypeFactory, typeID string, container *Container) error {
+func (c *TypeReferencesConstraint) checkCircularDependency(typeFactory TypeFactory, typeID string, container *Container) error {
 	allArguments := typeFactory.Arguments()
-	typeRefParameters := v.typeReferenceArguments(allArguments)
+	typeRefParameters := c.typeReferenceArguments(allArguments)
 
 	for _, referencedTypeID := range typeRefParameters {
-		referencedType, err := v.checkTypeIsDefined(typeID, referencedTypeID, container)
+		referencedType, err := c.checkTypeIsDefined(typeID, referencedTypeID, container)
 		if err != nil {
 			// TEST: test this for improved code coverage
 			return nil
 		}
 
-		if v.circularDependencyCheckMap.Contains(referencedTypeID) {
+		if c.circularDependencyCheckMap.Contains(referencedTypeID) {
 			return fmt.Errorf("detected circular dependency for type %q (referenced by %q)", referencedTypeID, typeID)
 		}
 
-		v.circularDependencyCheckMap.Set(typeID)
-		if err = v.checkCircularDependency(referencedType, referencedTypeID, container); err != nil {
+		c.circularDependencyCheckMap.Set(typeID)
+		if err = c.checkCircularDependency(referencedType, referencedTypeID, container); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+type TypeIsDefinedConstraint struct{
+	TypeID string
+}
+
+func NewTypeIsDefinedConstraint(typeID string) *TypeIsDefinedConstraint {
+	return &TypeIsDefinedConstraint{typeID}
+}
+
+func (c *TypeIsDefinedConstraint) Validate(container *Container) (err error) {
+	if _, isDefined := container.TypeRegistry[c.TypeID]; isDefined {
+		return nil
+	}
+
+	return fmt.Errorf("the type %q must be defined", c.TypeID)
 }

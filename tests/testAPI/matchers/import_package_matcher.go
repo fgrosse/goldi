@@ -12,6 +12,7 @@ func ImportPackage(expected string) types.GomegaMatcher {
 type ImportPackageMatcher struct {
 	BeValidGoCodeMatcher
 	ExpectedPackage string
+	foundMoreThanOnce bool
 }
 
 func (m *ImportPackageMatcher) Match(actual interface{}) (success bool, err error) {
@@ -20,17 +21,29 @@ func (m *ImportPackageMatcher) Match(actual interface{}) (success bool, err erro
 		return isCompilable, err
 	}
 
+	m.foundMoreThanOnce = false
+	importFound := false
 	for _, importSpec := range m.astFile.Imports {
 		if importSpec.Path.Value == m.ExpectedPackage {
-			return true, nil
+			if importFound {
+				m.foundMoreThanOnce = true
+				return false, nil
+			}
+
+			importFound = true
 		}
 	}
-	return false, nil
+
+	return importFound, nil
 }
 
 func (m *ImportPackageMatcher) FailureMessage(actual interface{}) (message string) {
 	if m.outIsEmpty || m.compileError != nil {
 		return m.BeValidGoCodeMatcher.FailureMessage(actual)
+	}
+
+	if m.foundMoreThanOnce {
+		return fmt.Sprintf("Expected output:\n%s\nto import package %s exactly once but found multiple times", m.indentSource(), m.ExpectedPackage)
 	}
 
 	return fmt.Sprintf("Expected output:\n%s\nto import package %s", m.indentSource(), m.ExpectedPackage)
