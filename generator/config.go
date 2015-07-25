@@ -1,27 +1,33 @@
 package generator
-import "strings"
+
+import (
+	"strings"
+	"path/filepath"
+)
 
 const DefaultFunctionName = "RegisterTypes"
 
 type Config struct {
-	packageName  string
-	functionName string
+	Package      string
+	FunctionName string
+	InputPath    string
+	OutputPath   string
 }
 
-func NewConfig(packageName, functionName string) Config {
+func NewConfig(completePackage, functionName, inputPath, outputPath string) Config {
 	if functionName == "" {
 		functionName = DefaultFunctionName
 	}
 
-	packageParts := strings.Split(packageName, "/")
-
-	return Config{packageParts[len(packageParts)-1], functionName}
+	return Config{completePackage, functionName, inputPath, outputPath}
 }
 
 func (c Config) PackageName() string {
-	return c.packageName
+	packageParts := strings.Split(c.Package, "/")
+
+	return packageParts[len(packageParts)-1]
 }
 
-func (c Config) FunctionName() string {
-	return c.functionName
+func (c Config) InputName() string {
+	return filepath.Base(c.InputPath)
 }
