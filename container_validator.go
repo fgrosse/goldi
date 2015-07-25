@@ -5,7 +5,7 @@ import "fmt"
 // The ContainerValidator can be used to determine whether a Container is valid.
 // A Container is said to be valid if it does not define any type that depends on a
 // undefined parameter and does not reference any unregistered type.
-// Additionally goldi does not allow you to define circular type references currently.
+// Additionally goldi does not allow you to define circular type references.
 type ContainerValidator struct {
 	checkedTypes               StringSet
 	circularDependencyCheckMap StringSet
@@ -16,7 +16,7 @@ func NewContainerValidator() *ContainerValidator {
 	return &ContainerValidator{}
 }
 
-// MustValidate behaves exactly as ContainerValidator.Validate but panics if an error occurrs
+// MustValidate behaves exactly as ContainerValidator.Validate but panics if an error occurs
 func (v *ContainerValidator) MustValidate(container *Container) {
 	if err := v.Validate(container); err != nil {
 		panic(err)

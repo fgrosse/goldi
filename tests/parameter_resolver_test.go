@@ -30,6 +30,22 @@ var _ = Describe("ParameterResolver", func() {
 	})
 
 	Context("with dynamic parameters", func() {
+		Context("with invalid parameter name", func() {
+			It("should not try to resolve `%`", func() {
+				parameter := reflect.ValueOf("%")
+				result, err := resolver.Resolve(parameter, parameter.Type())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result.Interface()).To(Equal("%"))
+			})
+
+			It("should not try to resolve `%%`", func() {
+				parameter := reflect.ValueOf("%%")
+				result, err := resolver.Resolve(parameter, parameter.Type())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result.Interface()).To(Equal("%%"))
+			})
+		})
+
 		Context("when parameter has not been defined", func() {
 			It("should return the parameter as is", func() {
 				config["foo"] = "success"

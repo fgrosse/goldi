@@ -6,7 +6,7 @@ import "fmt"
 // It will always `generate` the same instance of some previously instantiated type.
 type InstanceType struct {
 
-	// The Instance that this factory is going to return on each call to Generate
+	// The instance that this factory is going to return on each call to Generate
 	Instance interface{}
 }
 
