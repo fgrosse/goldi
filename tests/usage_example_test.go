@@ -58,10 +58,15 @@ var _ = Describe("Usage example from README.md", func() {
 	})
 })
 
-var mytime = new(TimePackageMock)
+// the following variables are just here to mock that we use code from other packages like in the README.md
+var (
+	mytime = new(TimePackageMock)
+	example = new(ExamplePackageMock)
+)
 
 func RegisterTypes(types goldi.TypeRegistry) {
 	types.RegisterType("logger", new(SimpleLogger))
 	types.RegisterType("my_fancy.client", NewDefaultClient, "%client_base_url%", "@logger")
 	types.RegisterType("time.clock", mytime.NewSystemClock)
+	types.Register("http_handler", goldi.NewFuncType(example.HandleHTTP))
 }

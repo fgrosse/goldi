@@ -104,6 +104,10 @@ types:
         package: github.com/fgrosse/goldi-example/lib/mytime
         type: Clock
         factory: NewSystemClock
+        
+    http_handler:
+        package: github.com/fgrosse/servo/example
+        func:    HandleHTTP         # You can register functions as types using the `func` keyword 
 ```
 
 Now you have your type configuration file you can use goldigen like this:
@@ -120,6 +124,7 @@ package lib
 import (
 	"github.com/fgrosse/goldi"
 	"github.com/fgrosse/goldi-example/lib/mytime"
+	"github.com/fgrosse/servo/example"
 )
 
 // RegisterTypes registers all types that have been defined in the file "types.yml"
@@ -131,6 +136,7 @@ func RegisterTypes(types goldi.TypeRegistry) {
 	types.RegisterType("logger", new(SimpleLogger))
 	types.RegisterType("my_fancy.client", NewDefaultClient, "%client_base_url%", "@logger")
 	types.RegisterType("time.clock", mytime.NewSystemClock)
+	types.Register("http_handler", goldi.NewFuncType(example.HandleHTTP))
 }
 ```
 

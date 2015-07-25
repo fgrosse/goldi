@@ -119,19 +119,11 @@ func (g *Generator) generateTypeRegistrationFunction(conf *TypesConfiguration, o
 	}
 	sort.Strings(typeIDs)
 
-	var factoryMethod string
 	for _, typeID := range typeIDs {
 		typeDef := conf.Types[typeID]
-		factoryMethod = typeDef.Factory(outputPackageName)
-
-		arguments := []string{
-			fmt.Sprintf("%q", typeID),
-			factoryMethod,
-		}
-		arguments = append(arguments, typeDef.Arguments()...)
-		fmt.Fprint(output, "\ttypes.RegisterType(")
-		fmt.Fprint(output, strings.Join(arguments, ", "))
-		fmt.Fprint(output, ")\n")
+		fmt.Fprint(output, "\t")
+		fmt.Fprint(output, typeDef.RegistrationCode(typeID, outputPackageName))
+		fmt.Fprint(output, "\n")
 	}
 	fmt.Fprint(output, "}\n")
 }

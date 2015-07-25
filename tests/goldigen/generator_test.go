@@ -32,6 +32,10 @@ var _ = Describe("Generator", func() {
 				simple.struct:
 					package: github.com/fgrosse/foobar
 					type:    MyStruct
+
+				http_handler:
+					package: github.com/fgrosse/servo/example
+					func:    HandleHTTP
 		`
 	)
 
@@ -78,6 +82,7 @@ var _ = Describe("Generator", func() {
 			func RegisterTypes(types goldi.TypeRegistry) {
 				types.RegisterType("goldi.test.foo", NewFoo)
 				types.RegisterType("graphigo.client", graphigo.NewClient)
+				types.Register("http_handler", goldi.NewFuncType(example.HandleHTTP))
 				types.RegisterType("simple.struct", new(foobar.MyStruct))
 			}
 		`))

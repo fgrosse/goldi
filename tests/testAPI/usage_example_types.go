@@ -51,3 +51,9 @@ func (M *TimePackageMock) NewSystemClock() *time.Time {
 	now := time.Now()
 	return &now
 }
+
+type ExamplePackageMock struct {}
+
+func (M *ExamplePackageMock) HandleHTTP() {
+	// foo
+}
