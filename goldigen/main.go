@@ -15,11 +15,12 @@ var (
 
 	inputFile     = app.Flag("in", "The input yaml file to generate type definitions from").Required().File()
 	outputPath    = app.Flag("out", "The output file to save the generated go code").String()
-	packageName   = app.Flag("package", "The name of the genarated package").Required().String()
+	packageName   = app.Flag("package", "The name of the genarated package").String()
 	functionName  = app.Flag("function", fmt.Sprintf("The name of the generated function that must be called to register your types (default %q)", generator.DefaultFunctionName)).String()
 	noInteraction = app.Flag("nointeraction", "Do not ask for any user input").Default("false").Bool()
 	verbose       = app.Flag("verbose", "Print verbose output").Default("false").Bool()
 	yes           = app.Flag("yes", "Answer all questions with yes").Default("false").Short('y').Bool()
+	forceStdOut   = app.Flag("echo", "Echo the generated code to std out even if a output path is given").Default("false").Bool()
 )
 
 func main() {
@@ -28,12 +29,24 @@ func main() {
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
+	if *outputPath == "" {
+		// TODO require a package name
+	}
+
+	outputPackageName := *packageName
+	if outputPackageName == "" {
+		goPathChecker := generator.NewGoPathChecker(*verbose)
+		outputPackageName := goPathChecker.PackageName(*outputPath)
+		log("Package name for output path %q is %q", *outputPath, outputPackageName)
+	}
+
 	config := generator.NewConfig(*packageName, *functionName)
 	gen := generator.New(config)
 	output := &bytes.Buffer{}
 
-	goPathChecker := generator.NewGoPathChecker()
-	outputPackageName := goPathChecker.PackageName(*outputPath)
+	if *verbose {
+		gen.Debug = true
+	}
 
 	inputStat, _ := (*inputFile).Stat()
 	inputFileName := inputStat.Name()
@@ -45,7 +58,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *outputPath == "" {
+	if *outputPath == "" || *forceStdOut {
+		log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 		fmt.Println(output.String())
 		return
 	}

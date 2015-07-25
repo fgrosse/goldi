@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"sort"
 	"strings"
+	"os"
 )
 
 const Version = "0.9.0"
@@ -15,15 +16,20 @@ const Version = "0.9.0"
 // The Generator is used to generate compilable go code from a yaml configuration
 type Generator struct {
 	Config Config
+	Debug  bool
 }
 
 // NewGenerator creates a new Generator instance
 func New(config Config) *Generator {
-	return &Generator{config}
+	return &Generator{
+		Config: config,
+		Debug: false,
+	}
 }
 
 // Generate reads a yaml type configuration from the `input` and writes the corresponding go code to the `output`.
 func (g *Generator) Generate(input io.Reader, output io.Writer, inputName, outputPackageName string) error {
+	g.logVerbose("Generating code from input name %q with output package %q", inputName, outputPackageName)
 	conf, err := g.parseInput(input)
 	if err != nil {
 		return fmt.Errorf("could not parse type definition: %s", err)
@@ -44,6 +50,7 @@ func (g *Generator) Generate(input io.Reader, output io.Writer, inputName, outpu
 }
 
 func (g *Generator) parseInput(input io.Reader) (*TypesConfiguration, error) {
+	g.logVerbose("Parsing input..")
 	inputData, err := ioutil.ReadAll(input)
 	if err != nil {
 		return nil, err
@@ -57,6 +64,7 @@ func (g *Generator) parseInput(input io.Reader) (*TypesConfiguration, error) {
 }
 
 func (g *Generator) sanitizeInput(input []byte) []byte {
+	g.logVerbose("Sanitizing input..")
 	sanitizedInput := &bytes.Buffer{}
 	line := &bytes.Buffer{}
 	lineBeginning := true
@@ -88,11 +96,13 @@ func (g *Generator) sanitizeInput(input []byte) []byte {
 }
 
 func (g *Generator) generateImports(conf *TypesConfiguration, output io.Writer, outputPackageName string) {
+	g.logVerbose("Generating import packages (ignoring %q)", outputPackageName)
 	packages := conf.Packages("github.com/fgrosse/goldi")
 
 	fmt.Fprint(output, "import (\n")
 	for _, pkg := range packages {
 		if pkg != outputPackageName {
+			g.logVerbose("Detected new import package %q", pkg)
 			fmt.Fprintf(output, "\t%q\n", pkg)
 		}
 	}
@@ -126,4 +136,10 @@ func (g *Generator) generateTypeRegistrationFunction(conf *TypesConfiguration, o
 		fmt.Fprint(output, "\n")
 	}
 	fmt.Fprint(output, "}\n")
+}
+
+func (g *Generator) logVerbose(message string, args ...interface{}) {
+	if g.Debug {
+		fmt.Fprintf(os.Stderr, message+"\n", args...)
+	}
 }

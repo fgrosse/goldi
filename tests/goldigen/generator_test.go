@@ -40,7 +40,7 @@ var _ = Describe("Generator", func() {
 	)
 
 	BeforeEach(func() {
-		config := generator.NewConfig("foobar", "RegisterTypes")
+		config := generator.NewConfig(outputPackageName, "RegisterTypes")
 		gen = generator.New(config)
 		output = &bytes.Buffer{}
 	})
@@ -52,7 +52,7 @@ var _ = Describe("Generator", func() {
 
 	It("should use the given package name", func() {
 		Expect(gen.Generate(strings.NewReader(exampleYaml), output, inputName, outputPackageName)).To(Succeed())
-		Expect(output).To(DeclarePackage("foobar"))
+		Expect(output).To(DeclarePackage("thing"))
 	})
 
 	Describe("generating import statements", func() {
@@ -71,7 +71,7 @@ var _ = Describe("Generator", func() {
 		It("should not import the output package", func() {
 			Expect(gen.Generate(strings.NewReader(exampleYaml), output, inputName, outputPackageName)).To(Succeed())
 			Expect(output).To(BeValidGoCode())
-			Expect(output).NotTo(ImportPackage("github.com/fgrosse/some/thing"))
+			Expect(output).NotTo(ImportPackage(outputPackageName))
 		})
 	})
 

@@ -1,4 +1,5 @@
 package generator
+import "strings"
 
 const DefaultFunctionName = "RegisterTypes"
 
@@ -11,7 +12,10 @@ func NewConfig(packageName, functionName string) Config {
 	if functionName == "" {
 		functionName = DefaultFunctionName
 	}
-	return Config{packageName, functionName}
+
+	packageParts := strings.Split(packageName, "/")
+
+	return Config{packageParts[len(packageParts)-1], functionName}
 }
 
 func (c Config) PackageName() string {
