@@ -113,7 +113,7 @@ types:
 Now you have your type configuration file you can use goldigen like this:
 
 ```
-$ goldigen --in config/types.yml --out lib/dependency_injection.go --package lib
+$ goldigen --in config/types.yml --out lib/dependency_injection.go
 ```
 
 This will generate the following output and write it to `lib/dependency_injection.go`:
@@ -140,6 +140,8 @@ func RegisterTypes(types goldi.TypeRegistry) {
 }
 ```
 
+Goldigen tries its best to determine the output files package by looking into your GOPATH. In certain situations this might not be enough so you can set a package explicitly using the `--package` parameter.
+
 For a full list of goldigens flags and parameters try
 
 ```
@@ -153,7 +155,7 @@ RegisterTypes(registry)
 ```
 
 If you have a serious error in your type registration (like returning more than one result from your type factory method) goldi will panic.
-Additionally you should use the `ContainerValidator` to check for any undefined parameters or circular type dependencies.
+Additionally you should use the [`ContainerValidator`][7] to check for any undefined parameters or circular type dependencies.
 
 Note that using goldigen is completely optional. If you do not like the idea of having an extra build step for your application just use goldis API directly.
 
@@ -191,3 +193,4 @@ Please keep in mind that I might not always be able to respond immediately but I
 [4]: https://github.com/go-yaml/yaml/tree/v2
 [5]: http://symfony.com/doc/current/components/dependency_injection/introduction.html
 [6]: https://github.com/alecthomas/kingpin/tree/v1.3.6
+[7]: https://github.com/fgrosse/goldi/blob/master/container_validator.go
