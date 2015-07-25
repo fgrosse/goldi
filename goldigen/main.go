@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"path/filepath"
 )
 
 var (
@@ -15,11 +16,12 @@ var (
 
 	inputFile     = app.Flag("in", "The input yaml file to generate type definitions from").Required().File()
 	outputPath    = app.Flag("out", "The output file to save the generated go code").String()
-	packageName   = app.Flag("package", "The name of the genarated package").Required().String()
+	packageName   = app.Flag("package", "The name of the genarated package").String()
 	functionName  = app.Flag("function", fmt.Sprintf("The name of the generated function that must be called to register your types (default %q)", generator.DefaultFunctionName)).String()
 	noInteraction = app.Flag("nointeraction", "Do not ask for any user input").Default("false").Bool()
 	verbose       = app.Flag("verbose", "Print verbose output").Default("false").Bool()
-	yes           = app.Flag("yes", "Answer all questions with yes").Default("false").Short('y').Bool()
+	overwrite     = app.Flag("overwrite", "Overwrite any existing files").Default("false").Short('y').Bool()
+	forceStdOut   = app.Flag("echo", "Echo the generated code to std out even if a output path is given").Default("false").Bool()
 )
 
 func main() {
@@ -28,24 +30,37 @@ func main() {
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	config := generator.NewConfig(*packageName, *functionName)
+	inputPath, _ := filepath.Abs((*inputFile).Name())
+	if *outputPath == "" {
+		// TODO require a package name
+	} else {
+		*outputPath, _ = filepath.Abs(*outputPath)
+	}
+
+	outputPackageName := *packageName
+	if outputPackageName == "" {
+		goPathChecker := generator.NewGoPathChecker(*verbose)
+		outputPackageName = goPathChecker.PackageName(*outputPath)
+		log("Package name for output path %q is %q", *outputPath, outputPackageName)
+	}
+
+	config := generator.NewConfig(outputPackageName, *functionName, inputPath, *outputPath)
 	gen := generator.New(config)
 	output := &bytes.Buffer{}
 
-	goPathChecker := generator.NewGoPathChecker()
-	outputPackageName := goPathChecker.PackageName(*outputPath)
+	if *verbose {
+		gen.Debug = true
+	}
 
-	inputStat, _ := (*inputFile).Stat()
-	inputFileName := inputStat.Name()
-
-	logVerboseGeneratorConfig(inputFileName, outputPackageName)
-	err := gen.Generate(*inputFile, output, inputFileName, outputPackageName)
+	logVerboseGeneratorConfig(inputPath, outputPackageName)
+	err := gen.Generate(*inputFile, output)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 
-	if *outputPath == "" {
+	if *outputPath == "" || *forceStdOut {
+		log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 		fmt.Println(output.String())
 		return
 	}
@@ -60,8 +75,8 @@ func panicHandler() {
 	}
 }
 
-func logVerboseGeneratorConfig(inputFileName, outputPackageName string) {
-	log("Generating output from file %q", inputFileName)
+func logVerboseGeneratorConfig(inputPath, outputPackageName string) {
+	log("Generating output from file %q", inputPath)
 	if *outputPath != "" {
 		log("Output will be saved to %q", *outputPath)
 	}
@@ -83,7 +98,6 @@ func log(message string, args ...interface{}) {
 
 func writeOutputFile(output *bytes.Buffer) {
 	if _, err := os.Stat(*outputPath); err == nil {
-		fmt.Printf("Output file %q does already exist. ", *outputPath)
 		checkUserWantsToOverwriteFile()
 	}
 
@@ -96,17 +110,17 @@ func writeOutputFile(output *bytes.Buffer) {
 }
 
 func checkUserWantsToOverwriteFile() {
+	if *overwrite {
+		return
+	}
+
+	fmt.Printf("Output file %q does already exist.\n", *outputPath)
 	if *noInteraction {
 		fmt.Println("")
 		os.Exit(1)
 	}
 
-	fmt.Println("Do you want me to overwrite that file? [yN] ")
-	if *yes {
-		fmt.Println("yes")
-		return
-	}
-
+	fmt.Print("Do you want me to overwrite that file? [yN] ")
 	var answer string
 	_, err := fmt.Scan(&answer)
 	if err != nil {

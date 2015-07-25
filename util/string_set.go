@@ -1,4 +1,4 @@
-package goldi
+package util
 
 // The HashSet is a little utility type to manage string sets
 type StringSet map[string]struct{}

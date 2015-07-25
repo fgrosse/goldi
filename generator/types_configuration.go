@@ -3,6 +3,7 @@ package generator
 import (
 	"fmt"
 	"sort"
+	"github.com/fgrosse/goldi/util"
 )
 
 // The TypesConfiguration is the struct that holds the complete dependency injection configuration
@@ -30,15 +31,17 @@ func (c *TypesConfiguration) Validate() (err error) {
 // Packages returns an alphabetically ordered list of unique package names that are referenced by this type configuration.
 func (c *TypesConfiguration) Packages(additionalPackages ...string) []string {
 	packages := additionalPackages
-	seenPackages := map[string]struct{}{}
+	seenPackages := util.StringSet{}
+	for _, additionalPackage := range additionalPackages {
+		seenPackages.Set(additionalPackage)
+	}
 
 	for _, typeDef := range c.Types {
-		_, hasBeenSeen := seenPackages[typeDef.Package]
-		if hasBeenSeen {
+		if seenPackages.Contains(typeDef.Package) {
 			continue
 		}
 
-		seenPackages[typeDef.Package] = struct{}{}
+		seenPackages.Set(typeDef.Package)
 		packages = append(packages, typeDef.Package)
 	}
 

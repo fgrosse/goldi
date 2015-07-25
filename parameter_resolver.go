@@ -2,11 +2,15 @@ package goldi
 
 import "reflect"
 
+// The ParameterResolver is used by type factories to resolve the values of the dynamic factory arguments
+// (parameters and other type references).
 type ParameterResolver struct {
 	Config   map[string]interface{}
 	Registry TypeRegistry
 }
 
+// NewParameterResolver creates a new ParameterResolver and initializes it with the given config and TypeRegistry.
+// The config is used when resolving parameters and the registry for type references.
 func NewParameterResolver(config map[string]interface{}, registry TypeRegistry) *ParameterResolver {
 	return &ParameterResolver{
 		Config:   config,
@@ -14,6 +18,10 @@ func NewParameterResolver(config map[string]interface{}, registry TypeRegistry) 
 	}
 }
 
+// Resolve takes a parameter and resolves any references to configuration parameter values or type references.
+// If the type of `parameter` is not a parameter or type reference it is returned as is.
+// Parameters must always have the form `%my.beautiful.param%.
+// Type references must have the form `@my_type.bla`
 func (r *ParameterResolver) Resolve(parameter reflect.Value, expectedType reflect.Type) (reflect.Value, error) {
 	if parameter.Kind() != reflect.String {
 		return parameter, nil
@@ -66,8 +74,7 @@ func isParameterOrTypeReference(p string) bool {
 }
 
 func isParameter(p string) bool {
-	if len(p) < 2 {
-		// TEST: test this for improved code coverage
+	if len(p) < 3 {
 		return false
 	}
 
@@ -76,7 +83,6 @@ func isParameter(p string) bool {
 
 func isTypeReference(p string) bool {
 	if len(p) < 2 {
-		// TEST: test this for improved code coverage
 		return false
 	}
 

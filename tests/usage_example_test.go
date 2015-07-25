@@ -5,10 +5,12 @@ import (
 	. "github.com/onsi/ginkgo"
 
 	"github.com/fgrosse/goldi"
+	"net/http"
 )
 
 var _ = Describe("Usage example from README.md", func() {
 	It("should not crash horribly", func() {
+		// create a new container when your application loads
 		registry := goldi.NewTypeRegistry()
 		config := map[string]interface{}{
 			"some_parameter": "Hello World",
@@ -17,8 +19,9 @@ var _ = Describe("Usage example from README.md", func() {
 		container := goldi.NewContainer(registry, config)
 
 		// now define the types you want to build using the di container
-		// you can use simple structs in case you do not have a factory function
+		// you can use simple structs
 		container.RegisterType("logger", &SimpleLogger{})
+		container.RegisterType("api.geo.client", new(GeoClient), "http://example.com/geo:1234")
 
 		// you can also use factory functions and parameters
 		container.RegisterType("acme_corp.mailer", NewAwesomeMailer, "first argument", "%some_parameter%")
@@ -26,12 +29,14 @@ var _ = Describe("Usage example from README.md", func() {
 		// dynamic or static parameters and references to other services can be used as arguments
 		container.RegisterType("renderer", NewRenderer, "@logger")
 
+		// closures and functions are also possible
+		container.Register("http_handler", goldi.NewFuncType(func(w http.ResponseWriter, r *http.Request) {
+			// do amazing stuff
+		}))
+
 		// once you are done registering all your types you should probably validate the container
 		validator := goldi.NewContainerValidator()
-		err := validator.Validate(container)
-		if err != nil {
-			panic(err)
-		}
+		validator.MustValidate(container)
 
 		// whoever has access to the container can request these types now
 		logger := container.Get("logger").(LoggerInterface)
@@ -44,4 +49,24 @@ var _ = Describe("Usage example from README.md", func() {
 		myLogger := NewNullLogger()
 		container.InjectInstance("logger", myLogger)
 	})
+
+	Describe("goldigen usage example", func() {
+		It("should not crash horribly", func() {
+			registry := goldi.NewTypeRegistry()
+			RegisterTypes(registry)
+		})
+	})
 })
+
+// the following variables are just here to mock that we use code from other packages like in the README.md
+var (
+	mytime = new(TimePackageMock)
+	example = new(ExamplePackageMock)
+)
+
+func RegisterTypes(types goldi.TypeRegistry) {
+	types.RegisterType("logger", new(SimpleLogger))
+	types.RegisterType("my_fancy.client", NewDefaultClient, "%client_base_url%", "@logger")
+	types.RegisterType("time.clock", mytime.NewSystemClock)
+	types.Register("http_handler", goldi.NewFuncType(example.HandleHTTP))
+}

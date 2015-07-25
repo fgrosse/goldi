@@ -8,7 +8,58 @@ import (
 )
 
 var _ = Describe("TypeDefinition", func() {
-	It("should return an error if a type definition is missing the factory method", func() {
+	Describe("Validate", func() {
+		It("should not return an error if the definition contains a factory method", func() {
+			t := generator.TypeDefinition{
+				Package:       "foo/bar",
+				FactoryMethod: "NewBaz",
+			}
+			Expect(t.Validate("foobar")).To(Succeed())
+		})
+
+		It("should not return an error if the definition contains a type name", func() {
+			t := generator.TypeDefinition{
+				Package:  "foo/bar",
+				TypeName: "Baz",
+			}
+			Expect(t.Validate("foobar")).To(Succeed())
+		})
+
+		It("should not return an error if the definition contains a func name", func() {
+			t := generator.TypeDefinition{
+				Package:  "foo/bar",
+				FuncName: "DoFoo",
+			}
+			Expect(t.Validate("foobar")).To(Succeed())
+		})
+
+		It("should return an error if the definition both contains a func name and a factory method", func() {
+			t := generator.TypeDefinition{
+				Package:       "foo/bar",
+				FactoryMethod: "NewFpp",
+				FuncName:      "DoFoo",
+			}
+			Expect(t.Validate("foobar")).NotTo(Succeed())
+		})
+
+		It("should return an error if the definition is for a func type but contains arguments", func() {
+			t := generator.TypeDefinition{
+				Package:       "foo/bar",
+				FuncName:      "DoFoo",
+				RawArguments: []interface{}{"test", 42},
+			}
+			Expect(t.Validate("foobar")).NotTo(Succeed())
+		})
+
+		It("should return an error if the definition does not contain a factory method or a type or func name", func() {
+			t := generator.TypeDefinition{
+				Package: "foo/bar",
+			}
+			Expect(t.Validate("foobar")).NotTo(Succeed())
+		})
+	})
+
+	It("should return the package name", func() {
 		t := generator.TypeDefinition{
 			Package:       "foo/bar",
 			FactoryMethod: "NewBaz",
@@ -38,5 +89,34 @@ var _ = Describe("TypeDefinition", func() {
 		Expect(arguments[3]).To(Equal(`3.1415`))
 		Expect(arguments[4]).To(Equal(`"%some_parameter%"`))
 		Expect(arguments[5]).To(Equal("\"Hello\t\tWorld\""))
+	})
+
+	Describe("RegistrationCode", func() {
+		var typeDef generator.TypeDefinition
+		BeforeEach(func() {
+			typeDef = generator.TypeDefinition{
+				Package:  "foo/bar",
+				RawArguments: []interface{}{"foo", "%bar%", 42},
+			}
+		})
+
+		It("should return the golang code to register a struct type", func() {
+			typeDef.TypeName = "Baz"
+			Expect(typeDef.RegistrationCode("test_type", "some/package/lib")).To(Equal(`types.RegisterType("test_type", new(bar.Baz), "foo", "%bar%", 42)`))
+			Expect(typeDef.RegistrationCode("test_type", typeDef.Package)).To(Equal(`types.RegisterType("test_type", new(Baz), "foo", "%bar%", 42)`))
+		})
+
+		It("should return the golang code to register a type using a factory function", func() {
+			typeDef.FactoryMethod = "NewBaz"
+			Expect(typeDef.RegistrationCode("test_type", "some/package/lib")).To(Equal(`types.RegisterType("test_type", bar.NewBaz, "foo", "%bar%", 42)`))
+			Expect(typeDef.RegistrationCode("test_type", typeDef.Package)).To(Equal(`types.RegisterType("test_type", NewBaz, "foo", "%bar%", 42)`))
+		})
+
+		It("should return the golang code to register a function type", func() {
+			typeDef.FuncName = "DoFoo"
+			typeDef.RawArguments = nil
+			Expect(typeDef.RegistrationCode("test_type", "some/package/lib")).To(Equal(`types.Register("test_type", goldi.NewFuncType(bar.DoFoo))`))
+			Expect(typeDef.RegistrationCode("test_type", typeDef.Package)).To(Equal(`types.Register("test_type", goldi.NewFuncType(DoFoo))`))
+		})
 	})
 })

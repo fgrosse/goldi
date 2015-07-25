@@ -15,7 +15,8 @@ var _ = Describe("Generator", func() {
 	var (
 		gen               *generator.Generator
 		output            *bytes.Buffer
-		inputName         = "input_file.yml"
+		inputPath         = "/absolute/path/servo_types.yml"
+		outputPath        = "/absolute/path/servo_types.go"
 		outputPackageName = "github.com/fgrosse/some/thing"
 		exampleYaml       = `
 			types:
@@ -28,52 +29,68 @@ var _ = Describe("Generator", func() {
 					package: github.com/fgrosse/graphigo
 					type:    Graphigo
 					factory: NewClient
+
+				simple.struct:
+					package: github.com/fgrosse/servo/example
+					type:    MyStruct
+
+				http_handler:
+					package: github.com/fgrosse/servo/example
+					func:    HandleHTTP
 		`
 	)
 
 	BeforeEach(func() {
-		config := generator.NewConfig("foobar", "RegisterTypes")
+		config := generator.NewConfig(outputPackageName, "RegisterTypes", inputPath, outputPath)
 		gen = generator.New(config)
 		output = &bytes.Buffer{}
 	})
 
 	It("should generate valid go code", func() {
-		Expect(gen.Generate(strings.NewReader(exampleYaml), output, inputName, outputPackageName)).To(Succeed())
+		Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 		Expect(output).To(BeValidGoCode())
 	})
 
 	It("should use the given package name", func() {
-		Expect(gen.Generate(strings.NewReader(exampleYaml), output, inputName, outputPackageName)).To(Succeed())
-		Expect(output).To(DeclarePackage("foobar"))
+		Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
+		Expect(output).To(DeclarePackage("thing"))
 	})
 
 	Describe("generating import statements", func() {
 		It("should import the goldi package", func() {
-			Expect(gen.Generate(strings.NewReader(exampleYaml), output, inputName, outputPackageName)).To(Succeed())
+			Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 			Expect(output).To(BeValidGoCode())
 			Expect(output).To(ImportPackage("github.com/fgrosse/goldi"))
 		})
 
 		It("should import the type packages", func() {
-			Expect(gen.Generate(strings.NewReader(exampleYaml), output, inputName, outputPackageName)).To(Succeed())
+			Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 			Expect(output).To(BeValidGoCode())
 			Expect(output).To(ImportPackage("github.com/fgrosse/graphigo"))
 		})
 
 		It("should not import the output package", func() {
-			Expect(gen.Generate(strings.NewReader(exampleYaml), output, inputName, outputPackageName)).To(Succeed())
+			Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 			Expect(output).To(BeValidGoCode())
-			Expect(output).NotTo(ImportPackage("github.com/fgrosse/some/thing"))
+			Expect(output).NotTo(ImportPackage(outputPackageName))
+		})
+
+		It("should not import type packages multuple times", func() {
+			Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
+			Expect(output).To(BeValidGoCode())
+			Expect(output).To(ImportPackage("github.com/fgrosse/servo/example"))
 		})
 	})
 
 	It("should define the types in a global function", func() {
-		Expect(gen.Generate(strings.NewReader(exampleYaml), output, inputName, outputPackageName)).To(Succeed())
+		Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 		// Note that NewFoo has no explicit package name since it is defined within the given outputPackageName
 		Expect(output).To(ContainCode(`
 			func RegisterTypes(types goldi.TypeRegistry) {
 				types.RegisterType("goldi.test.foo", NewFoo)
 				types.RegisterType("graphigo.client", graphigo.NewClient)
+				types.Register("http_handler", goldi.NewFuncType(example.HandleHTTP))
+				types.RegisterType("simple.struct", new(example.MyStruct))
 			}
 		`))
 	})
@@ -96,7 +113,7 @@ var _ = Describe("Generator", func() {
 		})
 
 		It("should define the types in a global function", func() {
-			Expect(gen.Generate(strings.NewReader(exampleYaml), output, inputName, outputPackageName)).To(Succeed())
+			Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 			Expect(output).To(ContainCode(`
 				func RegisterTypes(types goldi.TypeRegistry) {
 					types.RegisterType("graphigo.client", graphigo.NewClient, "%graphigo.base_url%", 100)
@@ -116,7 +133,7 @@ var _ = Describe("Generator", func() {
 					type: TypeRegistry
 					factory: NewTypeRegistry
 		`
-		Expect(gen.Generate(strings.NewReader(invalidInput), output, inputName, outputPackageName)).
+		Expect(gen.Generate(strings.NewReader(invalidInput), output)).
 			To(MatchError(`type definition of "bad" is missing the required "package" key`))
 	})
 
@@ -129,11 +146,19 @@ var _ = Describe("Generator", func() {
 					arguments:
             			- "%s"
 		`, "Hello\t\t\tWorld")
-		Expect(gen.Generate(strings.NewReader(input), output, inputName, outputPackageName)).To(Succeed())
+		Expect(gen.Generate(strings.NewReader(input), output)).To(Succeed())
 		Expect(output).To(ContainCode(fmt.Sprintf(`
 			func RegisterTypes(types goldi.TypeRegistry) {
 				types.RegisterType("test", bar.NewFoo, "%s")
 			}
 		`, "Hello\t\t\tWorld")))
+	})
+
+	It("should include the go generate code which was used to create this file", func() {
+		Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
+		Expect(output).To(ContainCode(fmt.Sprintf(
+			`//go:generate goldigen --in %q --out %q --package %s --function RegisterTypes --overwrite --nointeraction`,
+			inputPath, outputPath, outputPackageName,
+		)))
 	})
 })

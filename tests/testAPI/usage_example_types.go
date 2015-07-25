@@ -1,4 +1,5 @@
 package testAPI
+import "time"
 
 type LoggerInterface interface {
 	DoStuff(message string)
@@ -34,4 +35,25 @@ type Renderer struct {
 
 func NewRenderer(logger *LoggerInterface) *Renderer {
 	return &Renderer{logger}
+}
+
+type GeoClient struct {
+	BaseURL string
+}
+
+func NewDefaultClient(baseURL string, logger LoggerInterface) *GeoClient {
+	return &GeoClient{baseURL}
+}
+
+type TimePackageMock struct {}
+
+func (M *TimePackageMock) NewSystemClock() *time.Time {
+	now := time.Now()
+	return &now
+}
+
+type ExamplePackageMock struct {}
+
+func (M *ExamplePackageMock) HandleHTTP() {
+	// foo
 }

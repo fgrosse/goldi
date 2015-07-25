@@ -7,15 +7,20 @@ import (
 	"strings"
 )
 
-type GoPathChecker struct{}
+type GoPathChecker struct{
+	Verbose bool
+}
 
-func NewGoPathChecker() *GoPathChecker {
-	return &GoPathChecker{}
+func NewGoPathChecker(isVerbose bool) *GoPathChecker {
+	return &GoPathChecker{isVerbose}
 }
 
 func (c *GoPathChecker) PackageName(outputPath string) string {
+	c.log("GoPathChecker is determining package name for output path %q", outputPath)
+
 	goPaths := os.Getenv("GOPATH")
 	if outputPath == "" || goPaths == "" {
+		c.log("output path or GOPATH is empty")
 		return ""
 	}
 
@@ -29,10 +34,19 @@ func (c *GoPathChecker) PackageName(outputPath string) string {
 	for _, goPath := range strings.Split(goPaths, ":") {
 		goPath = goPath + "/src/"
 		if strings.Contains(outputDir, goPath) {
+			c.log("Found %q in GOPATH %q", outputDir, goPath)
 			packageName := strings.TrimPrefix(outputDir, goPath)
 			return packageName
+		} else {
+			c.log("%q is not contained in GOPATH %q", outputDir, goPath)
 		}
 	}
 
 	return ""
+}
+
+func (c *GoPathChecker) log(message string, args ...interface{}) {
+	if c.Verbose {
+		fmt.Fprintf(os.Stderr, message+"\n", args...)
+	}
 }
