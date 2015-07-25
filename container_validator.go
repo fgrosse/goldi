@@ -175,19 +175,3 @@ func (c *TypeReferencesConstraint) checkCircularDependency(typeFactory TypeFacto
 
 	return nil
 }
-
-type TypeIsDefinedConstraint struct{
-	TypeID string
-}
-
-func NewTypeIsDefinedConstraint(typeID string) *TypeIsDefinedConstraint {
-	return &TypeIsDefinedConstraint{typeID}
-}
-
-func (c *TypeIsDefinedConstraint) Validate(container *Container) (err error) {
-	if _, isDefined := container.TypeRegistry[c.TypeID]; isDefined {
-		return nil
-	}
-
-	return fmt.Errorf("the type %q must be defined", c.TypeID)
-}
