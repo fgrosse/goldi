@@ -31,9 +31,7 @@ func main() {
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	inputPath, _ := filepath.Abs((*inputFile).Name())
-	if *outputPath == "" {
-		// TODO require a package name
-	} else {
+	if *outputPath != "" {
 		*outputPath, _ = filepath.Abs(*outputPath)
 	}
 
@@ -49,12 +47,12 @@ func main() {
 	logVerboseGeneratorConfig(inputPath, outputPackageName)
 	err := gen.Generate(*inputFile, output)
 	if err != nil {
-		fmt.Println(err.Error())
+		log(err.Error())
 		os.Exit(1)
 	}
 
 	if *outputPath == "" || *forceStdOut {
-		log("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+		logVerbose("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 		fmt.Println(output.String())
 		return
 	}
@@ -64,7 +62,7 @@ func main() {
 
 func panicHandler() {
 	if r := recover(); r != nil {
-		fmt.Printf("FATAL ERROR: %s\n", r)
+		log("FATAL ERROR: %s", r)
 		os.Exit(1)
 	}
 }
@@ -77,14 +75,17 @@ func determineOutputPackageName() string {
 
 	goPathChecker := generator.NewGoPathChecker(*verbose)
 	outputPackageName = goPathChecker.PackageName(*outputPath)
-	log("Package name for output path %q is %q", *outputPath, outputPackageName)
+	logVerbose("Package name for output path %q is %q", *outputPath, outputPackageName)
 
 	if outputPackageName != "" {
 		return outputPackageName
 	}
 
-	fmt.Printf("Could not determine the package name for %q\n", *outputPath)
-	return ask("Please enter the package name: ")
+	if *outputPath != "" {
+		log("Could not determine the output package name for %q", *outputPath)
+	}
+
+	return ask("Output package name: ")
 }
 
 func ask(question string) string {
@@ -92,7 +93,7 @@ func ask(question string) string {
 		os.Exit(1)
 	}
 
-	fmt.Print(question)
+	log(question)
 	var answer string
 	_, err := fmt.Scan(&answer)
 	if err != nil {
@@ -103,24 +104,34 @@ func ask(question string) string {
 }
 
 func logVerboseGeneratorConfig(inputPath, outputPackageName string) {
-	log("Generating output from file %q", inputPath)
+	logVerbose("Generating output from file %q", inputPath)
 	if *outputPath != "" {
-		log("Output will be saved to %q", *outputPath)
+		logVerbose("Output will be saved to %q", *outputPath)
 	}
 
 	if outputPackageName == "" {
-		log("Output package name is empty")
+		logVerbose("Output package name is empty")
 	} else {
-		log("Output package name is %q", outputPackageName)
+		logVerbose("Output package name is %q", outputPackageName)
 	}
 }
 
-func log(message string, args ...interface{}) {
+func logVerbose(message string, args ...interface{}) {
 	if *verbose == false {
 		return
 	}
 
-	fmt.Printf(message+"\n", args...)
+	log(message, args...)
+}
+
+func log(message string, args ...interface{}) {
+	writer := os.Stdout
+	if *outputPath == "" {
+		// since we already output the generated code on stdout we print messages on stderr
+		writer = os.Stderr
+	}
+
+	fmt.Fprintf(writer, message+"\n", args...)
 }
 
 func writeOutputFile(output *bytes.Buffer) {
@@ -130,10 +141,10 @@ func writeOutputFile(output *bytes.Buffer) {
 
 	err := ioutil.WriteFile(*outputPath, output.Bytes(), 0644)
 	if err != nil {
-		fmt.Printf("Error while writing output file: %s", err)
+		log("Error while writing output file: %s", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Successfully wrote %d bytes to %q\n", output.Len(), *outputPath)
+	log("Successfully wrote %d bytes to %q", output.Len(), *outputPath)
 }
 
 func checkUserWantsToOverwriteFile() {
@@ -141,11 +152,11 @@ func checkUserWantsToOverwriteFile() {
 		return
 	}
 
-	fmt.Printf("Output file %q does already exist.\n", *outputPath)
+	log("Output file %q does already exist.", *outputPath)
 	answer := ask("Do you want me to overwrite that file? [yN] ")
 	answer = strings.ToLower(answer)
 	if answer == "" || answer == "n" {
-		fmt.Println("Output has NOT been saved")
+		log("Output has NOT been saved")
 		os.Exit(1)
 	}
 }
