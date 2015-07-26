@@ -27,10 +27,17 @@ var _ = Describe("GeneratorConfig", func() {
 		})
 	})
 
+	Describe("OutputName", func() {
+		It("should return the output file base bane", func() {
+			config := generator.NewConfig("github.com/fgrosse/servo", "", "/home/fgrosse/goldi/config/types.yml", "/home/fgrosse/goldi/types.go")
+			Expect(config.OutputName()).To(Equal("types.go"))
+		})
+	})
+
 	Describe("InputName", func() {
-		It("should only return the file name", func() {
-			config := generator.NewConfig("github.com/fgrosse/servo", "", "/home/fgrosse/tmp/types.yml", "")
-			Expect(config.InputName()).To(Equal("types.yml"))
+		It("should return the input file name relative to the output file", func() {
+			config := generator.NewConfig("github.com/fgrosse/servo", "", "/home/fgrosse/goldi/config/types.yml", "/home/fgrosse/goldi/types.go")
+			Expect(config.InputName()).To(Equal("config/types.yml"))
 		})
 	})
 })
