@@ -141,19 +141,19 @@ func RegisterTypes(types goldi.TypeRegistry) {
 }
 ```
 
-Ask you might have notices goldigen created a [go generate][7] comment.
-Next time after you modified `types.yml` and want to update `dependency_injection.go` you can simply run `go generate`.
+Ask you might have noticed goldigen has created a [go generate][7] comment for you.
+Next time you want to update `dependency_injection.go` you can simply run `go generate`.
 
-Goldigen tries its best to determine the output files package by looking into your GOPATH.
+Goldigen tries its best to determine the output files package by looking into your `GOPATH`.
 In certain situations this might not be enough so you can set a package explicitly using the `--package` parameter.
 
-For a full list of goldigens flags and parameters try
+For a full list of goldigens flags and parameters try:
 
 ```
 $ goldigen --help
 ```
 
-Now all you need to to is to create the di container as you would just using the goldi API and then somewhere in the bootstrapping of your application call
+Now all you need to to is to create the di container as you would just using the goldi API and then somewhere in the bootstrapping of your application call.
 
 ```go
 RegisterTypes(registry)
