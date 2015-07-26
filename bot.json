@@ -19,12 +19,17 @@
                 "version": "branch:master"
             },
             {
-                "name": "gopkg.in/alecthomas/kingpin.v1",
+                "name": "github.com/alecthomas/units",
                 "type": "git",
                 "version": "branch:master"
             },
             {
-                "name": "github.com/alecthomas/units",
+                "name": "gopkg.in/alecthomas/kingpin.v2",
+                "type": "git",
+                "version": "branch:master"
+            },
+            {
+                "name": "github.com/alecthomas/template",
                 "type": "git",
                 "version": "branch:master"
             }

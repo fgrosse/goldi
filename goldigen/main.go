@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/fgrosse/goldi/generator"
-	"gopkg.in/alecthomas/kingpin.v1"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"os"
 	"strings"

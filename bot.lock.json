@@ -4,28 +4,28 @@
             "name": "github.com/onsi/ginkgo",
             "source": {
                 "type": "git",
-                "version": "ae043a2b2a91d6441adedc96d2c01958a78ee516"
+                "version": "25380c62e61d3f90436be125b8127dbae578fdef"
             }
         },
         {
             "name": "github.com/onsi/gomega",
             "source": {
                 "type": "git",
-                "version": "a91b9a2e8063d07570320914bfe10a91d9323074"
+                "version": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
             }
         },
         {
             "name": "gopkg.in/yaml.v2",
             "source": {
                 "type": "git",
-                "version": "49c95bdc21843256fb6c4e0d370a05f24a0bf213"
+                "version": "7ad95dd0798a40da1ccdff6dff35fd177b5edf40"
             }
         },
         {
             "name": "gopkg.in/alecthomas/kingpin.v1",
             "source": {
                 "type": "git",
-                "version": "55a69a226d28a43b913720f5d765706d49c8fa9e"
+                "version": "45f9714aa86a9624491adeaab1e9df1baf84dd38"
             }
         },
         {
@@ -33,6 +33,20 @@
             "source": {
                 "type": "git",
                 "version": "6b4e7dc5e3143b85ea77909c72caf89416fc2915"
+            }
+        },
+        {
+            "name": "gopkg.in/alecthomas/kingpin.v2",
+            "source": {
+                "type": "git",
+                "version": "3eb8ffbc54a2f5e806181081e23098b67fe06d06"
+            }
+        },
+        {
+            "name": "github.com/alecthomas/template",
+            "source": {
+                "type": "git",
+                "version": "b867cc6ab45cece8143cfcc6fc9c77cf3f2c23c0"
             }
         }
     ]
