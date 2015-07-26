@@ -15,7 +15,7 @@ var _ = Describe("Generator", func() {
 	var (
 		gen               *generator.Generator
 		output            *bytes.Buffer
-		inputPath         = "/absolute/path/servo_types.yml"
+		inputPath         = "/absolute/path/conf/servo_types.yml"
 		outputPath        = "/absolute/path/servo_types.go"
 		outputPackageName = "github.com/fgrosse/some/thing"
 		exampleYaml       = `
@@ -157,8 +157,8 @@ var _ = Describe("Generator", func() {
 	It("should include the go generate code which was used to create this file", func() {
 		Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 		Expect(output).To(ContainCode(fmt.Sprintf(
-			`//go:generate goldigen --in %q --out %q --package %s --function RegisterTypes --overwrite --nointeraction`,
-			inputPath, outputPath, outputPackageName,
+			`//go:generate goldigen --in "conf/servo_types.yml" --out "servo_types.go" --package %s --function RegisterTypes --overwrite --nointeraction`,
+			outputPackageName,
 		)))
 	})
 })

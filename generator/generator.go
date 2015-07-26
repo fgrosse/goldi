@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"os"
+	"path/filepath"
 )
 
 const Version = "0.9.0"
@@ -100,8 +101,14 @@ func (g *Generator) sanitizeInput(input []byte) []byte {
 }
 
 func (g *Generator) generateGoGenerateLine(output io.Writer) {
+	outputFile := filepath.Base(g.Config.OutputPath)
+	inputFile, err := filepath.Rel(filepath.Dir(g.Config.OutputPath), g.Config.InputPath)
+	if err != nil {
+		g.logWarn("Could not create go:generate line: %s", err)
+	}
+
 	fmt.Fprintf(output, "//go:generate goldigen --in %q --out %q --package %s --function %s --overwrite --nointeraction\n",
-		g.Config.InputPath, g.Config.OutputPath, g.Config.Package, g.Config.FunctionName,
+		inputFile, outputFile, g.Config.Package, g.Config.FunctionName,
 	)
 }
 
@@ -152,4 +159,8 @@ func (g *Generator) logVerbose(message string, args ...interface{}) {
 	if g.Debug {
 		fmt.Fprintf(os.Stderr, message+"\n", args...)
 	}
+}
+
+func (g *Generator) logWarn(message string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, message+"\n", args...)
 }
