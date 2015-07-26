@@ -3,6 +3,7 @@ package generator
 import (
 	"strings"
 	"path/filepath"
+	"fmt"
 )
 
 const DefaultFunctionName = "RegisterTypes"
@@ -15,6 +16,10 @@ type Config struct {
 }
 
 func NewConfig(completePackage, functionName, inputPath, outputPath string) Config {
+	if completePackage == "" {
+		panic(fmt.Errorf("Output package name can not be empty"))
+	}
+
 	if functionName == "" {
 		functionName = DefaultFunctionName
 	}

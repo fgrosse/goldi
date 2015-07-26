@@ -13,6 +13,10 @@ var _ = Describe("GeneratorConfig", func() {
 			config := generator.NewConfig("package_name", "", "", "")
 			Expect(config.FunctionName).To(Equal(generator.DefaultFunctionName))
 		})
+
+		It("should panic if the package name is empty", func() {
+			Expect(func() {generator.NewConfig("", "", "", "")}).To(Panic())
+		})
 	})
 
 	Describe("PackageName", func() {

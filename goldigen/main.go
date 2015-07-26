@@ -37,13 +37,7 @@ func main() {
 		*outputPath, _ = filepath.Abs(*outputPath)
 	}
 
-	outputPackageName := *packageName
-	if outputPackageName == "" {
-		goPathChecker := generator.NewGoPathChecker(*verbose)
-		outputPackageName = goPathChecker.PackageName(*outputPath)
-		log("Package name for output path %q is %q", *outputPath, outputPackageName)
-	}
-
+	outputPackageName := determineOutputPackageName()
 	config := generator.NewConfig(outputPackageName, *functionName, inputPath, *outputPath)
 	gen := generator.New(config)
 	output := &bytes.Buffer{}
@@ -70,9 +64,42 @@ func main() {
 
 func panicHandler() {
 	if r := recover(); r != nil {
-		fmt.Printf("FATAL ERROR: %s", r)
+		fmt.Printf("FATAL ERROR: %s\n", r)
 		os.Exit(1)
 	}
+}
+
+func determineOutputPackageName() string {
+	outputPackageName := *packageName
+	if outputPackageName != "" {
+		return outputPackageName
+	}
+
+	goPathChecker := generator.NewGoPathChecker(*verbose)
+	outputPackageName = goPathChecker.PackageName(*outputPath)
+	log("Package name for output path %q is %q", *outputPath, outputPackageName)
+
+	if outputPackageName != "" {
+		return outputPackageName
+	}
+
+	fmt.Printf("Could not determine the package name for %q\n", *outputPath)
+	return ask("Please enter the package name: ")
+}
+
+func ask(question string) string {
+	if *noInteraction {
+		os.Exit(1)
+	}
+
+	fmt.Print(question)
+	var answer string
+	_, err := fmt.Scan(&answer)
+	if err != nil {
+		panic(err)
+	}
+
+	return strings.TrimSpace(answer)
 }
 
 func logVerboseGeneratorConfig(inputPath, outputPackageName string) {
@@ -115,18 +142,8 @@ func checkUserWantsToOverwriteFile() {
 	}
 
 	fmt.Printf("Output file %q does already exist.\n", *outputPath)
-	if *noInteraction {
-		fmt.Println("")
-		os.Exit(1)
-	}
-
-	fmt.Print("Do you want me to overwrite that file? [yN] ")
-	var answer string
-	_, err := fmt.Scan(&answer)
-	if err != nil {
-		panic(err)
-	}
-	answer = strings.TrimSpace(strings.ToLower(answer))
+	answer := ask("Do you want me to overwrite that file? [yN] ")
+	answer = strings.ToLower(answer)
 	if answer == "" || answer == "n" {
 		fmt.Println("Output has NOT been saved")
 		os.Exit(1)
