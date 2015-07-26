@@ -8,8 +8,6 @@ Goldi
 
 **Go**ldi: **l**azy **d**ependency **i**njection framework for go.
 
-**Note: This library is at the very early stages of its development.**
-
 This library enables you to build your applications based on a dependency injection container.
 It helps to make your code modular, flexible and ensures that you can reuse components easily.
 
