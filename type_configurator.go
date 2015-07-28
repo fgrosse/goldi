@@ -33,17 +33,15 @@ func NewTypeConfigurator(configuratorTypeID, methodName string) *TypeConfigurato
 // Configure will get the configurator type and ass `thing` its configuration function.
 // The method returns an error if thing is nil, the configurator type is not defined or
 // the configurators function does not exist.
-func (c *TypeConfigurator) Configure(thing interface{}, resolver *ParameterResolver) error {
+func (c *TypeConfigurator) Configure(thing interface{}, container *Container) error {
 	if thing == nil {
 		return fmt.Errorf("can not configure nil")
 	}
 
-	referencedType, typeDefined := resolver.Registry[c.ConfiguratorTypeID]
+	configurator, typeDefined := container.get(c.ConfiguratorTypeID)
 	if typeDefined == false {
-		return NewUnknownTypeReferenceError(c.ConfiguratorTypeID, `the referenced type "@%s" has not been defined`, c.ConfiguratorTypeID)
+		return NewUnknownTypeReferenceError(c.ConfiguratorTypeID, `the configurator type "@%s" has not been defined`, c.ConfiguratorTypeID)
 	}
-
-	configurator := referencedType.Generate(resolver)
 
 	configuratorType := reflect.TypeOf(configurator)
 	configuratorKind := configuratorType.Kind()

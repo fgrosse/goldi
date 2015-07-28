@@ -12,13 +12,13 @@ import (
 var _ = Describe("TypeRegistry", func() {
 	var (
 		registry goldi.TypeRegistry
-		config   = map[string]interface{}{} // for test convenience
 		resolver *goldi.ParameterResolver
 	)
 
 	BeforeEach(func() {
 		registry = goldi.NewTypeRegistry()
-		resolver = goldi.NewParameterResolver(config, registry)
+		container := goldi.NewContainer(registry, map[string]interface{}{})
+		resolver = goldi.NewParameterResolver(container)
 	})
 
 	Describe("RegisterType", func() {

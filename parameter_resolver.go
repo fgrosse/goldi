@@ -5,16 +5,14 @@ import "reflect"
 // The ParameterResolver is used by type factories to resolve the values of the dynamic factory arguments
 // (parameters and other type references).
 type ParameterResolver struct {
-	Config   map[string]interface{}
-	Registry TypeRegistry
+	Container *Container
 }
 
-// NewParameterResolver creates a new ParameterResolver and initializes it with the given config and TypeRegistry.
-// The config is used when resolving parameters and the registry for type references.
-func NewParameterResolver(config map[string]interface{}, registry TypeRegistry) *ParameterResolver {
+// NewParameterResolver creates a new ParameterResolver and initializes it with the given Container.
+// The container is used when resolving parameters and the type references.
+func NewParameterResolver(container *Container) *ParameterResolver {
 	return &ParameterResolver{
-		Config:   config,
-		Registry: registry,
+		Container: container,
 	}
 }
 
@@ -44,7 +42,7 @@ func (r *ParameterResolver) Resolve(parameter reflect.Value, expectedType reflec
 
 func (r *ParameterResolver) resolveParameter(parameter reflect.Value, stringParameter string, expectedType reflect.Type) reflect.Value {
 	parameterName := stringParameter[1 : len(stringParameter)-1]
-	configuredValue, isConfigured := r.Config[parameterName]
+	configuredValue, isConfigured := r.Container.config[parameterName]
 	if isConfigured == false {
 		return parameter
 	}
@@ -63,7 +61,7 @@ func (r *ParameterResolver) resolveTypeReference(typeIDAndPrefix string, expecte
 		typeID = typeIDAndPrefix[1:]
 	}
 
-	referencedType, typeDefined := r.Registry[typeID]
+	typeInstance, typeDefined := r.Container.get(typeID)
 	if typeDefined == false {
 		if isOptional {
 			return reflect.Zero(expectedType), nil
@@ -72,7 +70,6 @@ func (r *ParameterResolver) resolveTypeReference(typeIDAndPrefix string, expecte
 		return reflect.Value{}, NewUnknownTypeReferenceError(typeID, `the referenced type "@%s" has not been defined`, typeID)
 	}
 
-	typeInstance := referencedType.Generate(r)
 	if reflect.TypeOf(typeInstance).AssignableTo(expectedType) == false {
 		return reflect.Value{}, NewTypeReferenceError(typeID, typeInstance,
 			`the referenced type "@%s" (type %T) is not assignable to the expected type %v`, typeID, typeInstance, expectedType,

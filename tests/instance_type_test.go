@@ -13,9 +13,8 @@ var _ = Describe("InstanceType", func() {
 	var resolver *goldi.ParameterResolver
 
 	BeforeEach(func() {
-		config := map[string]interface{}{}
-		registry := goldi.NewTypeRegistry()
-		resolver = goldi.NewParameterResolver(config, registry)
+		container := goldi.NewContainer(goldi.NewTypeRegistry(), map[string]interface{}{})
+		resolver = goldi.NewParameterResolver(container)
 	})
 
 	It("should panic if NewInstanceType is called with nil", func() {
