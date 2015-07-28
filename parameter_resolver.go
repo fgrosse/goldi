@@ -33,7 +33,7 @@ func (r *ParameterResolver) Resolve(parameter reflect.Value, expectedType reflec
 	}
 
 	if isTypeReference(stringParameter) {
-		return r.resolveTypeReference(stringParameter[1:], expectedType)
+		return r.resolveTypeReference(stringParameter, expectedType)
 	} else {
 		return r.resolveParameter(parameter, stringParameter, expectedType), nil
 	}
@@ -51,9 +51,21 @@ func (r *ParameterResolver) resolveParameter(parameter reflect.Value, stringPara
 	return parameter
 }
 
-func (r *ParameterResolver) resolveTypeReference(typeID string, expectedType reflect.Type) (reflect.Value, error) {
+func (r *ParameterResolver) resolveTypeReference(typeIDAndPrefix string, expectedType reflect.Type) (reflect.Value, error) {
+	typeID := typeIDAndPrefix[1:]
+	isOptional := false
+
+	if typeID[0] == '?' {
+		isOptional = true
+		typeID = typeIDAndPrefix[1:]
+	}
+
 	referencedType, typeDefined := r.Registry[typeID]
 	if typeDefined == false {
+		if isOptional {
+			return reflect.Zero(expectedType), nil
+		}
+
 		return reflect.Value{}, NewUnknownTypeReferenceError(typeID, `the referenced type "@%s" has not been defined`, typeID)
 	}
 
