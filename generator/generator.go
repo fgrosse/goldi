@@ -3,13 +3,13 @@ package generator
 import (
 	"bytes"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
+	"os"
 	"sort"
 	"strings"
-	"os"
-	"path/filepath"
+
+	"gopkg.in/yaml.v2"
 )
 
 const Version = "0.9.0"
@@ -24,7 +24,7 @@ type Generator struct {
 func New(config Config) *Generator {
 	return &Generator{
 		Config: config,
-		Debug: false,
+		Debug:  false,
 	}
 }
 
@@ -101,14 +101,8 @@ func (g *Generator) sanitizeInput(input []byte) []byte {
 }
 
 func (g *Generator) generateGoGenerateLine(output io.Writer) {
-	outputFile := filepath.Base(g.Config.OutputPath)
-	inputFile, err := filepath.Rel(filepath.Dir(g.Config.OutputPath), g.Config.InputPath)
-	if err != nil {
-		g.logWarn("Could not create go:generate line: %s", err)
-	}
-
 	fmt.Fprintf(output, "//go:generate goldigen --in %q --out %q --package %s --function %s --overwrite --nointeraction\n",
-		inputFile, outputFile, g.Config.Package, g.Config.FunctionName,
+		g.Config.InputName(), g.Config.OutputName(), g.Config.Package, g.Config.FunctionName,
 	)
 }
 

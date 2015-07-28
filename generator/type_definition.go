@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -12,6 +13,9 @@ type TypeDefinition struct {
 	FuncName      string        `yaml:"func"`
 	FactoryMethod string        `yaml:"factory"`
 	RawArguments  []interface{} `yaml:"arguments,omitempty"`
+
+	// ForcePackageName can be used in case the full package does not correspond to the actual package name
+	ForcePackageName string `yaml:"package-name,omitempty"`
 }
 
 // RegistrationCode returns the go code that is necessary to register this type
@@ -74,8 +78,15 @@ func (t *TypeDefinition) requireField(fieldName, value, typeId string) error {
 	return nil
 }
 
+var versionSuffix = regexp.MustCompile(`\.v\d+$`)
+
 func (t *TypeDefinition) PackageName() string {
-	packageParts := strings.Split(t.Package, "/")
+	if t.ForcePackageName != "" {
+		return t.ForcePackageName
+	}
+
+	pkg := versionSuffix.ReplaceAllString(t.Package, "")
+	packageParts := strings.Split(pkg, "/")
 	return packageParts[len(packageParts)-1]
 }
 

@@ -33,6 +33,15 @@ func (c Config) PackageName() string {
 	return packageParts[len(packageParts)-1]
 }
 
+func (c Config) OutputName() string {
+	return filepath.Base(c.OutputPath)
+}
+
 func (c Config) InputName() string {
-	return filepath.Base(c.InputPath)
+	inputFile, err := filepath.Rel(filepath.Dir(c.OutputPath), c.InputPath)
+	if err != nil {
+		panic(err)
+	}
+
+	return inputFile
 }

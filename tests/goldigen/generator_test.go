@@ -37,6 +37,13 @@ var _ = Describe("Generator", func() {
 				http_handler:
 					package: github.com/fgrosse/servo/example
 					func:    HandleHTTP
+
+				logger:
+					package: github.com/mgutz/logxi.v1
+					package-name: log
+					type:    Logger
+					factory: New
+					arguments: [ test ]
 		`
 	)
 
@@ -57,32 +64,34 @@ var _ = Describe("Generator", func() {
 	})
 
 	Describe("generating import statements", func() {
-		It("should import the goldi package", func() {
+		BeforeEach(func() {
 			Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 			Expect(output).To(BeValidGoCode())
+		})
+
+		It("should import the goldi package", func() {
 			Expect(output).To(ImportPackage("github.com/fgrosse/goldi"))
 		})
 
 		It("should import the type packages", func() {
-			Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
-			Expect(output).To(BeValidGoCode())
 			Expect(output).To(ImportPackage("github.com/fgrosse/graphigo"))
 		})
 
 		It("should not import the output package", func() {
-			Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
-			Expect(output).To(BeValidGoCode())
 			Expect(output).NotTo(ImportPackage(outputPackageName))
 		})
 
 		It("should not import type packages multuple times", func() {
-			Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
-			Expect(output).To(BeValidGoCode())
 			Expect(output).To(ImportPackage("github.com/fgrosse/servo/example"))
+		})
+
+		It("should import packages that contain a version", func() {
+			Expect(output).To(ImportPackage("github.com/mgutz/logxi.v1"))
 		})
 	})
 
 	It("should define the types in a global function", func() {
+		// TODO always generate Register calls instead of the magic RegisterType
 		Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 		// Note that NewFoo has no explicit package name since it is defined within the given outputPackageName
 		Expect(output).To(ContainCode(`
@@ -90,6 +99,7 @@ var _ = Describe("Generator", func() {
 				types.RegisterType("goldi.test.foo", NewFoo)
 				types.RegisterType("graphigo.client", graphigo.NewClient)
 				types.Register("http_handler", goldi.NewFuncType(example.HandleHTTP))
+				types.RegisterType("logger", log.New, "test")
 				types.RegisterType("simple.struct", new(example.MyStruct))
 			}
 		`))

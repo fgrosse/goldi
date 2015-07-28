@@ -59,12 +59,25 @@ var _ = Describe("TypeDefinition", func() {
 		})
 	})
 
-	It("should return the package name", func() {
-		t := generator.TypeDefinition{
-			Package:       "foo/bar",
-			FactoryMethod: "NewBaz",
-		}
-		Expect(t.PackageName()).To(Equal("bar"))
+	Describe("PackageName", func() {
+		It("should return the package name", func() {
+			t := generator.TypeDefinition{
+				Package:       "foo/bar",
+				FactoryMethod: "NewBaz",
+			}
+			Expect(t.PackageName()).To(Equal("bar"))
+		})
+
+		It("should strip versions at the end of package names", func() {
+			t := generator.TypeDefinition{
+				Package:       "github.com/fgrosse/servo.v1",
+				FactoryMethod: "NewFoo",
+			}
+			Expect(t.PackageName()).To(Equal("servo"))
+
+			t.Package = "github.com/fgrosse/servov1"
+			Expect(t.PackageName()).To(Equal("servov1"))
+		})
 	})
 
 	It("should return all parameters such that they can be used in go code directly", func() {
