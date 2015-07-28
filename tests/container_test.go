@@ -103,6 +103,22 @@ var _ = Describe("Container", func() {
 		Expect(generatedMock.InjectedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 	})
 
+	It("should inject the same instance when it is used by different services", func() {
+		registry.RegisterType("foo", testAPI.NewMockType)
+		registry.RegisterType("type1", testAPI.NewTypeForServiceInjection, "@foo")
+		registry.RegisterType("type2", testAPI.NewTypeForServiceInjection, "@foo")
+
+		generatedType1 := container.Get("type1")
+		generatedType2 := container.Get("type2")
+		Expect(generatedType1).To(BeAssignableToTypeOf(&testAPI.TypeForServiceInjection{}))
+		Expect(generatedType2).To(BeAssignableToTypeOf(&testAPI.TypeForServiceInjection{}))
+
+		generatedMock1 := generatedType1.(*testAPI.TypeForServiceInjection)
+		generatedMock2 := generatedType2.(*testAPI.TypeForServiceInjection)
+
+		Expect(generatedMock1.InjectedType == generatedMock2.InjectedType).To(BeTrue(), "Both generated types should have the same instance of @foo")
+	})
+
 	It("should inject nil when using optional types that are not defined", func() {
 		registry.Register("goldi.main_type", goldi.NewType(testAPI.NewTypeForServiceInjection, "@?goldi.optional_type"))
 

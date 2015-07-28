@@ -4,22 +4,20 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/fgrosse/goldi"
 	"errors"
+	"github.com/fgrosse/goldi"
 	"net/http"
 	"net/http/httptest"
 )
 
 var _ = Describe("FuncType", func() {
-	var typeDef *goldi.FuncType
-
 	Describe("Short usage example", func() {
-		typeRegistry := goldi.NewTypeRegistry()
-		resolver := goldi.NewParameterResolver(map[string]interface{}{}, typeRegistry)
+		container := goldi.NewContainer(goldi.NewTypeRegistry(), map[string]interface{}{})
+		resolver := goldi.NewParameterResolver(container)
 
 		It("should work with a defined function", func() {
 			// define the type
-			typeDef = goldi.NewFuncType(SomeFunctionForFuncTypeTest)
+			typeDef := goldi.NewFuncType(SomeFunctionForFuncTypeTest)
 
 			// generate it
 			f := typeDef.Generate(resolver).(func(name string, age int) (bool, error))
@@ -32,7 +30,7 @@ var _ = Describe("FuncType", func() {
 		})
 
 		It("should work with closures", func() {
-			typeDef = goldi.NewFuncType(func(w http.ResponseWriter, r *http.Request) {
+			typeDef := goldi.NewFuncType(func(w http.ResponseWriter, r *http.Request) {
 				if r.URL.Path == "test" {
 					w.WriteHeader(http.StatusAccepted)
 				}
@@ -64,7 +62,7 @@ var _ = Describe("FuncType", func() {
 
 		Context("with argument beeing a function", func() {
 			It("should create the type", func() {
-				typeDef = goldi.NewFuncType(SomeFunctionForFuncTypeTest)
+				typeDef := goldi.NewFuncType(SomeFunctionForFuncTypeTest)
 				Expect(typeDef).NotTo(BeNil())
 			})
 		})
@@ -72,7 +70,7 @@ var _ = Describe("FuncType", func() {
 
 	Describe("Arguments()", func() {
 		It("should return an empty list", func() {
-			typeDef = goldi.NewFuncType(SomeFunctionForFuncTypeTest)
+			typeDef := goldi.NewFuncType(SomeFunctionForFuncTypeTest)
 			Expect(typeDef.Arguments()).NotTo(BeNil())
 			Expect(typeDef.Arguments()).To(BeEmpty())
 		})
@@ -80,18 +78,18 @@ var _ = Describe("FuncType", func() {
 
 	Describe("Generate()", func() {
 		var (
-			config       = map[string]interface{}{}
-			typeRegistry goldi.TypeRegistry
-			resolver     *goldi.ParameterResolver
+			config    = map[string]interface{}{}
+			container *goldi.Container
+			resolver  *goldi.ParameterResolver
 		)
 
 		BeforeEach(func() {
-			typeRegistry = goldi.NewTypeRegistry()
-			resolver = goldi.NewParameterResolver(config, typeRegistry)
+			container = goldi.NewContainer(goldi.NewTypeRegistry(), config)
+			resolver = goldi.NewParameterResolver(container)
 		})
 
 		It("should panic if Generate is called on an uninitialized type", func() {
-			typeDef = &goldi.FuncType{}
+			typeDef := &goldi.FuncType{}
 			defer func() {
 				r := recover()
 				Expect(r).NotTo(BeNil(), "Expected Generate to panic")
@@ -104,7 +102,7 @@ var _ = Describe("FuncType", func() {
 		})
 
 		It("should just return the function", func() {
-			typeDef = goldi.NewFuncType(SomeFunctionForFuncTypeTest)
+			typeDef := goldi.NewFuncType(SomeFunctionForFuncTypeTest)
 			Expect(typeDef.Generate(resolver)).To(BeAssignableToTypeOf(SomeFunctionForFuncTypeTest))
 		})
 	})

@@ -12,15 +12,15 @@ import (
 var _ = Describe("ParameterResolver", func() {
 
 	var (
-		config   map[string]interface{}
-		registry goldi.TypeRegistry
-		resolver *goldi.ParameterResolver
+		config    map[string]interface{}
+		container *goldi.Container
+		resolver  *goldi.ParameterResolver
 	)
 
 	BeforeEach(func() {
 		config = map[string]interface{}{}
-		registry = goldi.NewTypeRegistry()
-		resolver = goldi.NewParameterResolver(config, registry)
+		container = goldi.NewContainer(goldi.NewTypeRegistry(), config)
+		resolver = goldi.NewParameterResolver(container)
 	})
 
 	It("should return static parameters", func() {
@@ -84,7 +84,7 @@ var _ = Describe("ParameterResolver", func() {
 	Context("with type references", func() {
 		Context("when the type has been registered", func() {
 			BeforeEach(func() {
-				registry.RegisterType("foo", testAPI.NewFoo)
+				container.RegisterType("foo", testAPI.NewFoo)
 			})
 
 			Context("when the type is assignable to the expected type", func() {

@@ -10,8 +10,6 @@ import (
 )
 
 var _ = Describe("Type", func() {
-	var typeDef *goldi.Type
-
 	It("should implement the TypeFactory interface", func() {
 		var factory goldi.TypeFactory
 		factory = goldi.NewType(testAPI.NewFoo)
@@ -45,7 +43,7 @@ var _ = Describe("Type", func() {
 		Context("without factory function arguments", func() {
 			Context("when no factory argument is given", func() {
 				It("should create the type", func() {
-					typeDef = goldi.NewType(testAPI.NewMockType)
+					typeDef := goldi.NewType(testAPI.NewMockType)
 					Expect(typeDef).NotTo(BeNil())
 				})
 			})
@@ -75,7 +73,7 @@ var _ = Describe("Type", func() {
 
 			Context("when the correct argument number and types are given", func() {
 				It("should create the type", func() {
-					typeDef = goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", true)
+					typeDef := goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", true)
 					Expect(typeDef).NotTo(BeNil())
 				})
 			})
@@ -85,25 +83,25 @@ var _ = Describe("Type", func() {
 	Describe("Arguments()", func() {
 		It("should return all factory arguments", func() {
 			args := []interface{}{"foo", true}
-			typeDef = goldi.NewType(testAPI.NewMockTypeWithArgs, args...)
+			typeDef := goldi.NewType(testAPI.NewMockTypeWithArgs, args...)
 			Expect(typeDef.Arguments()).To(Equal(args))
 		})
 	})
 
 	Describe("Generate()", func() {
 		var (
-			config       = map[string]interface{}{}
-			typeRegistry goldi.TypeRegistry
-			resolver     *goldi.ParameterResolver
+			config    = map[string]interface{}{}
+			container *goldi.Container
+			resolver  *goldi.ParameterResolver
 		)
 
 		BeforeEach(func() {
-			typeRegistry = goldi.NewTypeRegistry()
-			resolver = goldi.NewParameterResolver(config, typeRegistry)
+			container = goldi.NewContainer(goldi.NewTypeRegistry(), config)
+			resolver = goldi.NewParameterResolver(container)
 		})
 
 		It("should panic if Generate is called on an uninitialized type", func() {
-			typeDef = &goldi.Type{}
+			typeDef := &goldi.Type{}
 			defer func() {
 				r := recover()
 				Expect(r).NotTo(BeNil(), "Expected Generate to panic")
@@ -117,14 +115,14 @@ var _ = Describe("Type", func() {
 
 		Context("without factory function arguments", func() {
 			It("should generate the type", func() {
-				typeDef = goldi.NewType(testAPI.NewMockType)
+				typeDef := goldi.NewType(testAPI.NewMockType)
 				Expect(typeDef.Generate(resolver)).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 			})
 		})
 
 		Context("with one or more factory function arguments", func() {
 			It("should generate the type", func() {
-				typeDef = goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", true)
+				typeDef := goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", true)
 
 				generatedType := typeDef.Generate(resolver)
 				Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
@@ -137,8 +135,8 @@ var _ = Describe("Type", func() {
 			Context("when a type reference is given", func() {
 				Context("and its type matches the function signature", func() {
 					It("should generate the type", func() {
-						typeRegistry.RegisterType("foo", testAPI.NewMockType)
-						typeDef = goldi.NewType(testAPI.NewTypeForServiceInjection, "@foo")
+						container.RegisterType("foo", testAPI.NewMockType)
+						typeDef := goldi.NewType(testAPI.NewTypeForServiceInjection, "@foo")
 
 						generatedType := typeDef.Generate(resolver)
 						Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.TypeForServiceInjection{}))
@@ -150,8 +148,8 @@ var _ = Describe("Type", func() {
 
 				Context("and its type does not match the function signature", func() {
 					It("should panic with a helpful error message", func() {
-						typeRegistry.RegisterType("foo", testAPI.NewFoo)
-						typeDef = goldi.NewType(testAPI.NewTypeForServiceInjectionWithArgs, "@foo", "arg1", "arg2", true)
+						container.RegisterType("foo", testAPI.NewFoo)
+						typeDef := goldi.NewType(testAPI.NewTypeForServiceInjectionWithArgs, "@foo", "arg1", "arg2", true)
 
 						defer func() {
 							r := recover()
