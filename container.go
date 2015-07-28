@@ -44,7 +44,6 @@ func (c *Container) Get(typeID string) interface{} {
 		panic(fmt.Errorf("could not get type %q : no such type has been defined", typeID))
 	}
 
-	t = generator.Generate(c.parameterResolver)
-	c.typeCache[typeID] = t
-	return t
+	c.typeCache[typeID] = generator.Generate(c.parameterResolver)
+	return c.typeCache[typeID]
 }

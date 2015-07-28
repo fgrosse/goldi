@@ -21,7 +21,10 @@ func NewParameterResolver(config map[string]interface{}, registry TypeRegistry) 
 // Resolve takes a parameter and resolves any references to configuration parameter values or type references.
 // If the type of `parameter` is not a parameter or type reference it is returned as is.
 // Parameters must always have the form `%my.beautiful.param%.
-// Type references must have the form `@my_type.bla`
+// Type references must have the form `@my_type.bla`.
+// It is also legal to request an optional type using the syntax `@?my_optional_type`.
+// If this type is not registered Resolve will not return an error but instead give you the null value
+// of the expected type.
 func (r *ParameterResolver) Resolve(parameter reflect.Value, expectedType reflect.Type) (reflect.Value, error) {
 	if parameter.Kind() != reflect.String {
 		return parameter, nil
