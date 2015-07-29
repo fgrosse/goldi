@@ -91,16 +91,15 @@ var _ = Describe("Generator", func() {
 	})
 
 	It("should define the types in a global function", func() {
-		// TODO always generate Register calls instead of the magic RegisterType
 		Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 		// Note that NewFoo has no explicit package name since it is defined within the given outputPackageName
 		Expect(output).To(ContainCode(`
 			func RegisterTypes(types goldi.TypeRegistry) {
-				types.RegisterType("goldi.test.foo", NewFoo)
-				types.RegisterType("graphigo.client", graphigo.NewClient)
+				types.Register("goldi.test.foo", goldi.NewType(NewFoo))
+				types.Register("graphigo.client", goldi.NewType(graphigo.NewClient))
 				types.Register("http_handler", goldi.NewFuncType(example.HandleHTTP))
-				types.RegisterType("logger", log.New, "test")
-				types.RegisterType("simple.struct", new(example.MyStruct))
+				types.Register("logger", goldi.NewType(log.New, "test"))
+				types.Register("simple.struct", goldi.NewStructType(new(example.MyStruct)))
 			}
 		`))
 	})
@@ -126,7 +125,7 @@ var _ = Describe("Generator", func() {
 			Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 			Expect(output).To(ContainCode(`
 				func RegisterTypes(types goldi.TypeRegistry) {
-					types.RegisterType("graphigo.client", graphigo.NewClient, "%graphigo.base_url%", 100)
+					types.Register("graphigo.client", goldi.NewType(graphigo.NewClient, "%graphigo.base_url%", 100))
 				}
 			`))
 		})
@@ -159,7 +158,7 @@ var _ = Describe("Generator", func() {
 		Expect(gen.Generate(strings.NewReader(input), output)).To(Succeed())
 		Expect(output).To(ContainCode(fmt.Sprintf(`
 			func RegisterTypes(types goldi.TypeRegistry) {
-				types.RegisterType("test", bar.NewFoo, "%s")
+				types.Register("test", goldi.NewType(bar.NewFoo, "%s"))
 			}
 		`, "Hello\t\t\tWorld")))
 	})
@@ -170,5 +169,24 @@ var _ = Describe("Generator", func() {
 			`//go:generate goldigen --in "conf/servo_types.yml" --out "servo_types.go" --package %s --function RegisterTypes --overwrite --nointeraction`,
 			outputPackageName,
 		)))
+	})
+
+	It("should allow specifying configuration types", func() {
+		input := `
+			types:
+				test:
+					package: foo/bar
+					factory: NewFoo
+					configurator: ["@confoogurator", Configure]
+		`
+		Expect(gen.Generate(strings.NewReader(input), output)).To(Succeed())
+		Expect(output).To(ContainCode(`
+			func RegisterTypes(types goldi.TypeRegistry) {
+				types.Register("test", goldi.NewConfiguredType(
+					goldi.NewType(bar.NewFoo),
+					"confoogurator", "Configure",
+				))
+			}
+		`))
 	})
 })

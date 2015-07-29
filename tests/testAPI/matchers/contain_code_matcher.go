@@ -30,9 +30,9 @@ func (m *ContainCodeMatcher) FailureMessage(actual interface{}) (message string)
 		return m.BeValidGoCodeMatcher.FailureMessage(actual)
 	}
 
-	return fmt.Sprintf("Expected output:\n%s\nto contain the code:\n%s", m.indentSource(), m.ExpectedCode)
+	return fmt.Sprintf("Expected output:\n%s\nto contain the code:\n%s", m.indentSource(), indent([]byte(m.ExpectedCode)))
 }
 
 func (m *ContainCodeMatcher) NegatedFailureMessage(_ interface{}) (message string) {
-	return fmt.Sprintf("Expected output:\n%s\nnot to contain the code\n%s", m.indentSource(), m.ExpectedCode)
+	return fmt.Sprintf("Expected output:\n%s\nnot to contain the code\n%s", m.indentSource(), indent([]byte(m.ExpectedCode)))
 }
