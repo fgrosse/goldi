@@ -17,9 +17,9 @@ var _ = Describe("TypeAlias", func() {
 	})
 
 	Describe("Arguments()", func() {
-		It("should return an empty list", func() {
+		It("should return the aliased service ID", func() {
 			typeDef := goldi.NewTypeAlias("foo")
-			Expect(typeDef.Arguments()).To(BeEmpty())
+			Expect(typeDef.Arguments()).To(Equal([]interface{}{"@foo"}))
 		})
 	})
 

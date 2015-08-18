@@ -13,6 +13,7 @@ type TypeDefinition struct {
 	TypeName      string        `yaml:"type"`
 	FuncName      string        `yaml:"func"`
 	FactoryMethod string        `yaml:"factory"`
+	AliasForType  string        `yaml:"alias"`
 	Configurator  []string      `yaml:"configurator"`
 	RawArguments  []interface{} `yaml:"arguments,omitempty"`
 
@@ -33,6 +34,8 @@ func (t *TypeDefinition) RegistrationCode(typeID, outputPackageName string) stri
 			funcName = fmt.Sprintf("%s.%s", t.PackageName(), funcName)
 		}
 		typeFactoryCode = fmt.Sprintf("goldi.NewFuncType(%s)", funcName)
+	} else if t.AliasForType != "" {
+		typeFactoryCode = fmt.Sprintf("goldi.NewTypeAlias(%q)", t.AliasForType)
 	} else {
 		var factoryMethod string
 		if t.FactoryMethod != "" {
@@ -68,6 +71,10 @@ func (t *TypeDefinition) RegistrationCode(typeID, outputPackageName string) stri
 
 // Validate checks if this type definition contains all required fields
 func (t *TypeDefinition) Validate(typeID string) error {
+	if t.AliasForType != "" {
+		return t.validateTypeAlias(typeID)
+	}
+
 	if err := t.requireField("package", t.Package, typeID); err != nil {
 		return err
 	}
@@ -104,6 +111,26 @@ func (t *TypeDefinition) Validate(typeID string) error {
 		if unicode.IsLower(rune(t.Configurator[1][0])) {
 			return fmt.Errorf("configurator method of type %q is not exported (lowercase)", typeID)
 		}
+	}
+
+	return nil
+}
+
+func (t *TypeDefinition) validateTypeAlias(typeID string) error {
+	if t.FactoryMethod != "" {
+		return fmt.Errorf("type alias %q must not define a factory method", typeID)
+	}
+
+	if t.Package != "" {
+		return fmt.Errorf("type alias %q must not define a package name", typeID)
+	}
+
+	if t.FuncName != "" {
+		return fmt.Errorf("type alias %q must not define a func", typeID)
+	}
+
+	if len(t.RawArguments) != 0 {
+		return fmt.Errorf("type alias %q must not contain arguments", typeID)
 	}
 
 	return nil

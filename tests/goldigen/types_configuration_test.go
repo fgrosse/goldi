@@ -35,6 +35,54 @@ var _ = Describe("TypesConfiguration", func() {
 			}
 			Expect(c.Validate()).To(MatchError(`type definition of "foo" is missing the required "factory" key`))
 		})
+
+		It("should return an error if a type is an alias and contains a factory method", func() {
+			c := generator.TypesConfiguration{
+				Types: map[string]generator.TypeDefinition{
+					"foo": generator.TypeDefinition{
+						AliasForType: "bar",
+						FactoryMethod: "NewFoo",
+					},
+				},
+			}
+			Expect(c.Validate()).To(MatchError(`type alias "foo" must not define a factory method`))
+		})
+
+		It("should return an error if a type is an alias and contains a package name", func() {
+			c := generator.TypesConfiguration{
+				Types: map[string]generator.TypeDefinition{
+					"foo": generator.TypeDefinition{
+						AliasForType: "bar",
+						Package: "github.com/fgrosse/foo",
+					},
+				},
+			}
+			Expect(c.Validate()).To(MatchError(`type alias "foo" must not define a package name`))
+		})
+
+		It("should return an error if a type is an alias and contains a func", func() {
+			c := generator.TypesConfiguration{
+				Types: map[string]generator.TypeDefinition{
+					"foo": generator.TypeDefinition{
+						AliasForType: "bar",
+						FuncName: "DoStuff",
+					},
+				},
+			}
+			Expect(c.Validate()).To(MatchError(`type alias "foo" must not define a func`))
+		})
+
+		It("should return an error if a type is an alias and contains arguments", func() {
+			c := generator.TypesConfiguration{
+				Types: map[string]generator.TypeDefinition{
+					"foo": generator.TypeDefinition{
+						AliasForType: "bar",
+						RawArguments: []interface{}{"a", "b", "c"},
+					},
+				},
+			}
+			Expect(c.Validate()).To(MatchError(`type alias "foo" must not contain arguments`))
+		})
 	})
 
 	Describe("retrieving all packages", func() {
@@ -102,5 +150,9 @@ var _ = Describe("TypesConfiguration", func() {
 				Expect(packages).To(ContainElement("github.com/fgrosse/goldi"))
 			})
 		})
+	})
+
+	PDescribe("short form of defining a type aliases", func() {
+		// TODO
 	})
 })

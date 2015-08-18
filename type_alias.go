@@ -9,7 +9,7 @@ func NewTypeAlias(typeID string) *TypeAlias {
 }
 
 func (a *TypeAlias) Arguments() []interface{} {
-	return []interface{}{}
+	return []interface{}{"@" + a.TypeID}
 }
 
 func (a *TypeAlias) Generate(resolver *ParameterResolver) interface{} {
