@@ -49,8 +49,8 @@ func newTypeFromFactoryFunction(function interface{}, factoryType reflect.Type, 
 		panic(fmt.Errorf("return parameter is no interface or pointer but a %v", kindOfGeneratedType))
 	}
 
-	if factoryType.NumIn() != len(parameters) {
-		panic(fmt.Errorf("invalid number of input parameters: got %d but expected %d", factoryType.NumIn(), len(parameters)))
+	if factoryType.IsVariadic() == false && factoryType.NumIn() != len(parameters) {
+		panic(fmt.Errorf("invalid number of input parameters: got %d but expected %d", len(parameters), factoryType.NumIn()))
 	}
 
 	return &Type{
@@ -61,6 +61,10 @@ func newTypeFromFactoryFunction(function interface{}, factoryType reflect.Type, 
 }
 
 func buildFactoryCallArguments(factoryType reflect.Type, factoryParameters []interface{}) []reflect.Value {
+	if factoryType.IsVariadic() {
+		factoryParameters = []interface{}{factoryParameters}
+	}
+
 	args := make([]reflect.Value, len(factoryParameters))
 	for i, argument := range factoryParameters {
 		expectedArgumentType := factoryType.In(i)

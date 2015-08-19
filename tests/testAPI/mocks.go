@@ -1,5 +1,7 @@
 package testAPI
 
+import "strings"
+
 type MockType struct {
 	StringParameter string
 	BoolParameter   bool
@@ -15,6 +17,10 @@ func NewMockType() *MockType {
 
 func NewMockTypeWithArgs(stringParameter string, boolParameter bool) *MockType {
 	return &MockType{stringParameter, boolParameter}
+}
+
+func NewVariadicMockType(parameters ...string) *MockType {
+	return &MockType{StringParameter: strings.Join(parameters, ", ")}
 }
 
 type MockTypeFactory struct {

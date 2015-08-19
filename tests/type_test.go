@@ -77,6 +77,13 @@ var _ = Describe("Type", func() {
 					Expect(typeDef).NotTo(BeNil())
 				})
 			})
+
+			Context("when the arguments are variadic", func() {
+				It("should create the type", func() {
+					typeDef := goldi.NewType(testAPI.NewVariadicMockType, "1", "two", "drei")
+					Expect(typeDef).NotTo(BeNil())
+				})
+			})
 		})
 	})
 
