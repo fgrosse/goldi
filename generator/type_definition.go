@@ -28,14 +28,21 @@ func (t *TypeDefinition) RegistrationCode(typeID, outputPackageName string) stri
 
 	// TODO refactor this mess:
 
-	if t.FuncName != "" {
+	if t.FuncName != "" && t.FuncName[0] != '@' {
 		funcName := t.FuncName
 		if t.Package != outputPackageName {
 			funcName = fmt.Sprintf("%s.%s", t.PackageName(), funcName)
 		}
 		typeFactoryCode = fmt.Sprintf("goldi.NewFuncType(%s)", funcName)
+	} else if t.FuncName != "" && t.FuncName[0] == '@' {
+		parts := strings.SplitN(t.FuncName, "::", 2)
+		typeFactoryCode = fmt.Sprintf("goldi.NewFuncReferenceType(%q, %q)", parts[0][1:], parts[1])
 	} else if t.AliasForType != "" {
-		typeFactoryCode = fmt.Sprintf("goldi.NewTypeAlias(%q)", t.AliasForType)
+		alias := t.AliasForType
+		if alias[0] == '@' {
+			alias = alias[1:]
+		}
+		typeFactoryCode = fmt.Sprintf("goldi.NewTypeAlias(%q)", alias)
 	} else {
 		var factoryMethod string
 		if t.FactoryMethod != "" {

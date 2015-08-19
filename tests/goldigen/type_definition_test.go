@@ -167,8 +167,13 @@ var _ = Describe("TypeDefinition", func() {
 		})
 
 		It("should return the golang code to register a type alias", func() {
-			typeDef.AliasForType = "test_type"
+			typeDef.AliasForType = "@test_type"
 			Expect(typeDef.RegistrationCode("my_alias", "some/package/lib")).To(Equal(`types.Register("my_alias", goldi.NewTypeAlias("test_type"))`))
+		})
+
+		It("should return the golang code to register a func reference type", func() {
+			typeDef.FuncName = "@my_controller::FancyAction"
+			Expect(typeDef.RegistrationCode("test_type", "some/package/lib")).To(Equal(`types.Register("test_type", goldi.NewFuncReferenceType("my_controller", "FancyAction"))`))
 		})
 	})
 })

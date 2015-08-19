@@ -35,7 +35,7 @@ var _ = Describe("TypeAlias", func() {
 			resolver = goldi.NewParameterResolver(container)
 		})
 
-		It("should ", func() {
+		It("should act as alias for the actual type", func() {
 			container.Register("foo", goldi.NewStructType(testAPI.MockType{}, "I was created by @foo"))
 			alias := goldi.NewTypeAlias("foo")
 

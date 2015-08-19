@@ -40,7 +40,7 @@ var _ = Describe("TypesConfiguration", func() {
 			c := generator.TypesConfiguration{
 				Types: map[string]generator.TypeDefinition{
 					"foo": generator.TypeDefinition{
-						AliasForType: "bar",
+						AliasForType:  "bar",
 						FactoryMethod: "NewFoo",
 					},
 				},
@@ -53,7 +53,7 @@ var _ = Describe("TypesConfiguration", func() {
 				Types: map[string]generator.TypeDefinition{
 					"foo": generator.TypeDefinition{
 						AliasForType: "bar",
-						Package: "github.com/fgrosse/foo",
+						Package:      "github.com/fgrosse/foo",
 					},
 				},
 			}
@@ -65,7 +65,7 @@ var _ = Describe("TypesConfiguration", func() {
 				Types: map[string]generator.TypeDefinition{
 					"foo": generator.TypeDefinition{
 						AliasForType: "bar",
-						FuncName: "DoStuff",
+						FuncName:     "DoStuff",
 					},
 				},
 			}
@@ -150,9 +150,5 @@ var _ = Describe("TypesConfiguration", func() {
 				Expect(packages).To(ContainElement("github.com/fgrosse/goldi"))
 			})
 		})
-	})
-
-	PDescribe("short form of defining a type aliases", func() {
-		// TODO
 	})
 })

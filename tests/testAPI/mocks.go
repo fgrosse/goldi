@@ -5,6 +5,10 @@ type MockType struct {
 	BoolParameter   bool
 }
 
+func (t *MockType) ReturnString(suffix string) string {
+	return t.StringParameter + " " + suffix
+}
+
 func NewMockType() *MockType {
 	return &MockType{}
 }
