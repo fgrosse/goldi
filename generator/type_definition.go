@@ -9,13 +9,15 @@ import (
 
 // A TypeDefinition holds all information necessary to register a type for a specific type ID
 type TypeDefinition struct {
-	Package       string        `yaml:"package"`
-	TypeName      string        `yaml:"type"`
-	FuncName      string        `yaml:"func"`
-	FactoryMethod string        `yaml:"factory"`
-	AliasForType  string        `yaml:"alias"`
-	Configurator  []string      `yaml:"configurator"`
-	RawArguments  []interface{} `yaml:"arguments,omitempty"`
+	Package       string   `yaml:"package"`
+	TypeName      string   `yaml:"type"`
+	FuncName      string   `yaml:"func"`
+	FactoryMethod string   `yaml:"factory"`
+	AliasForType  string   `yaml:"alias"`
+	Configurator  []string `yaml:"configurator"`
+
+	RawArguments      []interface{} `yaml:"arguments,omitempty"`
+	RawArgumentsShort []interface{} `yaml:"args,omitempty"`
 
 	// ForcePackageName can be used in case the full package does not correspond to the actual package name
 	ForcePackageName string `yaml:"package-name,omitempty"`
@@ -82,8 +84,10 @@ func (t *TypeDefinition) Validate(typeID string) error {
 		return t.validateTypeAlias(typeID)
 	}
 
-	if err := t.requireField("package", t.Package, typeID); err != nil {
-		return err
+	if t.FuncName == "" || t.FuncName[0] != '@' {
+		if err := t.requireField("package", t.Package, typeID); err != nil {
+			return err
+		}
 	}
 
 	if t.TypeName == "" && t.FuncName == "" {
@@ -163,8 +167,9 @@ func (t *TypeDefinition) PackageName() string {
 }
 
 func (t *TypeDefinition) Arguments() []string {
-	arguments := make([]string, len(t.RawArguments))
-	for i, arg := range t.RawArguments {
+	rawArgs := append(t.RawArguments, t.RawArgumentsShort...)
+	arguments := make([]string, len(rawArgs))
+	for i, arg := range rawArgs {
 		switch a := arg.(type) {
 		case string:
 			arguments[i] = fmt.Sprintf(`"%s"`, a)

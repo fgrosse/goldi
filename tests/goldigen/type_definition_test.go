@@ -91,6 +91,13 @@ var _ = Describe("TypeDefinition", func() {
 			}
 			Expect(t.Validate("foobar")).To(MatchError(`configurator method of type "foobar" is not exported (lowercase)`))
 		})
+
+		It("should not return an error if a func reference type does not contain a package name", func() {
+			t := generator.TypeDefinition{
+				FuncName:     "@blup::DoStuff",
+			}
+			Expect(t.Validate("foobar")).To(Succeed())
+		})
 	})
 
 	Describe("PackageName", func() {
@@ -114,28 +121,54 @@ var _ = Describe("TypeDefinition", func() {
 		})
 	})
 
-	It("should return all parameters such that they can be used in go code directly", func() {
-		t := generator.TypeDefinition{
-			Package:       "foo/bar",
-			FactoryMethod: "NewBaz",
-			RawArguments: []interface{}{
-				"Hello World",
-				true,
-				42,
-				3.1415,
-				"%some_parameter%",
-				"Hello\t\tWorld",
-			},
-		}
+	Describe("Arguments", func() {
+		It("should return all parameters such that they can be used in go code directly", func() {
+			t := generator.TypeDefinition{
+				Package:       "foo/bar",
+				FactoryMethod: "NewBaz",
+				RawArguments: []interface{}{
+					"Hello World",
+					true,
+					42,
+					3.1415,
+					"%some_parameter%",
+					"Hello\t\tWorld",
+				},
+			}
 
-		arguments := t.Arguments()
-		Expect(arguments).To(HaveLen(6))
-		Expect(arguments[0]).To(Equal(`"Hello World"`))
-		Expect(arguments[1]).To(Equal(`true`))
-		Expect(arguments[2]).To(Equal(`42`))
-		Expect(arguments[3]).To(Equal(`3.1415`))
-		Expect(arguments[4]).To(Equal(`"%some_parameter%"`))
-		Expect(arguments[5]).To(Equal("\"Hello\t\tWorld\""))
+			arguments := t.Arguments()
+			Expect(arguments).To(HaveLen(6))
+			Expect(arguments[0]).To(Equal(`"Hello World"`))
+			Expect(arguments[1]).To(Equal(`true`))
+			Expect(arguments[2]).To(Equal(`42`))
+			Expect(arguments[3]).To(Equal(`3.1415`))
+			Expect(arguments[4]).To(Equal(`"%some_parameter%"`))
+			Expect(arguments[5]).To(Equal("\"Hello\t\tWorld\""))
+		})
+
+		It("should return all arguments from RawArgumentsShort", func() {
+			t := generator.TypeDefinition{
+				Package:       "foo/bar",
+				FactoryMethod: "NewBaz",
+				RawArgumentsShort: []interface{}{
+					"Hello World",
+					true,
+					42,
+					3.1415,
+					"%some_parameter%",
+					"Hello\t\tWorld",
+				},
+			}
+
+			arguments := t.Arguments()
+			Expect(arguments).To(HaveLen(6))
+			Expect(arguments[0]).To(Equal(`"Hello World"`))
+			Expect(arguments[1]).To(Equal(`true`))
+			Expect(arguments[2]).To(Equal(`42`))
+			Expect(arguments[3]).To(Equal(`3.1415`))
+			Expect(arguments[4]).To(Equal(`"%some_parameter%"`))
+			Expect(arguments[5]).To(Equal("\"Hello\t\tWorld\""))
+		})
 	})
 
 	Describe("RegistrationCode", func() {
