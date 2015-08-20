@@ -49,7 +49,9 @@ func newTypeFromFactoryFunction(function interface{}, factoryType reflect.Type, 
 		panic(fmt.Errorf("return parameter is no interface or pointer but a %v", kindOfGeneratedType))
 	}
 
-	if factoryType.IsVariadic() == false && factoryType.NumIn() != len(parameters) {
+	if factoryType.IsVariadic() {
+		parameters = makeVariadic(factoryType, parameters)
+	} else if factoryType.NumIn() != len(parameters) {
 		panic(fmt.Errorf("invalid number of input parameters: got %d but expected %d", len(parameters), factoryType.NumIn()))
 	}
 
@@ -60,11 +62,30 @@ func newTypeFromFactoryFunction(function interface{}, factoryType reflect.Type, 
 	}
 }
 
-func buildFactoryCallArguments(factoryType reflect.Type, factoryParameters []interface{}) []reflect.Value {
-	if factoryType.IsVariadic() {
-		factoryParameters = []interface{}{factoryParameters}
+func makeVariadic(t reflect.Type, allParameters []interface{}) []interface{} {
+	if t.NumIn() > len(allParameters) {
+		panic(fmt.Errorf("invalid number of input parameters for variadic function: got %d but expected at least %d", len(allParameters), t.NumIn()))
 	}
 
+	actualNumberOfArgs := t.NumIn()
+	internalParameters := make([]interface{}, actualNumberOfArgs)
+	for i, _ := range allParameters[:actualNumberOfArgs-1] {
+		internalParameters[i] = allParameters[i]
+	}
+	variadicType := t.In(actualNumberOfArgs-1)
+
+	n := len(allParameters)-actualNumberOfArgs+1
+	variadicSlice := reflect.MakeSlice(variadicType, n, n)
+	for i, p := range allParameters[actualNumberOfArgs-1:] {
+		variadicSlice.Index(i).Set(reflect.ValueOf(p))
+	}
+
+	internalParameters[actualNumberOfArgs-1] = variadicSlice.Interface()
+
+	return internalParameters
+}
+
+func buildFactoryCallArguments(factoryType reflect.Type, factoryParameters []interface{}) []reflect.Value {
 	args := make([]reflect.Value, len(factoryParameters))
 	for i, argument := range factoryParameters {
 		expectedArgumentType := factoryType.In(i)
@@ -101,7 +122,13 @@ func (t *Type) Generate(parameterResolver *ParameterResolver) interface{} {
 	}
 
 	args := t.generateFactoryArguments(parameterResolver)
-	result := t.factory.Call(args)
+	var result []reflect.Value
+	if t.factoryType.IsVariadic() {
+		result = t.factory.CallSlice(args)
+	} else {
+		result = t.factory.Call(args)
+	}
+
 	if len(result) == 0 {
 		// in theory this condition can never evaluate to true since we check the number of return arguments in NewType
 		panic(fmt.Errorf("no return parameter found. this should never ever happen ò.Ó"))

@@ -4,7 +4,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"errors"
 	"github.com/fgrosse/goldi"
 	"github.com/fgrosse/goldi/tests/testAPI"
 )
@@ -80,8 +79,16 @@ var _ = Describe("Type", func() {
 
 			Context("when the arguments are variadic", func() {
 				It("should create the type", func() {
-					typeDef := goldi.NewType(testAPI.NewVariadicMockType, "1", "two", "drei")
+					typeDef := goldi.NewType(testAPI.NewVariadicMockType, true, "ignored", "1", "two", "drei")
 					Expect(typeDef).NotTo(BeNil())
+				})
+
+				It("should return an error if not enough arguments where given", func() {
+					defer func() {
+						Expect(recover()).To(MatchError("could not register type: invalid number of input parameters for variadic function: got 1 but expected at least 3"))
+					}()
+
+					goldi.NewType(testAPI.NewVariadicMockType, true)
 				})
 			})
 		})
@@ -110,11 +117,7 @@ var _ = Describe("Type", func() {
 		It("should panic if Generate is called on an uninitialized type", func() {
 			typeDef := &goldi.Type{}
 			defer func() {
-				r := recover()
-				Expect(r).NotTo(BeNil(), "Expected Generate to panic")
-				Expect(r).To(BeAssignableToTypeOf(errors.New("")))
-				err := r.(error)
-				Expect(err.Error()).To(Equal("could not generate type: this type is not initialized. Did you use NewType to create it?"))
+				Expect(recover()).To(MatchError("could not generate type: this type is not initialized. Did you use NewType to create it?"))
 			}()
 
 			typeDef.Generate(resolver)
@@ -159,15 +162,25 @@ var _ = Describe("Type", func() {
 						typeDef := goldi.NewType(testAPI.NewTypeForServiceInjectionWithArgs, "@foo", "arg1", "arg2", true)
 
 						defer func() {
-							r := recover()
-							Expect(r).NotTo(BeNil(), "Expected Generate to panic")
-							Expect(r).To(BeAssignableToTypeOf(errors.New("")))
-							err := r.(error)
-							Expect(err.Error()).To(Equal("could not generate type: the referenced type \"@foo\" (type *testAPI.Foo) can not be passed as argument 1 to the function signature testAPI.NewTypeForServiceInjectionWithArgs(*testAPI.MockType, string, string, bool)"))
+							Expect(recover()).To(MatchError("could not generate type: the referenced type \"@foo\" (type *testAPI.Foo) can not be passed as argument 1 to the function signature testAPI.NewTypeForServiceInjectionWithArgs(*testAPI.MockType, string, string, bool)"))
 						}()
 
 						typeDef.Generate(resolver)
 					})
+				})
+			})
+
+			Context("when the arguments are variadic", func() {
+				It("should generate the type", func() {
+					typeDef := goldi.NewType(testAPI.NewVariadicMockType, true, "ignored", "1", "two", "drei")
+					Expect(typeDef).NotTo(BeNil())
+
+					generatedType := typeDef.Generate(resolver)
+					Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
+
+					generatedMock := generatedType.(*testAPI.MockType)
+					Expect(generatedMock.BoolParameter).To(BeTrue())
+					Expect(generatedMock.StringParameter).To(Equal("1, two, drei"))
 				})
 			})
 		})

@@ -112,7 +112,7 @@ func (g *Generator) generateImports(conf *TypesConfiguration, output io.Writer) 
 
 	fmt.Fprint(output, "import (\n")
 	for _, pkg := range packages {
-		if pkg != g.Config.Package {
+		if pkg != "" && pkg != g.Config.Package {
 			g.logVerbose("Detected new import package %q", pkg)
 			fmt.Fprintf(output, "\t%q\n", pkg)
 		}

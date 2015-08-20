@@ -19,8 +19,11 @@ func NewMockTypeWithArgs(stringParameter string, boolParameter bool) *MockType {
 	return &MockType{stringParameter, boolParameter}
 }
 
-func NewVariadicMockType(parameters ...string) *MockType {
-	return &MockType{StringParameter: strings.Join(parameters, ", ")}
+func NewVariadicMockType(foo bool, bar string, parameters ...string) *MockType {
+	return &MockType{
+		BoolParameter:   foo,
+		StringParameter: strings.Join(parameters, ", "),
+	}
 }
 
 type MockTypeFactory struct {
