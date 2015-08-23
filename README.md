@@ -55,7 +55,7 @@ validator := goldi.NewContainerValidator()
 validator.MustValidate(container) // will panic, use validator.Validate to get the error
 
 // whoever has access to the container can request these types now
-logger := container.Get("logger").(LoggerInterface)
+logger := container.MustGet("logger").(LoggerInterface)
 logger.DoStuff("...")
 
 // in the tests you might want to exchange the registered types with mocks or other implementations

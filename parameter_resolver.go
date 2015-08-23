@@ -55,7 +55,11 @@ func (r *ParameterResolver) resolveParameter(parameter reflect.Value, stringPara
 func (r *ParameterResolver) resolveTypeReference(typeIDAndPrefix string, expectedType reflect.Type) (reflect.Value, error) {
 	t := NewTypeID(typeIDAndPrefix)
 
-	typeInstance, typeDefined := r.Container.get(t.ID)
+	typeInstance, typeDefined, err := r.Container.get(t.ID)
+	if err != nil {
+		return reflect.Zero(expectedType), err
+	}
+
 	if typeDefined == false {
 		if t.IsOptional {
 			return reflect.Zero(expectedType), nil

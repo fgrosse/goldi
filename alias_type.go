@@ -21,5 +21,5 @@ func (a *aliasType) Generate(resolver *ParameterResolver) (interface{}, error) {
 		return r.Generate(resolver)
 	}
 
-	return resolver.Container.Get(a.typeID), nil
+	return resolver.Container.Get(a.typeID)
 }

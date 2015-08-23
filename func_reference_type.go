@@ -7,8 +7,7 @@ import (
 )
 
 type funcReferenceType struct {
-	typeID string
-	functionName string
+	*TypeID
 }
 
 func NewFuncReferenceType(typeID, functionName string) TypeFactory {
@@ -16,21 +15,24 @@ func NewFuncReferenceType(typeID, functionName string) TypeFactory {
 		return newInvalidType(fmt.Errorf("can not use unexported method %q as second argument to NewFuncReferenceType", functionName))
 	}
 
-	return &funcReferenceType{typeID, functionName}
+	return &funcReferenceType{NewTypeID("@"+typeID + "::" + functionName)}
 }
 
 func (t *funcReferenceType) Arguments() []interface{} {
-	return []interface{}{"@" + t.typeID}
+	return []interface{}{"@" + t.ID}
 }
 
 func (t *funcReferenceType) Generate(resolver *ParameterResolver) (interface{}, error) {
-	referencedType := resolver.Container.Get(t.typeID)
+	referencedType, err := resolver.Container.Get(t.ID)
+	if err != nil {
+		return nil, fmt.Errorf("could not generate func reference type %s : type %s does not exist", t.ID)
+	}
 
 	v := reflect.ValueOf(referencedType)
-	method := v.MethodByName(t.functionName)
+	method := v.MethodByName(t.FuncReferenceMethod)
 
 	if method.IsValid() == false {
-		return nil, fmt.Errorf("could not generate func reference type @%s::%s method does not exist", t.typeID, t.functionName)
+		return nil, fmt.Errorf("could not generate func reference type %s : method does not exist", t)
 	}
 
 	return method.Interface(), nil

@@ -58,7 +58,7 @@ var _ = Describe("FuncReferenceType", func() {
 			typeDef := NewFuncReferenceType("foo", "ThisMethodDoesNotExist")
 
 			_, err := typeDef.Generate(resolver)
-			Expect(err).To(MatchError("could not generate func reference type @foo::ThisMethodDoesNotExist method does not exist"))
+			Expect(err).To(MatchError("could not generate func reference type @foo::ThisMethodDoesNotExist : method does not exist"))
 		})
 	})
 })

@@ -159,7 +159,7 @@ func (c *TypeReferencesConstraint) typeReferenceArguments(allArguments []interfa
 	return typeRefParameters
 }
 
-func (c *TypeReferencesConstraint) checkTypeIsDefined(t, referencedType TypeID, container *Container) (TypeFactory, error) {
+func (c *TypeReferencesConstraint) checkTypeIsDefined(t, referencedType *TypeID, container *Container) (TypeFactory, error) {
 	typeDef, isDefined := container.TypeRegistry[referencedType.ID]
 	if isDefined == false {
 		return nil, fmt.Errorf("type %q references unknown type %q", t.ID, referencedType.ID)

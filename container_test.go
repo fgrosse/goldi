@@ -21,12 +21,12 @@ var _ = Describe("Container", func() {
 	})
 
 	It("should panic if a type can not be resolved", func() {
-		Expect(func() { container.Get("foo.bar") }).To(Panic())
+		Expect(func() { container.MustGet("foo.bar") }).To(Panic())
 	})
 
 	It("should resolve simple types", func() {
 		registry.RegisterType("test_type", tests.NewMockType)
-		Expect(container.Get("test_type")).To(BeAssignableToTypeOf(&tests.MockType{}))
+		Expect(container.MustGet("test_type")).To(BeAssignableToTypeOf(&tests.MockType{}))
 	})
 
 	It("should build the types lazily", func() {
@@ -39,7 +39,7 @@ var _ = Describe("Container", func() {
 		Expect(generatorWrapper).NotTo(BeNil())
 
 		Expect(generator.HasBeenUsed).To(BeFalse())
-		container.Get(typeID)
+		container.MustGet(typeID)
 		Expect(generator.HasBeenUsed).To(BeTrue())
 	})
 
@@ -52,9 +52,9 @@ var _ = Describe("Container", func() {
 		Expect(typeIsRegistered).To(BeTrue())
 		Expect(generatorWrapper).NotTo(BeNil())
 
-		firstResult := container.Get(typeID)
-		secondResult := container.Get(typeID)
-		thirdResult := container.Get(typeID)
+		firstResult := container.MustGet(typeID)
+		secondResult := container.MustGet(typeID)
+		thirdResult := container.MustGet(typeID)
 		Expect(firstResult == secondResult).To(BeTrue())
 		Expect(firstResult == thirdResult).To(BeTrue())
 	})
@@ -64,7 +64,7 @@ var _ = Describe("Container", func() {
 		typeDef := NewType(tests.NewMockTypeWithArgs, "parameter1", true)
 		registry.Register(typeID, typeDef)
 
-		generatedType := container.Get("test_type")
+		generatedType := container.MustGet("test_type")
 		Expect(generatedType).NotTo(BeNil())
 		Expect(generatedType).To(BeAssignableToTypeOf(&tests.MockType{}))
 
@@ -81,7 +81,7 @@ var _ = Describe("Container", func() {
 		config["parameter1"] = "test"
 		config["parameter2"] = true
 
-		generatedType := container.Get("test_type")
+		generatedType := container.MustGet("test_type")
 		Expect(generatedType).NotTo(BeNil())
 		Expect(generatedType).To(BeAssignableToTypeOf(&tests.MockType{}))
 
@@ -94,7 +94,7 @@ var _ = Describe("Container", func() {
 		registry.Register("injected_type", NewType(tests.NewMockType))
 		registry.Register("main_type", NewType(tests.NewTypeForServiceInjection, "@injected_type"))
 
-		generatedType := container.Get("main_type")
+		generatedType := container.MustGet("main_type")
 		Expect(generatedType).NotTo(BeNil())
 		Expect(generatedType).To(BeAssignableToTypeOf(&tests.TypeForServiceInjection{}))
 
@@ -107,8 +107,8 @@ var _ = Describe("Container", func() {
 		registry.RegisterType("type1", tests.NewTypeForServiceInjection, "@foo")
 		registry.RegisterType("type2", tests.NewTypeForServiceInjection, "@foo")
 
-		generatedType1 := container.Get("type1")
-		generatedType2 := container.Get("type2")
+		generatedType1 := container.MustGet("type1")
+		generatedType2 := container.MustGet("type2")
 		Expect(generatedType1).To(BeAssignableToTypeOf(&tests.TypeForServiceInjection{}))
 		Expect(generatedType2).To(BeAssignableToTypeOf(&tests.TypeForServiceInjection{}))
 
@@ -121,7 +121,7 @@ var _ = Describe("Container", func() {
 	It("should inject nil when using optional types that are not defined", func() {
 		registry.Register("main_type", NewType(tests.NewTypeForServiceInjection, "@?optional_type"))
 
-		generatedType := container.Get("main_type")
+		generatedType := container.MustGet("main_type")
 		Expect(generatedType).NotTo(BeNil())
 		Expect(generatedType).To(BeAssignableToTypeOf(&tests.TypeForServiceInjection{}))
 

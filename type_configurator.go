@@ -38,7 +38,11 @@ func (c *TypeConfigurator) Configure(thing interface{}, container *Container) er
 		return fmt.Errorf("can not configure nil")
 	}
 
-	configurator, typeDefined := container.get(c.ConfiguratorTypeID)
+	configurator, typeDefined, err := container.get(c.ConfiguratorTypeID)
+	if err != nil {
+		return err
+	}
+
 	if typeDefined == false {
 		return NewUnknownTypeReferenceError(c.ConfiguratorTypeID, `the configurator type "@%s" has not been defined`, c.ConfiguratorTypeID)
 	}
