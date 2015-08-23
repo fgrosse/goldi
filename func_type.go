@@ -28,10 +28,10 @@ func (t *FuncType) Arguments() []interface{} {
 	return []interface{}{}
 }
 
-func (t *FuncType) Generate(parameterResolver *ParameterResolver) interface{} {
+func (t *FuncType) Generate(parameterResolver *ParameterResolver) (interface{}, error) {
 	if t.function == nil {
-		panic(fmt.Errorf("could not generate type: this func type is not initialized. Did you use NewFuncType to create it?"))
+		return nil, fmt.Errorf("could not generate type: this func type is not initialized. Did you use NewFuncType to create it?")
 	}
 
-	return t.function
+	return t.function, nil
 }

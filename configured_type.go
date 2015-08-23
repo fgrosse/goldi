@@ -37,12 +37,15 @@ func (t *ConfiguredType) Arguments() []interface{} {
 	return append(t.EmbeddedType.Arguments(), "@"+t.ConfiguratorTypeID)
 }
 
-func (t *ConfiguredType) Generate(parameterResolver *ParameterResolver) interface{} {
-	embedded := t.EmbeddedType.Generate(parameterResolver)
-	err := t.Configure(embedded, parameterResolver.Container)
+func (t *ConfiguredType) Generate(parameterResolver *ParameterResolver) (interface{}, error) {
+	embedded, err := t.EmbeddedType.Generate(parameterResolver)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("can not generate configured type: %s", err)
 	}
 
-	return embedded
+	if err = t.Configure(embedded, parameterResolver.Container); err != nil {
+		return nil, err
+	}
+
+	return embedded, nil
 }

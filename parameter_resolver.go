@@ -53,7 +53,7 @@ func (r *ParameterResolver) resolveParameter(parameter reflect.Value, stringPara
 }
 
 func (r *ParameterResolver) resolveTypeReference(typeIDAndPrefix string, expectedType reflect.Type) (reflect.Value, error) {
-	t := newTypeId(typeIDAndPrefix)
+	t := NewTypeID(typeIDAndPrefix)
 
 	typeInstance, typeDefined := r.Container.get(t.ID)
 	if typeDefined == false {

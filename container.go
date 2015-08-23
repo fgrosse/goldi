@@ -18,9 +18,9 @@ type Container struct {
 // NewContainer creates a new container instance using the provided arguments
 func NewContainer(registry TypeRegistry, config map[string]interface{}) *Container {
 	c := &Container{
-		TypeRegistry:      registry,
-		config:            config,
-		typeCache:         map[string]interface{}{},
+		TypeRegistry: registry,
+		config:       config,
+		typeCache:    map[string]interface{}{},
 	}
 
 	c.parameterResolver = NewParameterResolver(c)
@@ -57,6 +57,10 @@ func (c *Container) get(typeID string) (interface{}, bool) {
 		return nil, false
 	}
 
-	c.typeCache[typeID] = generator.Generate(c.parameterResolver)
-	return c.typeCache[typeID], true
+	instance, err := generator.Generate(c.parameterResolver)
+	if err != nil {
+		panic(fmt.Errorf("goldi: error while genereating type %q: %s", typeID, err))
+	}
+	c.typeCache[typeID] = instance
+	return instance, true
 }

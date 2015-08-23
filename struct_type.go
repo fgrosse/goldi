@@ -67,27 +67,25 @@ func (t *StructType) Arguments() []interface{} {
 }
 
 // Generate will instantiate a new instance of the according type.
-func (t *StructType) Generate(parameterResolver *ParameterResolver) interface{} {
-	defer func() {
-		if r := recover(); r != nil {
-			panic(fmt.Errorf("could not generate type: %v", r))
-		}
-	}()
-
+func (t *StructType) Generate(parameterResolver *ParameterResolver) (interface{}, error) {
 	if t.structType == nil {
 		panic("this struct type is not initialized. Did you use NewStructType to create it?")
 	}
 
-	args := t.generateTypeFields(parameterResolver)
+	args, err := t.generateTypeFields(parameterResolver)
+	if err != nil {
+		return nil, err
+	}
+
 	newStructInstance := reflect.New(t.structType)
 	for i := 0; i < len(args); i++ {
 		newStructInstance.Elem().Field(i).Set(args[i])
 	}
 
-	return newStructInstance.Interface()
+	return newStructInstance.Interface(), nil
 }
 
-func (t *StructType) generateTypeFields(parameterResolver *ParameterResolver) []reflect.Value {
+func (t *StructType) generateTypeFields(parameterResolver *ParameterResolver) ([]reflect.Value, error) {
 	args := make([]reflect.Value, len(t.structFields))
 	var err error
 
@@ -99,13 +97,13 @@ func (t *StructType) generateTypeFields(parameterResolver *ParameterResolver) []
 		case nil:
 			continue
 		case TypeReferenceError:
-			panic(t.invalidReferencedTypeErr(errorType.TypeID, errorType.TypeInstance, i))
+			return nil, t.invalidReferencedTypeErr(errorType.TypeID, errorType.TypeInstance, i)
 		default:
-			panic(err)
+			return nil, err
 		}
 	}
 
-	return args
+	return args, nil
 }
 
 func (t *StructType) invalidReferencedTypeErr(typeID string, typeInstance interface{}, i int) error {

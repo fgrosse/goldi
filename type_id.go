@@ -2,14 +2,14 @@ package goldi
 
 import "strings"
 
-type typeIDT struct {
+type TypeID struct {
 	ID, Raw             string
 	FuncReferenceMethod string
 	IsOptional          bool
 	IsFuncReference     bool
 }
 
-func newTypeId(s string) (t typeIDT) {
+func NewTypeID(s string) (t TypeID) {
 	if s == "" {
 		panic("can not create typeID from empty string")
 	}

@@ -22,15 +22,15 @@ func (t *FuncReferenceType) Arguments() []interface{} {
 	return []interface{}{"@" + t.TypeID}
 }
 
-func (t *FuncReferenceType) Generate(resolver *ParameterResolver) interface{} {
+func (t *FuncReferenceType) Generate(resolver *ParameterResolver) (interface{}, error) {
 	referencedType := resolver.Container.Get(t.TypeID)
 
 	v := reflect.ValueOf(referencedType)
 	method := v.MethodByName(t.FunctionName)
 
 	if method.IsValid() == false {
-		panic(fmt.Errorf("could not generate func reference type @%s::%s method does not exist", t.TypeID, t.FunctionName))
+		return nil, fmt.Errorf("could not generate func reference type @%s::%s method does not exist", t.TypeID, t.FunctionName)
 	}
 
-	return method.Interface()
+	return method.Interface(), nil
 }
