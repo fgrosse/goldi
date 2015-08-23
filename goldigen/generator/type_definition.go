@@ -44,7 +44,7 @@ func (t *TypeDefinition) RegistrationCode(typeID, outputPackageName string) stri
 		if alias[0] == '@' {
 			alias = alias[1:]
 		}
-		typeFactoryCode = fmt.Sprintf("goldi.NewTypeAlias(%q)", alias)
+		typeFactoryCode = fmt.Sprintf("goldi.NewAliasType(%q)", alias)
 	} else {
 		var factoryMethod string
 		if t.FactoryMethod != "" {

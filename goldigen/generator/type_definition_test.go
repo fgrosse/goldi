@@ -201,7 +201,7 @@ var _ = Describe("TypeDefinition", func() {
 
 		It("should return the golang code to register a type alias", func() {
 			typeDef.AliasForType = "@test_type"
-			Expect(typeDef.RegistrationCode("my_alias", "some/package/lib")).To(Equal(`types.Register("my_alias", goldi.NewTypeAlias("test_type"))`))
+			Expect(typeDef.RegistrationCode("my_alias", "some/package/lib")).To(Equal(`types.Register("my_alias", goldi.NewAliasType("test_type"))`))
 		})
 
 		It("should return the golang code to register a func reference type", func() {
