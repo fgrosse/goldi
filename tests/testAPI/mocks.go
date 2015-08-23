@@ -7,6 +7,10 @@ type MockType struct {
 	BoolParameter   bool
 }
 
+func (t *MockType) DoStuff() string {
+	return "I did stuff"
+}
+
 func (t *MockType) ReturnString(suffix string) string {
 	return t.StringParameter + " " + suffix
 }

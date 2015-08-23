@@ -67,13 +67,17 @@ var _ = Describe("ContainerValidator", func() {
 
 	It("should not return an error when everything is OK", func() {
 		config["param"] = true
-		injectedTypeID := "goldi.injected_type"
-		typeDef1 := goldi.NewType(testAPI.NewMockTypeWithArgs, "hello world", "%param%")
-		registry.Register(injectedTypeID, typeDef1)
+		registry.Register("goldi.injected_type",
+			goldi.NewType(testAPI.NewMockTypeWithArgs, "hello world", "%param%"),
+		)
 
-		otherTypeID := "goldi.main_type"
-		typeDef2 := goldi.NewType(testAPI.NewTypeForServiceInjection, "@goldi.injected_type")
-		registry.Register(otherTypeID, typeDef2)
+		registry.Register("goldi.main_type",
+			goldi.NewType(testAPI.NewTypeForServiceInjection, "@goldi.injected_type"),
+		)
+
+		registry.Register("goldi.foo_type",
+			goldi.NewType(testAPI.NewMockTypeWithArgs, "@goldi.injected_type::DoStuff", true),
+		)
 
 		Expect(validator.Validate(container)).To(Succeed())
 	})

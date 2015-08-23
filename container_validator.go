@@ -116,7 +116,7 @@ func (c *TypeReferencesConstraint) validateTypeReferences(typeID string, contain
 			continue
 		}
 
-		referencedTypeFactory, err := c.checkTypeIsDefined(typeID, referencedTypeID, container)
+		referencedTypeFactory, err := c.checkTypeIsDefined(newTypeId(typeID), newTypeId(referencedTypeID), container)
 		if err != nil {
 			return err
 		}
@@ -143,10 +143,10 @@ func (c *TypeReferencesConstraint) typeReferenceArguments(allArguments []interfa
 	return typeRefParameters
 }
 
-func (c *TypeReferencesConstraint) checkTypeIsDefined(typeID, referencedTypeID string, container *Container) (TypeFactory, error) {
-	typeDef, isDefined := container.TypeRegistry[referencedTypeID]
+func (c *TypeReferencesConstraint) checkTypeIsDefined(t, referencedType typeIDT, container *Container) (TypeFactory, error) {
+	typeDef, isDefined := container.TypeRegistry[referencedType.ID]
 	if isDefined == false {
-		return nil, fmt.Errorf("type %q references unkown type %q", typeID, referencedTypeID)
+		return nil, fmt.Errorf("type %q references unknown type %q", t.ID, referencedType.ID)
 	}
 
 	return typeDef, nil
@@ -157,7 +157,7 @@ func (c *TypeReferencesConstraint) checkCircularDependency(typeFactory TypeFacto
 	typeRefParameters := c.typeReferenceArguments(allArguments)
 
 	for _, referencedTypeID := range typeRefParameters {
-		referencedType, err := c.checkTypeIsDefined(typeID, referencedTypeID, container)
+		referencedType, err := c.checkTypeIsDefined(newTypeId(typeID), newTypeId(referencedTypeID), container)
 		if err != nil {
 			// TEST: test this for improved code coverage
 			return nil
