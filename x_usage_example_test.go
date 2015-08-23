@@ -34,7 +34,7 @@ func Example_Usage_Goldi() {
 
 	// once you are done registering all your types you should probably validate the container
 	validator := goldi.NewContainerValidator()
-	validator.MustValidate(container)
+	validator.MustValidate(container) // will panic, use validator.Validate to get the error
 
 	// whoever has access to the container can request these types now
 	logger := container.Get("logger").(LoggerInterface)

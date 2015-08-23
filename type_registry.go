@@ -29,7 +29,7 @@ func (r TypeRegistry) RegisterType(typeID string, factory interface{}, arguments
 	case kind == reflect.Func:
 		typeFactory = NewType(factory, arguments...)
 	default:
-		panic(fmt.Errorf("could not register type %q: could not determine TypeFactory for factory type %T", typeID, factory))
+		panic(fmt.Errorf("could not register type %q: could not determine TypeFactory for factory type %T", typeID, factory)) // FIXME don't panic
 	}
 
 	r.Register(typeID, typeFactory)

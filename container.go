@@ -40,7 +40,7 @@ func NewContainer(registry TypeRegistry, config map[string]interface{}) *Contain
 func (c *Container) Get(typeID string) interface{} {
 	instance, isDefined := c.get(typeID)
 	if isDefined == false {
-		panic(fmt.Errorf("could not get type %q : no such type has been defined", typeID))
+		panic(fmt.Errorf("could not get type %q : no such type has been defined", typeID)) // FIXME don't panic
 	}
 
 	return instance
@@ -59,7 +59,7 @@ func (c *Container) get(typeID string) (interface{}, bool) {
 
 	instance, err := generator.Generate(c.parameterResolver)
 	if err != nil {
-		panic(fmt.Errorf("goldi: error while genereating type %q: %s", typeID, err))
+		panic(fmt.Errorf("goldi: error while genereating type %q: %s", typeID, err)) // FIXME don't panic
 	}
 	c.typeCache[typeID] = instance
 	return instance, true

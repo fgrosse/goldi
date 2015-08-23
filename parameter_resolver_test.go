@@ -1,10 +1,9 @@
-package goldi_test
+package goldi
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/fgrosse/goldi"
 	"github.com/fgrosse/goldi/tests"
 	"reflect"
 )
@@ -13,14 +12,14 @@ var _ = Describe("ParameterResolver", func() {
 
 	var (
 		config    map[string]interface{}
-		container *goldi.Container
-		resolver  *goldi.ParameterResolver
+		container *Container
+		resolver  *ParameterResolver
 	)
 
 	BeforeEach(func() {
 		config = map[string]interface{}{}
-		container = goldi.NewContainer(goldi.NewTypeRegistry(), config)
-		resolver = goldi.NewParameterResolver(container)
+		container = NewContainer(NewTypeRegistry(), config)
+		resolver = NewParameterResolver(container)
 	})
 
 	It("should return static parameters", func() {
@@ -105,7 +104,7 @@ var _ = Describe("ParameterResolver", func() {
 
 					result, err := resolver.Resolve(parameter, expectedType)
 					Expect(err).To(HaveOccurred())
-					Expect(err).To(MatchError(goldi.NewTypeReferenceError("foo", tests.NewFoo(), `the referenced type "@foo" (type *tests.Foo) is not assignable to the expected type *tests.Bar`)))
+					Expect(err).To(MatchError(NewTypeReferenceError("foo", tests.NewFoo(), `the referenced type "@foo" (type *tests.Foo) is not assignable to the expected type *tests.Bar`)))
 					Expect(result.IsValid()).To(BeFalse())
 				})
 			})
@@ -133,7 +132,7 @@ var _ = Describe("ParameterResolver", func() {
 
 				result, err := resolver.Resolve(parameter, expectedType)
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(goldi.NewUnknownTypeReferenceError("foo", `the referenced type "@foo" has not been defined`)))
+				Expect(err).To(MatchError(NewUnknownTypeReferenceError("foo", `the referenced type "@foo" has not been defined`)))
 				Expect(result.IsValid()).To(BeFalse())
 			})
 		})

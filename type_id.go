@@ -9,6 +9,7 @@ type TypeID struct {
 	IsFuncReference     bool
 }
 
+// NewTypeID creates a new TypeId. Trying to create a type ID from an empty string will panic
 func NewTypeID(s string) (t TypeID) {
 	if s == "" {
 		panic("can not create typeID from empty string")

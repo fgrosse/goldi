@@ -52,7 +52,7 @@ container.Register("http_handler", goldi.NewFuncType(func(w http.ResponseWriter,
 
 // once you are done registering all your types you should probably validate the container
 validator := goldi.NewContainerValidator()
-validator.MustValidate(container)
+validator.MustValidate(container) // will panic, use validator.Validate to get the error
 
 // whoever has access to the container can request these types now
 logger := container.Get("logger").(LoggerInterface)
@@ -156,8 +156,11 @@ Now all you need to to is to create the di container as you would just using the
 RegisterTypes(registry)
 ```
 
-If you have a serious error in your type registration (like returning more than one result from your type factory method) goldi will panic.
-Additionally you should use the [`ContainerValidator`][8] to check for any undefined parameters or circular type dependencies.
+If you have a serious error in your type registration (like returning more than one result from your type factory method)
+goldi defers error handling by return an invalid type. You can check for invalid types with the `ContainerValidator`
+or by using `goldi.IsValid(TypeFactory)` directly.
+Using the [`ContainerValidator`][8] is always the preferred option since it will check for a wide variety of bad configurations
+like undefined parameters or circular type dependencies.
 
 Note that using goldigen is completely optional. If you do not like the idea of having an extra build step for your application just use goldis API directly.
 

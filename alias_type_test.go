@@ -1,43 +1,42 @@
-package goldi_test
+package goldi
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/fgrosse/goldi"
 	"github.com/fgrosse/goldi/tests"
 )
 
 var _ = Describe("AliasType", func() {
 	It("should implement the TypeFactory interface", func() {
-		var factory goldi.TypeFactory
-		factory = goldi.NewAliasType("foo")
+		var factory TypeFactory
+		factory = NewAliasType("foo")
 		// if this compiles the test passes (next expectation only to make compiler happy)
 		Expect(factory).NotTo(BeNil())
 	})
 
 	Describe("Arguments()", func() {
 		It("should return the aliased service ID", func() {
-			typeDef := goldi.NewAliasType("foo")
+			typeDef := NewAliasType("foo")
 			Expect(typeDef.Arguments()).To(Equal([]interface{}{"@foo"}))
 		})
 	})
 
 	Describe("Generate()", func() {
 		var (
-			container *goldi.Container
-			resolver  *goldi.ParameterResolver
+			container *Container
+			resolver  *ParameterResolver
 		)
 
 		BeforeEach(func() {
 			config := map[string]interface{}{}
-			container = goldi.NewContainer(goldi.NewTypeRegistry(), config)
-			resolver = goldi.NewParameterResolver(container)
+			container = NewContainer(NewTypeRegistry(), config)
+			resolver = NewParameterResolver(container)
 		})
 
 		It("should act as alias for the actual type", func() {
-			container.Register("foo", goldi.NewStructType(tests.MockType{}, "I was created by @foo"))
-			alias := goldi.NewAliasType("foo")
+			container.Register("foo", NewStructType(tests.MockType{}, "I was created by @foo"))
+			alias := NewAliasType("foo")
 
 			generated, err := alias.Generate(resolver)
 			Expect(err).NotTo(HaveOccurred())
@@ -46,8 +45,8 @@ var _ = Describe("AliasType", func() {
 		})
 
 		It("should work with func reference types", func() {
-			container.Register("foo", goldi.NewStructType(tests.MockType{}, "I was created by @foo"))
-			alias := goldi.NewAliasType("foo::ReturnString")
+			container.Register("foo", NewStructType(tests.MockType{}, "I was created by @foo"))
+			alias := NewAliasType("foo::ReturnString")
 
 			generated, err := alias.Generate(resolver)
 			Expect(err).NotTo(HaveOccurred())

@@ -19,6 +19,7 @@ type ContainerValidator struct {
 func NewContainerValidator() *ContainerValidator {
 	return &ContainerValidator{
 		constraints: []ValidationConstraint{
+			new(NoInvalidTypesConstraint),
 			new(TypeParametersConstraint),
 			new(TypeReferencesConstraint),
 		},
@@ -48,6 +49,19 @@ func (v *ContainerValidator) Validate(container *Container) (err error) {
 	for _, constraint := range v.constraints {
 		if err := constraint.Validate(container); err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+// The NoInvalidTypesConstraint checks all types that none of the registered types is invalid
+type NoInvalidTypesConstraint struct{}
+
+func (c *NoInvalidTypesConstraint) Validate(container *Container) (err error) {
+	for typeID, typeFactory := range container.TypeRegistry {
+		if t, isInvalid := typeFactory.(*invalidType); isInvalid {
+			return fmt.Errorf("type %q is invalid: %s", typeID, t.Err)
 		}
 	}
 
