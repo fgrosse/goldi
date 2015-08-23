@@ -9,13 +9,16 @@ type TypeID struct {
 	IsFuncReference     bool
 }
 
-func NewTypeID(s string) (t TypeID) {
+// NewTypeID creates a new TypeId. Trying to create a type ID from an empty string will panic
+func NewTypeID(s string) *TypeID {
 	if s == "" {
 		panic("can not create typeID from empty string")
 	}
 
-	t.ID = s
-	t.Raw = s
+	t := &TypeID{
+		ID:  s,
+		Raw: s,
+	}
 
 	if t.ID[0] == '@' {
 		t.ID = t.ID[1:]
@@ -33,7 +36,19 @@ func NewTypeID(s string) (t TypeID) {
 		t.FuncReferenceMethod = funcReferenceParts[1]
 	}
 
-	return
+	return t
+}
+
+func (t *TypeID) String() string {
+	if t.Raw != "" {
+		return t.Raw
+	}
+
+	if t.FuncReferenceMethod != "" {
+		return "@" + t.ID + "::" + t.FuncReferenceMethod
+	}
+
+	return "@" + t.ID
 }
 
 func isParameterOrTypeReference(p string) bool {

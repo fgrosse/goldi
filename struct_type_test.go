@@ -1,66 +1,58 @@
-package goldi_test
+package goldi
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"errors"
 	"fmt"
-	"github.com/fgrosse/goldi"
 	"github.com/fgrosse/goldi/tests"
 )
 
 var _ = Describe("StructType", func() {
 	It("should implement the TypeFactory interface", func() {
-		var factory goldi.TypeFactory
-		factory = goldi.NewStructType(tests.Foo{})
+		var factory TypeFactory
+		factory = NewStructType(tests.Foo{})
 		// if this compiles the test passes (next expectation only to make compiler happy)
 		Expect(factory).NotTo(BeNil())
 	})
 
 	Describe("NewStructType()", func() {
 		Context("with invalid arguments", func() {
-			It("should panic if the generator is no struct or pointer to a struct", func() {
-				Expect(func() { goldi.NewStructType(42) }).To(Panic())
+			It("should return an invalid type if the generator is no struct or pointer to a struct", func() {
+				Expect(IsValid(NewStructType(42))).To(BeFalse())
 			})
 
-			It("should panic if the generator is a pointer to something other than a struct", func() {
+			It("should return an invalid type if the generator is a pointer to something other than a struct", func() {
 				something := "Hello Pointer World!"
-				Expect(func() { goldi.NewStructType(&something) }).To(Panic())
+				Expect(IsValid(NewStructType(&something))).To(BeFalse())
 			})
 		})
 
 		Context("with first argument beeing a struct", func() {
 			It("should create the type", func() {
-				typeDef := goldi.NewStructType(tests.MockType{})
+				typeDef := NewStructType(tests.MockType{})
 				Expect(typeDef).NotTo(BeNil())
 			})
 		})
 
 		Context("with first argument beeing a pointer to struct", func() {
 			It("should create the type", func() {
-				typeDef := goldi.NewStructType(&tests.MockType{})
+				typeDef := NewStructType(&tests.MockType{})
 				Expect(typeDef).NotTo(BeNil())
 			})
 		})
 
-		It("should panic if more factory arguments where provided than the struct has fields", func() {
-			defer func() {
-				r := recover()
-				Expect(r).NotTo(BeNil(), "Expected Generate to panic")
-				Expect(r).To(BeAssignableToTypeOf(errors.New("")))
-				err := r.(error)
-				Expect(err.Error()).To(Equal("could not register struct type: the struct MockType has only 2 fields but 3 arguments where provided"))
-			}()
-
-			goldi.NewStructType(&tests.MockType{}, "foo", true, "bar")
+		It("should return an invalid type if more factory arguments were provided than the struct has fields", func() {
+			t := NewStructType(&tests.MockType{}, "foo", true, "bar")
+			Expect(t).To(BeAssignableToTypeOf(&invalidType{}))
+			Expect(t.(*invalidType).Err).To(MatchError("the struct MockType has only 2 fields but 3 arguments where provided"))
 		})
 	})
 
 	Describe("Arguments()", func() {
 		It("should return all factory arguments", func() {
 			args := []interface{}{"foo", true}
-			typeDef := goldi.NewStructType(tests.MockType{}, args...)
+			typeDef := NewStructType(tests.MockType{}, args...)
 			Expect(typeDef.Arguments()).To(Equal(args))
 		})
 	})
@@ -68,39 +60,30 @@ var _ = Describe("StructType", func() {
 	Describe("Generate()", func() {
 		var (
 			config    = map[string]interface{}{}
-			container *goldi.Container
-			resolver  *goldi.ParameterResolver
+			container *Container
+			resolver  *ParameterResolver
 		)
 
 		BeforeEach(func() {
-			container = goldi.NewContainer(goldi.NewTypeRegistry(), config)
-			resolver = goldi.NewParameterResolver(container)
-		})
-
-		It("should panic if Generate is called on an uninitialized type", func() {
-			typeDef := &goldi.StructType{}
-			defer func() {
-				Expect(recover()).To(Equal("this struct type is not initialized. Did you use NewStructType to create it?"))
-			}()
-
-			typeDef.Generate(resolver)
+			container = NewContainer(NewTypeRegistry(), config)
+			resolver = NewParameterResolver(container)
 		})
 
 		Context("without struct arguments", func() {
 			Context("when the factory is a struct (no pointer)", func() {
 				It("should generate the type", func() {
-					typeDef := goldi.NewStructType(tests.MockType{})
+					typeDef := NewStructType(tests.MockType{})
 					Expect(typeDef.Generate(resolver)).To(BeAssignableToTypeOf(&tests.MockType{}))
 				})
 			})
 
 			It("should generate the type", func() {
-				typeDef := goldi.NewStructType(&tests.MockType{})
+				typeDef := NewStructType(&tests.MockType{})
 				Expect(typeDef.Generate(resolver)).To(BeAssignableToTypeOf(&tests.MockType{}))
 			})
 
 			It("should generate a new type each time", func() {
-				typeDef := goldi.NewStructType(&tests.MockType{})
+				typeDef := NewStructType(&tests.MockType{})
 				t1, err1 := typeDef.Generate(resolver)
 				t2, err2 := typeDef.Generate(resolver)
 
@@ -122,7 +105,7 @@ var _ = Describe("StructType", func() {
 
 		Context("with one or more arguments", func() {
 			It("should generate the type", func() {
-				typeDef := goldi.NewStructType(&tests.MockType{}, "foo", true)
+				typeDef := NewStructType(&tests.MockType{}, "foo", true)
 
 				generatedType, err := typeDef.Generate(resolver)
 				Expect(err).NotTo(HaveOccurred())
@@ -134,7 +117,7 @@ var _ = Describe("StructType", func() {
 			})
 
 			It("should use the given parameters", func() {
-				typeDef := goldi.NewStructType(&tests.MockType{}, "%param1%", "%param2%")
+				typeDef := NewStructType(&tests.MockType{}, "%param1%", "%param2%")
 				config["param1"] = "TEST"
 				config["param2"] = true
 				generatedType, err := typeDef.Generate(resolver)
@@ -150,7 +133,7 @@ var _ = Describe("StructType", func() {
 				Context("and its type matches the struct field type", func() {
 					It("should generate the type", func() {
 						container.RegisterType("foo", tests.NewMockType)
-						typeDef := goldi.NewStructType(tests.TypeForServiceInjection{}, "@foo")
+						typeDef := NewStructType(tests.TypeForServiceInjection{}, "@foo")
 
 						generatedType, err := typeDef.Generate(resolver)
 						Expect(err).NotTo(HaveOccurred())
@@ -164,7 +147,7 @@ var _ = Describe("StructType", func() {
 				Context("and its type does not match the function signature", func() {
 					It("should return an error", func() {
 						container.RegisterType("foo", tests.NewFoo)
-						typeDef := goldi.NewStructType(tests.TypeForServiceInjection{}, "@foo")
+						typeDef := NewStructType(tests.TypeForServiceInjection{}, "@foo")
 
 						_, err := typeDef.Generate(resolver)
 						Expect(err).To(MatchError(`the referenced type "@foo" (type *tests.Foo) can not be used as field 1 for struct type tests.TypeForServiceInjection`))

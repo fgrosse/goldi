@@ -1,25 +1,24 @@
-package goldi_test
+package goldi
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/fgrosse/goldi"
 	"github.com/fgrosse/goldi/tests"
 )
 
 var _ = Describe("TypeConfigurator", func() {
-	var container *goldi.Container
+	var container *Container
 
 	BeforeEach(func() {
-		container = goldi.NewContainer(goldi.NewTypeRegistry(), map[string]interface{}{})
+		container = NewContainer(NewTypeRegistry(), map[string]interface{}{})
 	})
 
 	Describe("Configure", func() {
 		Context("when the type configurator has not been defined correctly", func() {
 			It("should return an error", func() {
 				someType := tests.NewMockType()
-				configurator := goldi.NewTypeConfigurator("configurator", "Configure")
+				configurator := NewTypeConfigurator("configurator", "Configure")
 				Expect(configurator.Configure(someType, container)).To(MatchError(`the configurator type "@configurator" has not been defined`))
 			})
 		})
@@ -28,7 +27,7 @@ var _ = Describe("TypeConfigurator", func() {
 			It("should return an error", func() {
 				container.InjectInstance("configurator", 42)
 				someType := tests.NewMockType()
-				configurator := goldi.NewTypeConfigurator("configurator", "Configure")
+				configurator := NewTypeConfigurator("configurator", "Configure")
 				Expect(configurator.Configure(someType, container)).To(MatchError("the configurator instance is no struct or pointer to struct but a int"))
 			})
 		})
@@ -36,7 +35,7 @@ var _ = Describe("TypeConfigurator", func() {
 		Context("when the type configurator method does not exist", func() {
 			It("should return an error", func() {
 				someType := tests.NewMockType()
-				configurator := goldi.NewTypeConfigurator("configurator", "Fooobar")
+				configurator := NewTypeConfigurator("configurator", "Fooobar")
 				container.RegisterType("configurator", tests.NewMockTypeConfigurator, "foobar")
 
 				Expect(configurator.Configure(someType, container)).To(MatchError(`the configurator does not have a method "Fooobar"`))
@@ -49,13 +48,13 @@ var _ = Describe("TypeConfigurator", func() {
 			})
 
 			It("should return an error if the first argument is nil", func() {
-				configurator := goldi.NewTypeConfigurator("configurator", "Configure")
+				configurator := NewTypeConfigurator("configurator", "Configure")
 				Expect(configurator.Configure(nil, container)).To(MatchError("can not configure nil"))
 			})
 
 			It("should call the requested function on the configurator", func() {
 				someType := tests.NewMockType()
-				configurator := goldi.NewTypeConfigurator("configurator", "Configure")
+				configurator := NewTypeConfigurator("configurator", "Configure")
 
 				Expect(someType.StringParameter).NotTo(Equal("foobar"))
 				Expect(configurator.Configure(someType, container)).To(Succeed())
@@ -66,7 +65,7 @@ var _ = Describe("TypeConfigurator", func() {
 				container.InjectInstance("configurator", tests.NewFailingMockTypeConfigurator())
 
 				someType := tests.NewMockType()
-				configurator := goldi.NewTypeConfigurator("configurator", "Configure")
+				configurator := NewTypeConfigurator("configurator", "Configure")
 
 				Expect(configurator.Configure(someType, container)).To(MatchError("this is the error message from the tests.MockTypeConfigurator"))
 			})

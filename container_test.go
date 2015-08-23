@@ -1,37 +1,36 @@
-package goldi_test
+package goldi
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/fgrosse/goldi"
 	"github.com/fgrosse/goldi/tests"
 )
 
 var _ = Describe("Container", func() {
 	var (
-		registry  goldi.TypeRegistry
+		registry  TypeRegistry
 		config    map[string]interface{}
-		container *goldi.Container
+		container *Container
 	)
 
 	BeforeEach(func() {
-		registry = goldi.NewTypeRegistry()
+		registry = NewTypeRegistry()
 		config = map[string]interface{}{}
-		container = goldi.NewContainer(registry, config)
+		container = NewContainer(registry, config)
 	})
 
 	It("should panic if a type can not be resolved", func() {
-		Expect(func() { container.Get("foo.bar") }).To(Panic())
+		Expect(func() { container.MustGet("foo.bar") }).To(Panic())
 	})
 
 	It("should resolve simple types", func() {
-		registry.RegisterType("goldi.test_type", tests.NewMockType)
-		Expect(container.Get("goldi.test_type")).To(BeAssignableToTypeOf(&tests.MockType{}))
+		registry.RegisterType("test_type", tests.NewMockType)
+		Expect(container.MustGet("test_type")).To(BeAssignableToTypeOf(&tests.MockType{}))
 	})
 
 	It("should build the types lazily", func() {
-		typeID := "goldi.test_type"
+		typeID := "test_type"
 		generator := &tests.MockTypeFactory{}
 		registry.RegisterType(typeID, generator.NewMockType)
 
@@ -40,12 +39,12 @@ var _ = Describe("Container", func() {
 		Expect(generatorWrapper).NotTo(BeNil())
 
 		Expect(generator.HasBeenUsed).To(BeFalse())
-		container.Get(typeID)
+		container.MustGet(typeID)
 		Expect(generator.HasBeenUsed).To(BeTrue())
 	})
 
 	It("should build the types as singletons (one instance per type ID)", func() {
-		typeID := "goldi.test_type"
+		typeID := "test_type"
 		generator := &tests.MockTypeFactory{}
 		registry.RegisterType(typeID, generator.NewMockType)
 
@@ -53,19 +52,19 @@ var _ = Describe("Container", func() {
 		Expect(typeIsRegistered).To(BeTrue())
 		Expect(generatorWrapper).NotTo(BeNil())
 
-		firstResult := container.Get(typeID)
-		secondResult := container.Get(typeID)
-		thirdResult := container.Get(typeID)
+		firstResult := container.MustGet(typeID)
+		secondResult := container.MustGet(typeID)
+		thirdResult := container.MustGet(typeID)
 		Expect(firstResult == secondResult).To(BeTrue())
 		Expect(firstResult == thirdResult).To(BeTrue())
 	})
 
 	It("should pass static parameters as arguments when generating types", func() {
-		typeID := "goldi.test_type"
-		typeDef := goldi.NewType(tests.NewMockTypeWithArgs, "parameter1", true)
+		typeID := "test_type"
+		typeDef := NewType(tests.NewMockTypeWithArgs, "parameter1", true)
 		registry.Register(typeID, typeDef)
 
-		generatedType := container.Get("goldi.test_type")
+		generatedType := container.MustGet("test_type")
 		Expect(generatedType).NotTo(BeNil())
 		Expect(generatedType).To(BeAssignableToTypeOf(&tests.MockType{}))
 
@@ -75,14 +74,14 @@ var _ = Describe("Container", func() {
 	})
 
 	It("should be able to use parameters as arguments when generating types", func() {
-		typeID := "goldi.test_type"
-		typeDef := goldi.NewType(tests.NewMockTypeWithArgs, "%parameter1%", "%parameter2%")
+		typeID := "test_type"
+		typeDef := NewType(tests.NewMockTypeWithArgs, "%parameter1%", "%parameter2%")
 		registry.Register(typeID, typeDef)
 
 		config["parameter1"] = "test"
 		config["parameter2"] = true
 
-		generatedType := container.Get("goldi.test_type")
+		generatedType := container.MustGet("test_type")
 		Expect(generatedType).NotTo(BeNil())
 		Expect(generatedType).To(BeAssignableToTypeOf(&tests.MockType{}))
 
@@ -92,10 +91,10 @@ var _ = Describe("Container", func() {
 	})
 
 	It("should be able to inject already defined types into other types", func() {
-		registry.Register("goldi.injected_type", goldi.NewType(tests.NewMockType))
-		registry.Register("goldi.main_type", goldi.NewType(tests.NewTypeForServiceInjection, "@goldi.injected_type"))
+		registry.Register("injected_type", NewType(tests.NewMockType))
+		registry.Register("main_type", NewType(tests.NewTypeForServiceInjection, "@injected_type"))
 
-		generatedType := container.Get("goldi.main_type")
+		generatedType := container.MustGet("main_type")
 		Expect(generatedType).NotTo(BeNil())
 		Expect(generatedType).To(BeAssignableToTypeOf(&tests.TypeForServiceInjection{}))
 
@@ -108,8 +107,8 @@ var _ = Describe("Container", func() {
 		registry.RegisterType("type1", tests.NewTypeForServiceInjection, "@foo")
 		registry.RegisterType("type2", tests.NewTypeForServiceInjection, "@foo")
 
-		generatedType1 := container.Get("type1")
-		generatedType2 := container.Get("type2")
+		generatedType1 := container.MustGet("type1")
+		generatedType2 := container.MustGet("type2")
 		Expect(generatedType1).To(BeAssignableToTypeOf(&tests.TypeForServiceInjection{}))
 		Expect(generatedType2).To(BeAssignableToTypeOf(&tests.TypeForServiceInjection{}))
 
@@ -120,9 +119,9 @@ var _ = Describe("Container", func() {
 	})
 
 	It("should inject nil when using optional types that are not defined", func() {
-		registry.Register("goldi.main_type", goldi.NewType(tests.NewTypeForServiceInjection, "@?goldi.optional_type"))
+		registry.Register("main_type", NewType(tests.NewTypeForServiceInjection, "@?optional_type"))
 
-		generatedType := container.Get("goldi.main_type")
+		generatedType := container.MustGet("main_type")
 		Expect(generatedType).NotTo(BeNil())
 		Expect(generatedType).To(BeAssignableToTypeOf(&tests.TypeForServiceInjection{}))
 

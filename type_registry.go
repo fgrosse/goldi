@@ -44,14 +44,7 @@ func (r TypeRegistry) Register(typeID string, typeDef TypeFactory) {
 
 // InjectInstance enables you to inject type instances.
 // If instance is nil an error is returned
-func (r TypeRegistry) InjectInstance(typeID string, instance interface{}) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("could not inject type: %s", r)
-		}
-	}()
-
+func (r TypeRegistry) InjectInstance(typeID string, instance interface{}) {
 	factory := NewInstanceType(instance)
 	r.Register(typeID, factory)
-	return nil
 }

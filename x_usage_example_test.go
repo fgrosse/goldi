@@ -1,10 +1,10 @@
 package goldi_test
 
 import (
-	. "github.com/fgrosse/goldi/tests"
+	"net/http"
+	"time"
 
 	"github.com/fgrosse/goldi"
-	"net/http"
 )
 
 func Example_Usage_Goldi() {
@@ -34,10 +34,10 @@ func Example_Usage_Goldi() {
 
 	// once you are done registering all your types you should probably validate the container
 	validator := goldi.NewContainerValidator()
-	validator.MustValidate(container)
+	validator.MustValidate(container) // will panic, use validator.Validate to get the error
 
 	// whoever has access to the container can request these types now
-	logger := container.Get("logger").(LoggerInterface)
+	logger := container.MustGet("logger").(LoggerInterface)
 	logger.DoStuff("...")
 
 	// in the tests you might want to exchange the registered types with mocks or other implementations
@@ -46,4 +46,53 @@ func Example_Usage_Goldi() {
 	// if you already have an instance you want to be used you can inject it directly
 	myLogger := NewNullLogger()
 	container.InjectInstance("logger", myLogger)
+}
+
+type LoggerInterface interface {
+	DoStuff(message string)
+}
+
+type SimpleLogger struct{}
+
+func (l *SimpleLogger) DoStuff(_ string) {}
+
+type NullLogger struct{}
+
+func NewNullLogger() *NullLogger {
+	return &NullLogger{}
+}
+
+func (l *NullLogger) DoStuff(_ string) {}
+
+type AwesomeMailer struct {
+	arg1, arg2 string
+}
+
+func NewAwesomeMailer(arg1, arg2 string) *AwesomeMailer {
+	return &AwesomeMailer{arg1, arg2}
+}
+
+type Renderer struct {
+	logger *LoggerInterface
+}
+
+func NewRenderer(logger *LoggerInterface) *Renderer {
+	return &Renderer{logger}
+}
+
+type GeoClient struct {
+	BaseURL string
+}
+
+type TimePackageMock struct{}
+
+func (M *TimePackageMock) NewSystemClock() *time.Time {
+	now := time.Now()
+	return &now
+}
+
+type ExamplePackageMock struct{}
+
+func (M *ExamplePackageMock) HandleHTTP() {
+	// foo
 }

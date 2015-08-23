@@ -5,26 +5,20 @@ import (
 	"reflect"
 )
 
-// A StructType holds all information that is necessary to create a new instance of some struct type.
-// StructType implements the TypeFactory interface.
-type StructType struct {
+// A structType holds all information that is necessary to create a new instance of some struct type.
+// structType implements the TypeFactory interface.
+type structType struct {
 	structType   reflect.Type
 	structFields []reflect.Value
 }
 
-// NewStructType creates a new StructType.
+// NewStructType creates a TypeFactory that can be used to create a new instance of some struct type.
 //
-// This function will panic if:
+// This function will return an invalid type if:
 //   - structT is no struct or pointer to a struct,
 //   - the number of given structParameters exceed the number of field of structT
 //   - the structParameters types do not match the fields of structT
-func NewStructType(structT interface{}, structParameters ...interface{}) *StructType {
-	defer func() {
-		if r := recover(); r != nil {
-			panic(fmt.Errorf("could not register struct type: %v", r))
-		}
-	}()
-
+func NewStructType(structT interface{}, structParameters ...interface{}) TypeFactory {
 	structType := reflect.TypeOf(structT)
 	if structType.Kind() == reflect.Ptr {
 		structType = structType.Elem()
@@ -34,13 +28,13 @@ func NewStructType(structT interface{}, structParameters ...interface{}) *Struct
 	case reflect.Struct:
 		return newTypeFromStruct(structType, structParameters)
 	default:
-		panic(fmt.Errorf("the given type must either be a struct or a pointer to a struct (given %T)", structT))
+		return newInvalidType(fmt.Errorf("the given type must either be a struct or a pointer to a struct (given %T)", structT))
 	}
 }
 
-func newTypeFromStruct(generatedType reflect.Type, parameters []interface{}) *StructType {
+func newTypeFromStruct(generatedType reflect.Type, parameters []interface{}) TypeFactory {
 	if generatedType.NumField() < len(parameters) {
-		panic(fmt.Errorf("the struct %s has only %d fields but %d arguments where provided",
+		return newInvalidType(fmt.Errorf("the struct %s has only %d fields but %d arguments where provided",
 			generatedType.Name(), generatedType.NumField(), len(parameters),
 		))
 	}
@@ -51,14 +45,14 @@ func newTypeFromStruct(generatedType reflect.Type, parameters []interface{}) *St
 		args[i] = reflect.ValueOf(argument)
 	}
 
-	return &StructType{
+	return &structType{
 		structType:   generatedType,
 		structFields: args,
 	}
 }
 
 // Arguments returns all struct parameters from NewStructType
-func (t *StructType) Arguments() []interface{} {
+func (t *structType) Arguments() []interface{} {
 	args := make([]interface{}, len(t.structFields))
 	for i, argument := range t.structFields {
 		args[i] = argument.Interface()
@@ -67,11 +61,7 @@ func (t *StructType) Arguments() []interface{} {
 }
 
 // Generate will instantiate a new instance of the according type.
-func (t *StructType) Generate(parameterResolver *ParameterResolver) (interface{}, error) {
-	if t.structType == nil {
-		panic("this struct type is not initialized. Did you use NewStructType to create it?")
-	}
-
+func (t *structType) Generate(parameterResolver *ParameterResolver) (interface{}, error) {
 	args, err := t.generateTypeFields(parameterResolver)
 	if err != nil {
 		return nil, err
@@ -85,7 +75,7 @@ func (t *StructType) Generate(parameterResolver *ParameterResolver) (interface{}
 	return newStructInstance.Interface(), nil
 }
 
-func (t *StructType) generateTypeFields(parameterResolver *ParameterResolver) ([]reflect.Value, error) {
+func (t *structType) generateTypeFields(parameterResolver *ParameterResolver) ([]reflect.Value, error) {
 	args := make([]reflect.Value, len(t.structFields))
 	var err error
 
@@ -106,7 +96,7 @@ func (t *StructType) generateTypeFields(parameterResolver *ParameterResolver) ([
 	return args, nil
 }
 
-func (t *StructType) invalidReferencedTypeErr(typeID string, typeInstance interface{}, i int) error {
+func (t *structType) invalidReferencedTypeErr(typeID string, typeInstance interface{}, i int) error {
 	err := fmt.Errorf("the referenced type \"@%s\" (type %T) can not be used as field %d for struct type %v",
 		typeID, typeInstance, i+1, t.structType,
 	)

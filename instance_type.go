@@ -4,33 +4,26 @@ import "fmt"
 
 // InstanceType is a trivial implementation of the TypeFactory interface.
 // It will always `generate` the same instance of some previously instantiated type.
-type InstanceType struct {
+type instanceType struct {
 
 	// The instance that this factory is going to return on each call to Generate
 	Instance interface{}
 }
 
 // NewInstanceType creates a new InstanceType which will return the given instance on each call to Generate.
-// It will panic if the given instance is nil
-func NewInstanceType(instance interface{}) *InstanceType {
+// It will return an invalid type factory if the given instance is nil
+func NewInstanceType(instance interface{}) TypeFactory {
 	if instance == nil {
-		panic(fmt.Errorf("refused to create a new InstanceType with instance being nil"))
+		return newInvalidType(fmt.Errorf("refused to create a new InstanceType with instance being nil"))
 	}
 
-	return &InstanceType{instance}
+	return &instanceType{instance}
 }
 
-// Generate fulfills the TypeFactory interface and will always return the type instance of this factory.
-// It will panic if the instance is nil
-func (t *InstanceType) Generate(_ *ParameterResolver) (interface{}, error) {
-	if t.Instance == nil {
-		return nil, fmt.Errorf("refused to return nil on InstanceType.Generate. Seems like you did not use NewInstanceType")
-	}
-
+func (t *instanceType) Generate(_ *ParameterResolver) (interface{}, error) {
 	return t.Instance, nil
 }
 
-// Arguments is part of the TypeFactory interface and does always return an empty list for the InstanceType.
-func (t *InstanceType) Arguments() []interface{} {
+func (t *instanceType) Arguments() []interface{} {
 	return []interface{}{}
 }

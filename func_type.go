@@ -5,33 +5,23 @@ import (
 	"reflect"
 )
 
-type FuncType struct {
+type funcType struct {
 	function interface{}
 }
 
-func NewFuncType(function interface{}) *FuncType {
-	defer func() {
-		if r := recover(); r != nil {
-			panic(fmt.Errorf("could not register func type: %v", r))
-		}
-	}()
-
+func NewFuncType(function interface{}) TypeFactory {
 	structType := reflect.TypeOf(function)
 	if structType.Kind() != reflect.Func {
-		panic(fmt.Errorf("the given type must be a function (given %T)", function))
+		return newInvalidType(fmt.Errorf("the given type must be a function (given %T)", function))
 	}
 
-	return &FuncType{function}
+	return &funcType{function}
 }
 
-func (t *FuncType) Arguments() []interface{} {
+func (t *funcType) Arguments() []interface{} {
 	return []interface{}{}
 }
 
-func (t *FuncType) Generate(parameterResolver *ParameterResolver) (interface{}, error) {
-	if t.function == nil {
-		return nil, fmt.Errorf("could not generate type: this func type is not initialized. Did you use NewFuncType to create it?")
-	}
-
+func (t *funcType) Generate(parameterResolver *ParameterResolver) (interface{}, error) {
 	return t.function, nil
 }
