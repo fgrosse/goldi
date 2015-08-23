@@ -40,8 +40,11 @@ var _ = Describe("TypeRegistry", func() {
 				typeID := "goldi.test_type"
 				registry.RegisterType(typeID, testAPI.NewMockTypeWithArgs, "foo", true)
 				Expect(registry).To(HaveKey(typeID))
-				Expect(registry["goldi.test_type"].Generate(resolver).(*testAPI.MockType).StringParameter).To(Equal("foo"))
-				Expect(registry["goldi.test_type"].Generate(resolver).(*testAPI.MockType).BoolParameter).To(Equal(true))
+
+				result, err := registry["goldi.test_type"].Generate(resolver)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result.(*testAPI.MockType).StringParameter).To(Equal("foo"))
+				Expect(result.(*testAPI.MockType).BoolParameter).To(Equal(true))
 			})
 		})
 
@@ -55,7 +58,8 @@ var _ = Describe("TypeRegistry", func() {
 				Expect(typeIsRegistered).To(BeTrue())
 				Expect(fooType).NotTo(BeNil())
 
-				newFoo := fooType.Generate(resolver)
+				newFoo, err := fooType.Generate(resolver)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(newFoo).To(BeAssignableToTypeOf(&foo))
 			})
 
@@ -64,7 +68,9 @@ var _ = Describe("TypeRegistry", func() {
 				registry.RegisterType(typeID, testAPI.Baz{}, "param1", "param2")
 				Expect(registry).To(HaveKey(typeID))
 
-				newBaz := registry["goldi.test_type"].Generate(resolver).(*testAPI.Baz)
+				result, err := registry["goldi.test_type"].Generate(resolver)
+				Expect(err).NotTo(HaveOccurred())
+				newBaz := result.(*testAPI.Baz)
 				Expect(newBaz.Parameter1).To(Equal("param1"))
 				Expect(newBaz.Parameter2).To(Equal("param2"))
 			})
@@ -80,7 +86,8 @@ var _ = Describe("TypeRegistry", func() {
 				Expect(typeIsRegistered).To(BeTrue())
 				Expect(fooType).NotTo(BeNil())
 
-				newFoo := fooType.Generate(resolver)
+				newFoo, err := fooType.Generate(resolver)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(newFoo).To(BeAssignableToTypeOf(foo))
 			})
 
@@ -89,7 +96,9 @@ var _ = Describe("TypeRegistry", func() {
 				registry.RegisterType(typeID, &testAPI.Baz{}, "param1", "param2")
 				Expect(registry).To(HaveKey(typeID))
 
-				newBaz := registry["goldi.test_type"].Generate(resolver).(*testAPI.Baz)
+				result, err := registry["goldi.test_type"].Generate(resolver)
+				Expect(err).NotTo(HaveOccurred())
+				newBaz := result.(*testAPI.Baz)
 				Expect(newBaz.Parameter1).To(Equal("param1"))
 				Expect(newBaz.Parameter2).To(Equal("param2"))
 			})
@@ -112,7 +121,8 @@ var _ = Describe("TypeRegistry", func() {
 			Expect(typeIsRegistered).To(BeTrue())
 			Expect(factory).NotTo(BeNil())
 
-			generateResult := factory.Generate(resolver)
+			generateResult, err := factory.Generate(resolver)
+			Expect(err).NotTo(HaveOccurred())
 			Expect(generateResult == fooInstance).To(BeTrue(),
 				fmt.Sprintf("generateResult (%p) should point to the same instance as fooInstance (%p)", generateResult, fooInstance),
 			)

@@ -117,7 +117,7 @@ var _ = Describe("Type", func() {
 		It("should panic if Generate is called on an uninitialized type", func() {
 			typeDef := &goldi.Type{}
 			defer func() {
-				Expect(recover()).To(MatchError("could not generate type: this type is not initialized. Did you use NewType to create it?"))
+				Expect(recover()).To(MatchError("this type is not initialized. Did you use NewType to create it?"))
 			}()
 
 			typeDef.Generate(resolver)
@@ -134,7 +134,8 @@ var _ = Describe("Type", func() {
 			It("should generate the type", func() {
 				typeDef := goldi.NewType(testAPI.NewMockTypeWithArgs, "foo", true)
 
-				generatedType := typeDef.Generate(resolver)
+				generatedType, err := typeDef.Generate(resolver)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 
 				generatedMock := generatedType.(*testAPI.MockType)
@@ -148,7 +149,8 @@ var _ = Describe("Type", func() {
 						container.RegisterType("foo", testAPI.NewMockType)
 						typeDef := goldi.NewType(testAPI.NewTypeForServiceInjection, "@foo")
 
-						generatedType := typeDef.Generate(resolver)
+						generatedType, err := typeDef.Generate(resolver)
+						Expect(err).NotTo(HaveOccurred())
 						Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.TypeForServiceInjection{}))
 
 						generatedMock := generatedType.(*testAPI.TypeForServiceInjection)
@@ -157,15 +159,12 @@ var _ = Describe("Type", func() {
 				})
 
 				Context("and its type does not match the function signature", func() {
-					It("should panic with a helpful error message", func() {
+					It("should return an error", func() {
 						container.RegisterType("foo", testAPI.NewFoo)
 						typeDef := goldi.NewType(testAPI.NewTypeForServiceInjectionWithArgs, "@foo", "arg1", "arg2", true)
 
-						defer func() {
-							Expect(recover()).To(MatchError("could not generate type: the referenced type \"@foo\" (type *testAPI.Foo) can not be passed as argument 1 to the function signature testAPI.NewTypeForServiceInjectionWithArgs(*testAPI.MockType, string, string, bool)"))
-						}()
-
-						typeDef.Generate(resolver)
+						_, err := typeDef.Generate(resolver)
+						Expect(err).To(MatchError(`the referenced type "@foo" (type *testAPI.Foo) can not be passed as argument 1 to the function signature testAPI.NewTypeForServiceInjectionWithArgs(*testAPI.MockType, string, string, bool)`))
 					})
 				})
 			})
@@ -175,7 +174,8 @@ var _ = Describe("Type", func() {
 					typeDef := goldi.NewType(testAPI.NewVariadicMockType, true, "ignored", "1", "two", "drei")
 					Expect(typeDef).NotTo(BeNil())
 
-					generatedType := typeDef.Generate(resolver)
+					generatedType, err := typeDef.Generate(resolver)
+					Expect(err).NotTo(HaveOccurred())
 					Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 
 					generatedMock := generatedType.(*testAPI.MockType)
@@ -190,7 +190,8 @@ var _ = Describe("Type", func() {
 					container.InjectInstance("foo", foo)
 					typeDef := goldi.NewType(testAPI.NewMockTypeFromStringFunc, "YEAH", "@foo::ReturnString")
 
-					generatedType := typeDef.Generate(resolver)
+					generatedType, err := typeDef.Generate(resolver)
+					Expect(err).NotTo(HaveOccurred())
 					Expect(generatedType).To(BeAssignableToTypeOf(testAPI.NewMockType()))
 					Expect(generatedType.(*testAPI.MockType).StringParameter).To(Equal("Success! YEAH"))
 				})
@@ -202,7 +203,8 @@ var _ = Describe("Type", func() {
 					container.InjectInstance("foo", foo)
 					typeDef := goldi.NewType(testAPI.NewVariadicMockTypeFuncs, "@foo::ReturnString", "@foo::ReturnString")
 
-					generatedType := typeDef.Generate(resolver)
+					generatedType, err := typeDef.Generate(resolver)
+					Expect(err).NotTo(HaveOccurred())
 					Expect(generatedType).To(BeAssignableToTypeOf(testAPI.NewMockType()))
 					Expect(generatedType.(*testAPI.MockType).StringParameter).To(Equal("Success! Success! "))
 				})

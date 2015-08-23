@@ -34,7 +34,8 @@ var _ = Describe("InstanceType", func() {
 			factory := goldi.NewInstanceType(instance)
 
 			for i := 0; i < 3; i++ {
-				generateResult := factory.Generate(resolver)
+				generateResult, err := factory.Generate(resolver)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(generateResult == instance).To(BeTrue(),
 					fmt.Sprintf("generateResult (%p) should point to the same instance as instance (%p)", generateResult, instance),
 				)
@@ -43,7 +44,8 @@ var _ = Describe("InstanceType", func() {
 
 		It("should panic if is called with nil", func() {
 			factory := &goldi.InstanceType{}
-			Expect(func() { factory.Generate(resolver) }).To(Panic())
+			_, err := factory.Generate(resolver)
+			Expect(err).To(MatchError("refused to return nil on InstanceType.Generate. Seems like you did not use NewInstanceType"))
 		})
 	})
 

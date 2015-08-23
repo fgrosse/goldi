@@ -39,7 +39,8 @@ var _ = Describe("TypeAlias", func() {
 			container.Register("foo", goldi.NewStructType(testAPI.MockType{}, "I was created by @foo"))
 			alias := goldi.NewTypeAlias("foo")
 
-			generated := alias.Generate(resolver)
+			generated, err := alias.Generate(resolver)
+			Expect(err).NotTo(HaveOccurred())
 			Expect(generated).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 			Expect(generated.(*testAPI.MockType).StringParameter).To(Equal("I was created by @foo"))
 		})
@@ -48,7 +49,8 @@ var _ = Describe("TypeAlias", func() {
 			container.Register("foo", goldi.NewStructType(testAPI.MockType{}, "I was created by @foo"))
 			alias := goldi.NewTypeAlias("foo::ReturnString")
 
-			generated := alias.Generate(resolver)
+			generated, err := alias.Generate(resolver)
+			Expect(err).NotTo(HaveOccurred())
 			Expect(generated).To(BeAssignableToTypeOf(func(string) string { return "" }))
 			Expect(generated.(func(string) string)("TEST")).To(Equal("I was created by @foo TEST"))
 		})

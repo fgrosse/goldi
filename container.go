@@ -57,6 +57,10 @@ func (c *Container) get(typeID string) (interface{}, bool) {
 		return nil, false
 	}
 
-	c.typeCache[typeID] = generator.Generate(c.parameterResolver)
-	return c.typeCache[typeID], true
+	instance, err := generator.Generate(c.parameterResolver)
+	if err != nil {
+		panic(fmt.Errorf("goldi: error while genereating type %q: %s", typeID, err))
+	}
+	c.typeCache[typeID] = instance
+	return instance, true
 }

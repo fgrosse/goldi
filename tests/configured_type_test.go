@@ -74,7 +74,8 @@ var _ = Describe("ConfiguredType", func() {
 			typeDef := goldi.NewConfiguredType(embeddedType, "configurator_type", "Configure",)
 			container.InjectInstance("configurator_type", testAPI.NewMockTypeConfigurator("~~ configured ~~"))
 
-			generatedType := typeDef.Generate(resolver)
+			generatedType, err := typeDef.Generate(resolver)
+			Expect(err).NotTo(HaveOccurred())
 			Expect(generatedType).NotTo(BeNil())
 			Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 			Expect(generatedType.(*testAPI.MockType).StringParameter).To(Equal("~~ configured ~~"))

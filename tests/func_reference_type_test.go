@@ -52,23 +52,18 @@ var _ = Describe("FuncReferenceType", func() {
 			container.Register("foo", goldi.NewStructType(testAPI.MockType{}, "I was created by @foo"))
 			typeDef := goldi.NewFuncReferenceType("foo", "ReturnString")
 
-			generated := typeDef.Generate(resolver)
+			generated, err := typeDef.Generate(resolver)
+			Expect(err).NotTo(HaveOccurred())
 			Expect(generated).To(BeAssignableToTypeOf(func(string) string { return "" }))
-
 			Expect(generated.(func(string) string)("TEST")).To(Equal("I was created by @foo TEST"))
 		})
 
-		It("panic if the referenced type has no such method", func() {
+		It("should return an error if the referenced type has no such method", func() {
 			container.Register("foo", goldi.NewStructType(testAPI.MockType{}))
 			typeDef := goldi.NewFuncReferenceType("foo", "ThisMethodDoesNotExist")
 
-			defer func() {
-				r := recover()
-				Expect(r).NotTo(BeNil(), "Expected Generate to panic")
-				Expect(r).To(MatchError(fmt.Errorf("could not generate func reference type @foo::ThisMethodDoesNotExist method does not exist")))
-			}()
-
-			typeDef.Generate(resolver)
+			_, err := typeDef.Generate(resolver)
+			Expect(err).To(MatchError("could not generate func reference type @foo::ThisMethodDoesNotExist method does not exist"))
 		})
 	})
 })

@@ -107,20 +107,14 @@ func (t *Type) Arguments() []interface{} {
 }
 
 // Generate will instantiate a new instance of the according type.
-func (t *Type) Generate(parameterResolver *ParameterResolver) interface{} {
-	defer func() {
-		if r := recover(); r != nil {
-			panic(fmt.Errorf("could not generate type: %v", r))
-		}
-	}()
-
+func (t *Type) Generate(parameterResolver *ParameterResolver) (interface{}, error) {
 	if t.factory.IsValid() == false {
-		panic("this type is not initialized. Did you use NewType to create it?")
+		panic(fmt.Errorf("this type is not initialized. Did you use NewType to create it?"))
 	}
 
 	args, err := t.generateFactoryArguments(parameterResolver)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	var result []reflect.Value
@@ -135,7 +129,7 @@ func (t *Type) Generate(parameterResolver *ParameterResolver) interface{} {
 		panic(fmt.Errorf("no return parameter found. this should never ever happen ò.Ó"))
 	}
 
-	return result[0].Interface()
+	return result[0].Interface(), nil
 }
 
 func (t *Type) generateFactoryArguments(parameterResolver *ParameterResolver) ([]reflect.Value, error) {

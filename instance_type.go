@@ -22,12 +22,12 @@ func NewInstanceType(instance interface{}) *InstanceType {
 
 // Generate fulfills the TypeFactory interface and will always return the type instance of this factory.
 // It will panic if the instance is nil
-func (t *InstanceType) Generate(_ *ParameterResolver) interface{} {
+func (t *InstanceType) Generate(_ *ParameterResolver) (interface{}, error) {
 	if t.Instance == nil {
-		panic(fmt.Errorf("refused to return nil on InstanceType.Generate. Seems like you did not use NewInstanceType"))
+		return nil, fmt.Errorf("refused to return nil on InstanceType.Generate. Seems like you did not use NewInstanceType")
 	}
 
-	return t.Instance
+	return t.Instance, nil
 }
 
 // Arguments is part of the TypeFactory interface and does always return an empty list for the InstanceType.

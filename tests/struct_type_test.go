@@ -80,11 +80,7 @@ var _ = Describe("StructType", func() {
 		It("should panic if Generate is called on an uninitialized type", func() {
 			typeDef := &goldi.StructType{}
 			defer func() {
-				r := recover()
-				Expect(r).NotTo(BeNil(), "Expected Generate to panic")
-				Expect(r).To(BeAssignableToTypeOf(errors.New("")))
-				err := r.(error)
-				Expect(err.Error()).To(Equal("could not generate type: this struct type is not initialized. Did you use NewStructType to create it?"))
+				Expect(recover()).To(Equal("this struct type is not initialized. Did you use NewStructType to create it?"))
 			}()
 
 			typeDef.Generate(resolver)
@@ -105,9 +101,11 @@ var _ = Describe("StructType", func() {
 
 			It("should generate a new type each time", func() {
 				typeDef := goldi.NewStructType(&testAPI.MockType{})
-				t1 := typeDef.Generate(resolver)
-				t2 := typeDef.Generate(resolver)
+				t1, err1 := typeDef.Generate(resolver)
+				t2, err2 := typeDef.Generate(resolver)
 
+				Expect(err1).NotTo(HaveOccurred())
+				Expect(err2).NotTo(HaveOccurred())
 				Expect(t1).NotTo(BeNil())
 				Expect(t2).NotTo(BeNil())
 				Expect(t1 == t2).To(BeFalse(), fmt.Sprintf("t1 (%p) should not point to the same instance as t2 (%p)", t1, t2))
@@ -126,7 +124,8 @@ var _ = Describe("StructType", func() {
 			It("should generate the type", func() {
 				typeDef := goldi.NewStructType(&testAPI.MockType{}, "foo", true)
 
-				generatedType := typeDef.Generate(resolver)
+				generatedType, err := typeDef.Generate(resolver)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 
 				generatedMock := generatedType.(*testAPI.MockType)
@@ -138,7 +137,8 @@ var _ = Describe("StructType", func() {
 				typeDef := goldi.NewStructType(&testAPI.MockType{}, "%param1%", "%param2%")
 				config["param1"] = "TEST"
 				config["param2"] = true
-				generatedType := typeDef.Generate(resolver)
+				generatedType, err := typeDef.Generate(resolver)
+				Expect(err).NotTo(HaveOccurred())
 				Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.MockType{}))
 
 				generatedMock := generatedType.(*testAPI.MockType)
@@ -152,7 +152,8 @@ var _ = Describe("StructType", func() {
 						container.RegisterType("foo", testAPI.NewMockType)
 						typeDef := goldi.NewStructType(testAPI.TypeForServiceInjection{}, "@foo")
 
-						generatedType := typeDef.Generate(resolver)
+						generatedType, err := typeDef.Generate(resolver)
+						Expect(err).NotTo(HaveOccurred())
 						Expect(generatedType).To(BeAssignableToTypeOf(&testAPI.TypeForServiceInjection{}))
 
 						generatedMock := generatedType.(*testAPI.TypeForServiceInjection)
@@ -161,19 +162,12 @@ var _ = Describe("StructType", func() {
 				})
 
 				Context("and its type does not match the function signature", func() {
-					It("should panic with a helpful error message", func() {
+					It("should return an error", func() {
 						container.RegisterType("foo", testAPI.NewFoo)
 						typeDef := goldi.NewStructType(testAPI.TypeForServiceInjection{}, "@foo")
 
-						defer func() {
-							r := recover()
-							Expect(r).NotTo(BeNil(), "Expected Generate to panic")
-							Expect(r).To(BeAssignableToTypeOf(errors.New("")))
-							err := r.(error)
-							Expect(err.Error()).To(Equal("could not generate type: the referenced type \"@foo\" (type *testAPI.Foo) can not be used as field 1 for struct type testAPI.TypeForServiceInjection"))
-						}()
-
-						typeDef.Generate(resolver)
+						_, err := typeDef.Generate(resolver)
+						Expect(err).To(MatchError(`the referenced type "@foo" (type *testAPI.Foo) can not be used as field 1 for struct type testAPI.TypeForServiceInjection`))
 					})
 				})
 			})

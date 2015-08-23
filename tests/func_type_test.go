@@ -4,7 +4,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"errors"
 	"github.com/fgrosse/goldi"
 	"net/http"
 	"net/http/httptest"
@@ -20,9 +19,12 @@ var _ = Describe("FuncType", func() {
 			typeDef := goldi.NewFuncType(SomeFunctionForFuncTypeTest)
 
 			// generate it
-			f := typeDef.Generate(resolver).(func(name string, age int) (bool, error))
+			result, err := typeDef.Generate(resolver)
+			Expect(result).NotTo(BeNil())
+			Expect(err).NotTo(HaveOccurred())
 
 			// call it
+			f := result.(func(name string, age int) (bool, error))
 			ok, err := f("foo", 42)
 
 			Expect(ok).To(BeTrue())
@@ -38,9 +40,12 @@ var _ = Describe("FuncType", func() {
 
 			request, _ := http.NewRequest("GET", "test", nil)
 			response := httptest.NewRecorder()
-			handler := typeDef.Generate(resolver).(func(w http.ResponseWriter, r *http.Request))
-			handler(response, request)
+			result, err := typeDef.Generate(resolver)
+			Expect(result).NotTo(BeNil())
+			Expect(err).NotTo(HaveOccurred())
 
+			handler := result.(func(w http.ResponseWriter, r *http.Request))
+			handler(response, request)
 			Expect(response.Code).To(Equal(http.StatusAccepted))
 		})
 	})
@@ -88,17 +93,11 @@ var _ = Describe("FuncType", func() {
 			resolver = goldi.NewParameterResolver(container)
 		})
 
-		It("should panic if Generate is called on an uninitialized type", func() {
+		It("should return an error if Generate is called on an uninitialized type", func() {
 			typeDef := &goldi.FuncType{}
-			defer func() {
-				r := recover()
-				Expect(r).NotTo(BeNil(), "Expected Generate to panic")
-				Expect(r).To(BeAssignableToTypeOf(errors.New("")))
-				err := r.(error)
-				Expect(err.Error()).To(Equal("could not generate type: this func type is not initialized. Did you use NewFuncType to create it?"))
-			}()
 
-			typeDef.Generate(resolver)
+			_, err := typeDef.Generate(resolver)
+			Expect(err).To(MatchError("could not generate type: this func type is not initialized. Did you use NewFuncType to create it?"))
 		})
 
 		It("should just return the function", func() {
