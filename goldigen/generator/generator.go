@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const Version = "0.9.0"
+const Version = "0.9.2"
 
 // The Generator is used to generate compilable go code from a yaml configuration
 type Generator struct {
