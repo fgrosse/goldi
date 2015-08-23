@@ -60,8 +60,8 @@ func newTypeFromFactoryFunction(function interface{}, factoryType reflect.Type, 
 	}
 
 	t := &Type{
-		factory:          reflect.ValueOf(function),
-		factoryType:      factoryType,
+		factory:     reflect.ValueOf(function),
+		factoryType: factoryType,
 	}
 
 	var err error
@@ -80,7 +80,7 @@ func buildFactoryCallArguments(t reflect.Type, allParameters []interface{}) ([]r
 		var expectedArgumentType reflect.Type
 		if t.IsVariadic() && i >= actualNumberOfArgs-1 {
 			// variadic argument
-			expectedArgumentType = t.In(actualNumberOfArgs-1).Elem()
+			expectedArgumentType = t.In(actualNumberOfArgs - 1).Elem()
 		} else {
 			// regular argument
 			expectedArgumentType = t.In(i)
@@ -174,8 +174,8 @@ func (t *Type) generateVariadicFactoryArguments(parameterResolver *ParameterReso
 		}
 	}
 
-	n := len(t.factoryArguments)-actualNumberOfArgs+1
-	variadicType := t.factoryType.In(actualNumberOfArgs-1)
+	n := len(t.factoryArguments) - actualNumberOfArgs + 1
+	variadicType := t.factoryType.In(actualNumberOfArgs - 1)
 	variadicSlice := reflect.MakeSlice(variadicType, n, n)
 	expectedType := variadicType.Elem()
 	for i, argument := range t.factoryArguments[actualNumberOfArgs-1:] {

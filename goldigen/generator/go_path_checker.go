@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type GoPathChecker struct{
+type GoPathChecker struct {
 	Verbose bool
 }
 

@@ -1,9 +1,9 @@
 package generator
 
 import (
-	"strings"
-	"path/filepath"
 	"fmt"
+	"path/filepath"
+	"strings"
 )
 
 const DefaultFunctionName = "RegisterTypes"

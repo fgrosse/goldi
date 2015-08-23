@@ -2,8 +2,8 @@ package generator
 
 import (
 	"fmt"
-	"sort"
 	"github.com/fgrosse/goldi/util"
+	"sort"
 )
 
 // The TypesConfiguration is the struct that holds the complete dependency injection configuration

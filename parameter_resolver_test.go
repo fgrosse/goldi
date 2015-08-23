@@ -121,7 +121,7 @@ var _ = Describe("ParameterResolver", func() {
 					result, err := resolver.Resolve(parameter, expectedType)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(result.Interface()).To(BeAssignableToTypeOf(foo.ReturnString))
-					Expect(result.Interface().(func(string) string )("YEAH")).To(Equal("Success! YEAH"))
+					Expect(result.Interface().(func(string) string)("YEAH")).To(Equal("Success! YEAH"))
 				})
 			})
 		})

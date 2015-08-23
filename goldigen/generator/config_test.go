@@ -15,7 +15,7 @@ var _ = Describe("Config", func() {
 		})
 
 		It("should panic if the package name is empty", func() {
-			Expect(func() {generator.NewConfig("", "", "", "")}).To(Panic())
+			Expect(func() { generator.NewConfig("", "", "", "") }).To(Panic())
 		})
 	})
 

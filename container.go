@@ -18,9 +18,9 @@ type Container struct {
 // NewContainer creates a new container instance using the provided arguments
 func NewContainer(registry TypeRegistry, config map[string]interface{}) *Container {
 	c := &Container{
-		TypeRegistry:      registry,
-		config:            config,
-		typeCache:         map[string]interface{}{},
+		TypeRegistry: registry,
+		config:       config,
+		typeCache:    map[string]interface{}{},
 	}
 
 	c.parameterResolver = NewParameterResolver(c)

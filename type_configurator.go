@@ -1,8 +1,8 @@
 package goldi
 
 import (
-	"reflect"
 	"fmt"
+	"reflect"
 )
 
 // The TypeConfigurator is used to configure a type after its instantiation.

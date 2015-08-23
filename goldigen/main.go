@@ -7,8 +7,8 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"os"
-	"strings"
 	"path/filepath"
+	"strings"
 )
 
 var (

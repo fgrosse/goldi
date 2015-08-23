@@ -87,7 +87,7 @@ var _ = Describe("ContainerValidator", func() {
 			typeDef := goldi.NewType(tests.NewMockTypeWithArgs, "hello world", "%param%")
 			registry.Register("goldi.main_type", typeDef)
 
-			Expect(func() {validator.MustValidate(container)}).To(Panic())
+			Expect(func() { validator.MustValidate(container) }).To(Panic())
 		})
 
 		It("should not panic if everything is ok", func() {
@@ -100,7 +100,7 @@ var _ = Describe("ContainerValidator", func() {
 			typeDef2 := goldi.NewType(tests.NewTypeForServiceInjection, "@goldi.injected_type")
 			registry.Register(otherTypeID, typeDef2)
 
-			Expect(func() {validator.MustValidate(container)}).NotTo(Panic())
+			Expect(func() { validator.MustValidate(container) }).NotTo(Panic())
 		})
 	})
 })

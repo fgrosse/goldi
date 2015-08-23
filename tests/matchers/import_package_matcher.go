@@ -11,7 +11,7 @@ func ImportPackage(expected string) types.GomegaMatcher {
 
 type ImportPackageMatcher struct {
 	BeValidGoCodeMatcher
-	ExpectedPackage string
+	ExpectedPackage   string
 	foundMoreThanOnce bool
 }
 

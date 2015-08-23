@@ -94,7 +94,7 @@ var _ = Describe("TypeDefinition", func() {
 
 		It("should not return an error if a func reference type does not contain a package name", func() {
 			t := generator.TypeDefinition{
-				FuncName:     "@blup::DoStuff",
+				FuncName: "@blup::DoStuff",
 			}
 			Expect(t.Validate("foobar")).To(Succeed())
 		})
