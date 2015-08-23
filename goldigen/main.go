@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/fgrosse/goldi/generator"
+	"github.com/fgrosse/goldi/goldigen/generator"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"os"
