@@ -15,10 +15,11 @@ type ContainerValidator struct {
 }
 
 // NewContainerValidator creates a new ContainerValidator.
-// The validator will be initialized with the TypeParametersConstraint and TypeReferencesConstraint
+// The validator will be initialized with the NoInvalidTypesConstraint, TypeParametersConstraint and TypeReferencesConstraint
 func NewContainerValidator() *ContainerValidator {
 	return &ContainerValidator{
 		constraints: []ValidationConstraint{
+			new(NoInvalidTypesConstraint),
 			new(TypeParametersConstraint),
 			new(TypeReferencesConstraint),
 		},
@@ -54,6 +55,20 @@ func (v *ContainerValidator) Validate(container *Container) (err error) {
 	return nil
 }
 
+// The NoInvalidTypesConstraint checks all types that none of the registered types is invalid
+type NoInvalidTypesConstraint struct{}
+
+func (c *NoInvalidTypesConstraint) Validate(container *Container) (err error) {
+	for typeID, typeFactory := range container.TypeRegistry {
+		if t, isInvalid := typeFactory.(*invalidType); isInvalid {
+			return fmt.Errorf("type %q is invalid: %s", typeID, t.Err)
+		}
+	}
+
+	return nil
+}
+
+// The TypeParametersConstraint is used in a ContainerValidator to check if all used parameters do exist.
 type TypeParametersConstraint struct{}
 
 func (c *TypeParametersConstraint) Validate(container *Container) (err error) {
@@ -89,6 +104,7 @@ func (c *TypeParametersConstraint) parameterArguments(allArguments []interface{}
 	return parameterArguments
 }
 
+// The TypeReferencesConstraint is used in a ContainerValidator to check if all referenced types in the container have been defined.
 type TypeReferencesConstraint struct {
 	checkedTypes               util.StringSet
 	circularDependencyCheckMap util.StringSet
@@ -116,7 +132,7 @@ func (c *TypeReferencesConstraint) validateTypeReferences(typeID string, contain
 			continue
 		}
 
-		referencedTypeFactory, err := c.checkTypeIsDefined(typeID, referencedTypeID, container)
+		referencedTypeFactory, err := c.checkTypeIsDefined(NewTypeID(typeID), NewTypeID(referencedTypeID), container)
 		if err != nil {
 			return err
 		}
@@ -143,10 +159,10 @@ func (c *TypeReferencesConstraint) typeReferenceArguments(allArguments []interfa
 	return typeRefParameters
 }
 
-func (c *TypeReferencesConstraint) checkTypeIsDefined(typeID, referencedTypeID string, container *Container) (TypeFactory, error) {
-	typeDef, isDefined := container.TypeRegistry[referencedTypeID]
+func (c *TypeReferencesConstraint) checkTypeIsDefined(t, referencedType *TypeID, container *Container) (TypeFactory, error) {
+	typeDef, isDefined := container.TypeRegistry[referencedType.ID]
 	if isDefined == false {
-		return nil, fmt.Errorf("type %q references unkown type %q", typeID, referencedTypeID)
+		return nil, fmt.Errorf("type %q references unknown type %q", t.ID, referencedType.ID)
 	}
 
 	return typeDef, nil
@@ -157,7 +173,7 @@ func (c *TypeReferencesConstraint) checkCircularDependency(typeFactory TypeFacto
 	typeRefParameters := c.typeReferenceArguments(allArguments)
 
 	for _, referencedTypeID := range typeRefParameters {
-		referencedType, err := c.checkTypeIsDefined(typeID, referencedTypeID, container)
+		referencedType, err := c.checkTypeIsDefined(NewTypeID(typeID), NewTypeID(referencedTypeID), container)
 		if err != nil {
 			// TEST: test this for improved code coverage
 			return nil

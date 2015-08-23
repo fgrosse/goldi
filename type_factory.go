@@ -9,6 +9,6 @@ type TypeFactory interface {
 	// and if there are circular type dependencies.
 	Arguments() []interface{}
 
-	// Generate will instantiate a new instance of the according type.
-	Generate(parameterResolver *ParameterResolver) interface{}
+	// Generate will instantiate a new instance of the according type or return an error.
+	Generate(parameterResolver *ParameterResolver) (interface{}, error)
 }

@@ -1,21 +1,23 @@
 language: go
+sudo: false
 
 go:
   - 1.2
   - 1.3
   - 1.4
+  - 1.5
   - tip
 
 install:
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/modocache/gover
   - go get github.com/mattn/goveralls
-  - go get github.com/onsi/ginkgo/ginkgo
-  - go get github.com/onsi/gomega
-  - go get -v ./...
+  - go get -v -t ./...
 
 script:
-  - go test ./tests -cover -coverpkg github.com/fgrosse/goldi -coverprofile goldi.coverprofile
-  - go test ./tests/goldigen -cover -coverpkg github.com/fgrosse/goldi/generator -coverprofile goldigen.coverprofile
+  - go test . -cover -coverpkg github.com/fgrosse/goldi -coverprofile goldi.coverprofile
+  - go test ./goldigen/generator -cover -coverpkg github.com/fgrosse/goldi/goldigen/generator -coverprofile goldigen.coverprofile
+
+after_script:
   - gover
-  - goveralls -coverprofile=gover.coverprofile -repotoken $COVERALLS_TOKEN || /bin/true
+  - goveralls -coverprofile=gover.coverprofile -repotoken $COVERALLS_TOKEN

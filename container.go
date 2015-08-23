@@ -18,45 +18,65 @@ type Container struct {
 // NewContainer creates a new container instance using the provided arguments
 func NewContainer(registry TypeRegistry, config map[string]interface{}) *Container {
 	c := &Container{
-		TypeRegistry:      registry,
-		config:            config,
-		typeCache:         map[string]interface{}{},
+		TypeRegistry: registry,
+		config:       config,
+		typeCache:    map[string]interface{}{},
 	}
 
 	c.parameterResolver = NewParameterResolver(c)
 	return c
 }
 
-// Get retrieves a previously defined type.
-// If the requested typeID is unknown (has not been registered before) Get will panic with an error.
-// Since Get can only return interface{} you need to add a type assertion after the call:
-//
-//     container.Get("logger").(LoggerInterface)
+// MustGet behaves exactly like Get but will panic instead of returning an error
+// Since MustGet can only return interface{} you need to add a type assertion after the call:
+//     container.MustGet("logger").(LoggerInterface)
+func (c *Container) MustGet(typeID string) interface{} {
+	t, err := c.Get(typeID)
+	if err != nil {
+		panic(err)
+	}
+
+	return t
+}
+
+// Get retrieves a previously defined type or an error.
+// If the requested typeID has not been registered before or can not be generated Get will return an error.
 //
 // For your dependency injection to work properly it is important that you do only try to assert interface types
 // when you use Get(..). Otherwise it might be impossible to assert the correct type when you change the underlying type
 // implementations. Also make sure your application is properly tested and defers some panic handling in case you
 // forgot to define a service.
-func (c *Container) Get(typeID string) interface{} {
-	instance, isDefined := c.get(typeID)
-	if isDefined == false {
-		panic(fmt.Errorf("could not get type %q : no such type has been defined", typeID))
+//
+// See also Container.MustGet
+func (c *Container) Get(typeID string) (interface{}, error) {
+	instance, isDefined, err := c.get(typeID)
+	if err != nil {
+		return nil, err
 	}
 
-	return instance
+	if isDefined == false {
+		return nil, NewUnknownTypeReferenceError(typeID, "no such type has been defined", typeID)
+	}
+
+	return instance, nil
 }
 
-func (c *Container) get(typeID string) (interface{}, bool) {
+func (c *Container) get(typeID string) (interface{}, bool, error) {
 	t, isCached := c.typeCache[typeID]
 	if isCached {
-		return t, true
+		return t, true, nil
 	}
 
 	generator, isDefined := c.TypeRegistry[typeID]
 	if isDefined == false {
-		return nil, false
+		return nil, false, nil
 	}
 
-	c.typeCache[typeID] = generator.Generate(c.parameterResolver)
-	return c.typeCache[typeID], true
+	instance, err := generator.Generate(c.parameterResolver)
+	if err != nil {
+		return nil, false, fmt.Errorf("goldi: error while genereating type %q: %s", typeID, err)
+	}
+
+	c.typeCache[typeID] = instance
+	return instance, true, nil
 }
