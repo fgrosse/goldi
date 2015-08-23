@@ -26,6 +26,21 @@ func NewVariadicMockType(foo bool, bar string, parameters ...string) *MockType {
 	}
 }
 
+type someFunc func(string) string
+
+func NewMockTypeFromStringFunc(s string, sf someFunc) *MockType {
+	return &MockType{StringParameter: sf(s)}
+}
+
+func NewVariadicMockTypeFuncs(funcs ...someFunc) *MockType {
+	m := &MockType{}
+	for _, f := range funcs {
+		m.StringParameter = f(m.StringParameter)
+	}
+
+	return m
+}
+
 type MockTypeFactory struct {
 	HasBeenUsed bool
 }

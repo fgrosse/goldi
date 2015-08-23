@@ -183,6 +183,30 @@ var _ = Describe("Type", func() {
 					Expect(generatedMock.StringParameter).To(Equal("1, two, drei"))
 				})
 			})
+
+			Context("when a func reference type is given", func() {
+				It("should generate the type", func() {
+					foo := &testAPI.MockType{StringParameter: "Success!"}
+					container.InjectInstance("foo", foo)
+					typeDef := goldi.NewType(testAPI.NewMockTypeFromStringFunc, "YEAH", "@foo::ReturnString")
+
+					generatedType := typeDef.Generate(resolver)
+					Expect(generatedType).To(BeAssignableToTypeOf(testAPI.NewMockType()))
+					Expect(generatedType.(*testAPI.MockType).StringParameter).To(Equal("Success! YEAH"))
+				})
+			})
+
+			Context("when a func reference type is given as variadic argument", func() {
+				It("should generate the type", func() {
+					foo := &testAPI.MockType{StringParameter: "Success!"}
+					container.InjectInstance("foo", foo)
+					typeDef := goldi.NewType(testAPI.NewVariadicMockTypeFuncs, "@foo::ReturnString", "@foo::ReturnString")
+
+					generatedType := typeDef.Generate(resolver)
+					Expect(generatedType).To(BeAssignableToTypeOf(testAPI.NewMockType()))
+					Expect(generatedType.(*testAPI.MockType).StringParameter).To(Equal("Success! Success! "))
+				})
+			})
 		})
 	})
 })

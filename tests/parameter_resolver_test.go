@@ -109,6 +109,21 @@ var _ = Describe("ParameterResolver", func() {
 					Expect(result.IsValid()).To(BeFalse())
 				})
 			})
+
+			Context("when a func reference type is requested", func() {
+				It("should generate the type and return the function", func() {
+					foo := &testAPI.MockType{StringParameter: "Success!"}
+					container.InjectInstance("foo", foo)
+
+					parameter := reflect.ValueOf("@foo::ReturnString")
+					expectedType := reflect.TypeOf(func(string) string { return "" })
+
+					result, err := resolver.Resolve(parameter, expectedType)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result.Interface()).To(BeAssignableToTypeOf(foo.ReturnString))
+					Expect(result.Interface().(func(string) string )("YEAH")).To(Equal("Success! YEAH"))
+				})
+			})
 		})
 
 		Context("when the type has not been registered", func() {

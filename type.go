@@ -50,54 +50,51 @@ func newTypeFromFactoryFunction(function interface{}, factoryType reflect.Type, 
 	}
 
 	if factoryType.IsVariadic() {
-		parameters = makeVariadic(factoryType, parameters)
-	} else if factoryType.NumIn() != len(parameters) {
-		panic(fmt.Errorf("invalid number of input parameters: got %d but expected %d", len(parameters), factoryType.NumIn()))
+		if factoryType.NumIn() > len(parameters) {
+			panic(fmt.Errorf("invalid number of input parameters for variadic function: got %d but expected at least %d", len(parameters), factoryType.NumIn()))
+		}
+	} else {
+		if factoryType.NumIn() != len(parameters) {
+			panic(fmt.Errorf("invalid number of input parameters: got %d but expected %d", len(parameters), factoryType.NumIn()))
+		}
 	}
 
-	return &Type{
+	t := &Type{
 		factory:          reflect.ValueOf(function),
 		factoryType:      factoryType,
-		factoryArguments: buildFactoryCallArguments(factoryType, parameters),
 	}
+
+	var err error
+	t.factoryArguments, err = buildFactoryCallArguments(factoryType, parameters)
+	if err != nil {
+		panic(err)
+	}
+
+	return t
 }
 
-func makeVariadic(t reflect.Type, allParameters []interface{}) []interface{} {
-	if t.NumIn() > len(allParameters) {
-		panic(fmt.Errorf("invalid number of input parameters for variadic function: got %d but expected at least %d", len(allParameters), t.NumIn()))
-	}
-
+func buildFactoryCallArguments(t reflect.Type, allParameters []interface{}) ([]reflect.Value, error) {
 	actualNumberOfArgs := t.NumIn()
-	internalParameters := make([]interface{}, actualNumberOfArgs)
-	for i, _ := range allParameters[:actualNumberOfArgs-1] {
-		internalParameters[i] = allParameters[i]
-	}
-	variadicType := t.In(actualNumberOfArgs-1)
+	args := make([]reflect.Value, len(allParameters))
+	for i, argument := range allParameters {
+		var expectedArgumentType reflect.Type
+		if t.IsVariadic() && i >= actualNumberOfArgs-1 {
+			// variadic argument
+			expectedArgumentType = t.In(actualNumberOfArgs-1).Elem()
+		} else {
+			// regular argument
+			expectedArgumentType = t.In(i)
+		}
 
-	n := len(allParameters)-actualNumberOfArgs+1
-	variadicSlice := reflect.MakeSlice(variadicType, n, n)
-	for i, p := range allParameters[actualNumberOfArgs-1:] {
-		variadicSlice.Index(i).Set(reflect.ValueOf(p))
-	}
-
-	internalParameters[actualNumberOfArgs-1] = variadicSlice.Interface()
-
-	return internalParameters
-}
-
-func buildFactoryCallArguments(factoryType reflect.Type, factoryParameters []interface{}) []reflect.Value {
-	args := make([]reflect.Value, len(factoryParameters))
-	for i, argument := range factoryParameters {
-		expectedArgumentType := factoryType.In(i)
 		args[i] = reflect.ValueOf(argument)
 		if args[i].Kind() != expectedArgumentType.Kind() {
-			if stringArg, isString := argument.(string); isString && isParameterOrTypeReference(stringArg) == false {
-				panic(fmt.Errorf("input argument %d is of type %s but needs to be a %s", i+1, args[i].Kind(), expectedArgumentType.Kind()))
+			if stringArg, isString := argument.(string); isString && !isParameterOrTypeReference(stringArg) {
+				return nil, fmt.Errorf("input argument %d is of type %s but needs to be a %s", i+1, args[i].Kind(), expectedArgumentType.Kind())
 			}
 		}
 	}
 
-	return args
+	return args, nil
 }
 
 // Arguments returns all factory parameters from NewType
@@ -121,7 +118,11 @@ func (t *Type) Generate(parameterResolver *ParameterResolver) interface{} {
 		panic("this type is not initialized. Did you use NewType to create it?")
 	}
 
-	args := t.generateFactoryArguments(parameterResolver)
+	args, err := t.generateFactoryArguments(parameterResolver)
+	if err != nil {
+		panic(err)
+	}
+
 	var result []reflect.Value
 	if t.factoryType.IsVariadic() {
 		result = t.factory.CallSlice(args)
@@ -137,7 +138,11 @@ func (t *Type) Generate(parameterResolver *ParameterResolver) interface{} {
 	return result[0].Interface()
 }
 
-func (t *Type) generateFactoryArguments(parameterResolver *ParameterResolver) []reflect.Value {
+func (t *Type) generateFactoryArguments(parameterResolver *ParameterResolver) ([]reflect.Value, error) {
+	if t.factoryType.IsVariadic() {
+		return t.generateVariadicFactoryArguments(parameterResolver)
+	}
+
 	args := make([]reflect.Value, len(t.factoryArguments))
 	var err error
 
@@ -148,13 +153,53 @@ func (t *Type) generateFactoryArguments(parameterResolver *ParameterResolver) []
 		case nil:
 			continue
 		case TypeReferenceError:
-			panic(t.invalidReferencedTypeErr(errorType.TypeID, errorType.TypeInstance, i))
+			return nil, t.invalidReferencedTypeErr(errorType.TypeID, errorType.TypeInstance, i)
 		default:
-			panic(err)
+			return nil, err
 		}
 	}
 
-	return args
+	return args, nil
+}
+
+func (t *Type) generateVariadicFactoryArguments(parameterResolver *ParameterResolver) ([]reflect.Value, error) {
+	args := make([]reflect.Value, t.factoryType.NumIn())
+	var err error
+
+	actualNumberOfArgs := t.factoryType.NumIn()
+	for i, argument := range t.factoryArguments[:actualNumberOfArgs-1] {
+		args[i], err = parameterResolver.Resolve(argument, t.factoryType.In(i))
+
+		switch errorType := err.(type) {
+		case nil:
+			continue
+		case TypeReferenceError:
+			return nil, t.invalidReferencedTypeErr(errorType.TypeID, errorType.TypeInstance, i)
+		default:
+			return nil, err
+		}
+	}
+
+	n := len(t.factoryArguments)-actualNumberOfArgs+1
+	variadicType := t.factoryType.In(actualNumberOfArgs-1)
+	variadicSlice := reflect.MakeSlice(variadicType, n, n)
+	expectedType := variadicType.Elem()
+	for i, argument := range t.factoryArguments[actualNumberOfArgs-1:] {
+		resolvedArgument, err := parameterResolver.Resolve(argument, expectedType)
+		if err != nil {
+			switch errorType := err.(type) {
+			case TypeReferenceError:
+				return nil, t.invalidReferencedTypeErr(errorType.TypeID, errorType.TypeInstance, i)
+			default:
+				return nil, err
+			}
+		}
+
+		variadicSlice.Index(i).Set(resolvedArgument)
+	}
+
+	args[actualNumberOfArgs-1] = variadicSlice
+	return args, nil
 }
 
 func (t *Type) invalidReferencedTypeErr(typeID string, typeInstance interface{}, i int) error {

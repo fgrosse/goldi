@@ -1,6 +1,9 @@
 package goldi
 
-import "reflect"
+import (
+	"reflect"
+	"strings"
+)
 
 // The ParameterResolver is used by type factories to resolve the values of the dynamic factory arguments
 // (parameters and other type references).
@@ -61,6 +64,12 @@ func (r *ParameterResolver) resolveTypeReference(typeIDAndPrefix string, expecte
 		typeID = typeIDAndPrefix[1:]
 	}
 
+	funcReferenceParts := strings.SplitN(typeID, "::", 2)
+	if len(funcReferenceParts) == 2 {
+		// this is reference a function of typeID
+		typeID = funcReferenceParts[0]
+	}
+
 	typeInstance, typeDefined := r.Container.get(typeID)
 	if typeDefined == false {
 		if isOptional {
@@ -70,15 +79,25 @@ func (r *ParameterResolver) resolveTypeReference(typeIDAndPrefix string, expecte
 		return reflect.Value{}, NewUnknownTypeReferenceError(typeID, `the referenced type "@%s" has not been defined`, typeID)
 	}
 
+	if len(funcReferenceParts) == 2 {
+		method := reflect.ValueOf(typeInstance).MethodByName(funcReferenceParts[1])
+
+		if method.IsValid() == false {
+			return reflect.Value{}, NewTypeReferenceError(typeID, typeInstance, `the referenced method %q does not exist or is not exported`, typeIDAndPrefix)
+		}
+
+		return method, nil
+	}
+
 	if reflect.TypeOf(typeInstance).AssignableTo(expectedType) == false {
 		return reflect.Value{}, NewTypeReferenceError(typeID, typeInstance,
-			`the referenced type "@%s" (type %T) is not assignable to the expected type %v`, typeID, typeInstance, expectedType,
+			`the referenced type %q (type %T) is not assignable to the expected type %v`, typeIDAndPrefix, typeInstance, expectedType,
 		)
 	}
 
-	argument := reflect.New(expectedType).Elem()
-	argument.Set(reflect.ValueOf(typeInstance))
-	return argument, nil
+	result := reflect.New(expectedType).Elem()
+	result.Set(reflect.ValueOf(typeInstance))
+	return result, nil
 }
 
 func isParameterOrTypeReference(p string) bool {

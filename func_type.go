@@ -1,4 +1,5 @@
 package goldi
+
 import (
 	"fmt"
 	"reflect"
