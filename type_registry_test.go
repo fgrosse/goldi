@@ -114,7 +114,7 @@ var _ = Describe("TypeRegistry", func() {
 		It("should store the type instance", func() {
 			typeID := "test_type"
 			fooInstance := tests.NewFoo()
-			Expect(registry.InjectInstance(typeID, fooInstance)).To(Succeed())
+			registry.InjectInstance(typeID, fooInstance)
 
 			factory, typeIsRegistered := registry[typeID]
 			Expect(typeIsRegistered).To(BeTrue())

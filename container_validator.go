@@ -15,7 +15,7 @@ type ContainerValidator struct {
 }
 
 // NewContainerValidator creates a new ContainerValidator.
-// The validator will be initialized with the TypeParametersConstraint and TypeReferencesConstraint
+// The validator will be initialized with the NoInvalidTypesConstraint, TypeParametersConstraint and TypeReferencesConstraint
 func NewContainerValidator() *ContainerValidator {
 	return &ContainerValidator{
 		constraints: []ValidationConstraint{
@@ -68,6 +68,7 @@ func (c *NoInvalidTypesConstraint) Validate(container *Container) (err error) {
 	return nil
 }
 
+// The TypeParametersConstraint is used in a ContainerValidator to check if all used parameters do exist.
 type TypeParametersConstraint struct{}
 
 func (c *TypeParametersConstraint) Validate(container *Container) (err error) {
@@ -103,6 +104,7 @@ func (c *TypeParametersConstraint) parameterArguments(allArguments []interface{}
 	return parameterArguments
 }
 
+// The TypeReferencesConstraint is used in a ContainerValidator to check if all referenced types in the container have been defined.
 type TypeReferencesConstraint struct {
 	checkedTypes               util.StringSet
 	circularDependencyCheckMap util.StringSet

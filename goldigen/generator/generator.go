@@ -129,7 +129,6 @@ func (g *Generator) generateGoldiGenComment(output io.Writer) {
 	fmt.Fprintf(output, "// See https://github.com/fgrosse/goldi for what is going on here.\n")
 }
 
-// TODO the function should defer panic handling and return an error if a panic occurred during type registration
 func (g *Generator) generateTypeRegistrationFunction(conf *TypesConfiguration, output io.Writer) {
 	fmt.Fprintf(output, "func %s(types goldi.TypeRegistry) {\n", g.Config.FunctionName)
 	typeIDs := make([]string, len(conf.Types))
