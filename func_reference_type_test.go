@@ -6,13 +6,10 @@ import (
 
 	"fmt"
 	"github.com/fgrosse/goldi"
-	"github.com/fgrosse/goldi/tests"
 )
 
 func ExampleNewFuncReferenceType() {
-	registry := goldi.NewTypeRegistry()
-	config := map[string]interface{}{}
-	container := goldi.NewContainer(registry, config)
+	container := goldi.NewContainer(goldi.NewTypeRegistry(), map[string]interface{}{})
 
 	logger := new(SimpleLogger)
 	container.Register("logger", goldi.NewInstanceType(logger))
@@ -63,7 +60,7 @@ var _ = Describe("FuncReferenceType", func() {
 		})
 
 		It("should get the correct method of the referenced type", func() {
-			container.Register("foo", goldi.NewStructType(tests.MockType{}, "I was created by @foo"))
+			container.Register("foo", goldi.NewStructType(Foo{}, "I was created by @foo"))
 			typeDef := goldi.NewFuncReferenceType("foo", "ReturnString")
 
 			generated, err := typeDef.Generate(resolver)
@@ -73,7 +70,7 @@ var _ = Describe("FuncReferenceType", func() {
 		})
 
 		It("should return an error if the referenced type has no such method", func() {
-			container.Register("foo", goldi.NewStructType(tests.MockType{}))
+			container.Register("foo", goldi.NewStructType(Foo{}))
 			typeDef := goldi.NewFuncReferenceType("foo", "ThisMethodDoesNotExist")
 
 			_, err := typeDef.Generate(resolver)

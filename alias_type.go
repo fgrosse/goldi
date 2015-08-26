@@ -6,6 +6,8 @@ type aliasType struct {
 
 // NewAliasType create a new TypeFactory which just serves as alias to the given type ID.
 // A call to an alias type will retrieve the aliased type as if it was requested via container.Get(typeID)
+// This method will always return a valid type and works bot for regular type references (without leading @) and
+// references to type functions.
 func NewAliasType(typeID string) TypeFactory {
 	return &aliasType{typeID}
 }

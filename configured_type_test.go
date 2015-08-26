@@ -1,21 +1,43 @@
-package goldi
+package goldi_test
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/fgrosse/goldi/tests"
+	"github.com/fgrosse/goldi"
+	"fmt"
 )
 
+func ExampleNewConfiguredType() {
+	container := goldi.NewContainer(goldi.NewTypeRegistry(), map[string]interface{}{})
+
+	// this example configurator accepts a Foo type and will set its Value field to the given value
+	configurator := &MyConfigurator{ConfiguredValue: "success!"}
+
+	// register the configurator under a type ID
+	container.Register("configurator_type", goldi.NewInstanceType(configurator))
+
+	// create the type that should be configured
+	embeddedType := goldi.NewStructType(Foo{})
+	container.Register("foo", goldi.NewConfiguredType(embeddedType, "configurator_type", "Configure"))
+
+	fmt.Println(container.MustGet("foo").(*Foo).Value)
+	// Output:
+	// success!
+}
+
+// ExampleNewConfiguredType_ prevents godoc from printing the whole content of this file as example
+func ExampleNewConfiguredType_() {}
+
 var _ = Describe("ConfiguredType", func() {
-	var embeddedType TypeFactory
+	var embeddedType goldi.TypeFactory
 	BeforeEach(func() {
-		embeddedType = NewStructType(tests.MockType{})
+		embeddedType = goldi.NewStructType(Foo{})
 	})
 
 	It("should implement the TypeFactory interface", func() {
-		var factory TypeFactory
-		factory = NewConfiguredType(embeddedType, "configurator_type", "Configure")
+		var factory goldi.TypeFactory
+		factory = goldi.NewConfiguredType(embeddedType, "configurator_type", "Configure")
 		// if this compiles the test passes (next expectation only to make compiler happy)
 		Expect(factory).NotTo(BeNil())
 	})
@@ -23,24 +45,24 @@ var _ = Describe("ConfiguredType", func() {
 	Describe("NewConfiguredType()", func() {
 		Context("with invalid argument", func() {
 			It("should return an invalid type if the embedded type is nil", func() {
-				typeDef := NewConfiguredType(nil, "configurator_type", "Configure")
-				Expect(IsValid(typeDef)).To(BeFalse())
+				typeDef := goldi.NewConfiguredType(nil, "configurator_type", "Configure")
+				Expect(goldi.IsValid(typeDef)).To(BeFalse())
 			})
 
 			It("should return an invalid type if either the configurator ID or method is empty", func() {
-				Expect(IsValid(NewConfiguredType(embeddedType, "", ""))).To(BeFalse())
-				Expect(IsValid(NewConfiguredType(embeddedType, "configurator_type", ""))).To(BeFalse())
-				Expect(IsValid(NewConfiguredType(embeddedType, "", "configure"))).To(BeFalse())
+				Expect(goldi.IsValid(goldi.NewConfiguredType(embeddedType, "", ""))).To(BeFalse())
+				Expect(goldi.IsValid(goldi.NewConfiguredType(embeddedType, "configurator_type", ""))).To(BeFalse())
+				Expect(goldi.IsValid(goldi.NewConfiguredType(embeddedType, "", "configure"))).To(BeFalse())
 			})
 
 			It("should return an invalid type if the configurator method is not exported", func() {
-				Expect(IsValid(NewConfiguredType(embeddedType, "configurator_type", "configure"))).To(BeFalse())
+				Expect(goldi.IsValid(goldi.NewConfiguredType(embeddedType, "configurator_type", "configure"))).To(BeFalse())
 			})
 		})
 
 		Context("with valid arguments", func() {
 			It("should create the type", func() {
-				typeDef := NewConfiguredType(embeddedType, "configurator_type", "Configure")
+				typeDef := goldi.NewConfiguredType(embeddedType, "configurator_type", "Configure")
 				Expect(typeDef).NotTo(BeNil())
 			})
 		})
@@ -48,8 +70,8 @@ var _ = Describe("ConfiguredType", func() {
 
 	Describe("Arguments()", func() {
 		It("should return the arguments of the embedded type and the configurator as type ID", func() {
-			embeddedType = NewStructType(tests.MockType{}, "%param_of_embedded%", "another param")
-			typeDef := NewConfiguredType(embeddedType, "configurator_type", "Configure")
+			embeddedType = goldi.NewStructType(Foo{}, "%param_of_embedded%", "another param")
+			typeDef := goldi.NewConfiguredType(embeddedType, "configurator_type", "Configure")
 			Expect(typeDef.Arguments()).NotTo(BeNil())
 			Expect(typeDef.Arguments()).To(HaveLen(3))
 			Expect(typeDef.Arguments()).To(ContainElement("%param_of_embedded%"))
@@ -61,24 +83,25 @@ var _ = Describe("ConfiguredType", func() {
 	Describe("Generate()", func() {
 		var (
 			config    = map[string]interface{}{}
-			container *Container
-			resolver  *ParameterResolver
+			container *goldi.Container
+			resolver  *goldi.ParameterResolver
 		)
 
 		BeforeEach(func() {
-			container = NewContainer(NewTypeRegistry(), config)
-			resolver = NewParameterResolver(container)
+			container = goldi.NewContainer(goldi.NewTypeRegistry(), config)
+			resolver = goldi.NewParameterResolver(container)
 		})
 
 		It("should get the embedded type and configurator and configure it", func() {
-			typeDef := NewConfiguredType(embeddedType, "configurator_type", "Configure")
-			container.Register("configurator_type", NewType(tests.NewMockTypeConfigurator, "~~ configured ~~"))
+			typeDef := goldi.NewConfiguredType(embeddedType, "configurator_type", "Configure")
+			configurator := &MyConfigurator{ConfiguredValue: "success!"}
+			container.Register("configurator_type", goldi.NewInstanceType(configurator))
 
 			generatedType, err := typeDef.Generate(resolver)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(generatedType).NotTo(BeNil())
-			Expect(generatedType).To(BeAssignableToTypeOf(&tests.MockType{}))
-			Expect(generatedType.(*tests.MockType).StringParameter).To(Equal("~~ configured ~~"))
+			Expect(generatedType).To(BeAssignableToTypeOf(&Foo{}))
+			Expect(generatedType.(*Foo).Value).To(Equal("success!"))
 		})
 	})
 })

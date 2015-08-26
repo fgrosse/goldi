@@ -1,7 +1,7 @@
 package generator_test
 
 import (
-	. "github.com/fgrosse/goldi/tests/matchers"
+	. "github.com/fgrosse/gomega-matchers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 

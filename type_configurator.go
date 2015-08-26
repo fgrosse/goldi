@@ -23,6 +23,7 @@ type TypeConfigurator struct {
 	MethodName         string
 }
 
+// NewTypeConfigurator creates a new TypeConfigurator
 func NewTypeConfigurator(configuratorTypeID, methodName string) *TypeConfigurator {
 	return &TypeConfigurator{
 		ConfiguratorTypeID: configuratorTypeID,
@@ -64,7 +65,7 @@ func (c *TypeConfigurator) Configure(thing interface{}, container *Container) er
 		lastResult := result[len(result)-1]
 
 		errType := reflect.TypeOf((*error)(nil)).Elem()
-		if lastResult.Type().AssignableTo(errType) {
+		if lastResult.Type().AssignableTo(errType) && !lastResult.IsNil() {
 			return lastResult.Interface().(error)
 		}
 	}
