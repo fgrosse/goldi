@@ -85,7 +85,7 @@ var _ = Describe("Type", func() {
 				It("should return an invalid type if not enough arguments where given", func() {
 					t := NewType(tests.NewVariadicMockType, true)
 					Expect(t).To(BeAssignableToTypeOf(&invalidType{}))
-					Expect(t.(*invalidType).Err).To(MatchError("invalid number of input parameters for variadic function: got 1 but expected at least 3"))
+					Expect(t).To(MatchError("invalid number of input parameters for variadic function: got 1 but expected at least 3"))
 				})
 			})
 		})

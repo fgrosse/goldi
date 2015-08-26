@@ -51,11 +51,11 @@ func (t *TypeID) String() string {
 	return "@" + t.ID
 }
 
-func isParameterOrTypeReference(p string) bool {
-	return isParameter(p) || isTypeReference(p)
+func IsParameterOrTypeReference(p string) bool {
+	return IsParameter(p) || IsTypeReference(p)
 }
 
-func isParameter(p string) bool {
+func IsParameter(p string) bool {
 	if len(p) < 3 {
 		return false
 	}
@@ -63,7 +63,7 @@ func isParameter(p string) bool {
 	return p[0] == '%' && p[len(p)-1] == '%'
 }
 
-func isTypeReference(p string) bool {
+func IsTypeReference(p string) bool {
 	if len(p) < 2 {
 		return false
 	}

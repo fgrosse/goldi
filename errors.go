@@ -15,8 +15,8 @@ type UnknownTypeReferenceError struct {
 	TypeID string
 }
 
-// NewTypeReferenceError creates a new TypeReferenceError
-func NewTypeReferenceError(typeID string, typeInstance interface{}, message string, printfParameters ...interface{}) TypeReferenceError {
+// newTypeReferenceError creates a new TypeReferenceError
+func newTypeReferenceError(typeID string, typeInstance interface{}, message string, printfParameters ...interface{}) TypeReferenceError {
 	return TypeReferenceError{
 		error:        fmt.Errorf(message, printfParameters...),
 		TypeID:       typeID,
@@ -24,8 +24,8 @@ func NewTypeReferenceError(typeID string, typeInstance interface{}, message stri
 	}
 }
 
-// NewUnknownTypeReferenceError creates a new UnknownTypeReferenceError
-func NewUnknownTypeReferenceError(typeID, message string, printfParameters ...interface{}) UnknownTypeReferenceError {
+// newUnknownTypeReferenceError creates a new UnknownTypeReferenceError
+func newUnknownTypeReferenceError(typeID, message string, printfParameters ...interface{}) UnknownTypeReferenceError {
 	return UnknownTypeReferenceError{
 		error:  fmt.Errorf(message, printfParameters...),
 		TypeID: typeID,

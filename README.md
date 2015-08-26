@@ -24,7 +24,10 @@ No additional dependencies are required to use the library.
 First you need to define the types you are going to use later
 
 ```go
-import "github.com/fgrosse/goldi"
+import (
+    "github.com/fgrosse/goldi"
+    "github.com/fgrosse/goldi/validation"
+)
 
 // create a new container when your application loads
 registry := goldi.NewTypeRegistry()
@@ -51,7 +54,7 @@ container.Register("http_handler", goldi.NewFuncType(func(w http.ResponseWriter,
 }))
 
 // once you are done registering all your types you should probably validate the container
-validator := goldi.NewContainerValidator()
+validator := validation.NewContainerValidator()
 validator.MustValidate(container) // will panic, use validator.Validate to get the error
 
 // whoever has access to the container can request these types now

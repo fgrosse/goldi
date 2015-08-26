@@ -10,6 +10,7 @@ type funcReferenceType struct {
 	*TypeID
 }
 
+// NewFuncReferenceType returns a TypeFactory that returns a method of another type as function.
 func NewFuncReferenceType(typeID, functionName string) TypeFactory {
 	if functionName == "" || unicode.IsLower(rune(functionName[0])) {
 		return newInvalidType(fmt.Errorf("can not use unexported method %q as second argument to NewFuncReferenceType", functionName))

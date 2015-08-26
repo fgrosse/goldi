@@ -104,7 +104,7 @@ var _ = Describe("ParameterResolver", func() {
 
 					result, err := resolver.Resolve(parameter, expectedType)
 					Expect(err).To(HaveOccurred())
-					Expect(err).To(MatchError(NewTypeReferenceError("foo", tests.NewFoo(), `the referenced type "@foo" (type *tests.Foo) is not assignable to the expected type *tests.Bar`)))
+					Expect(err).To(MatchError(newTypeReferenceError("foo", tests.NewFoo(), `the referenced type "@foo" (type *tests.Foo) is not assignable to the expected type *tests.Bar`)))
 					Expect(result.IsValid()).To(BeFalse())
 				})
 			})
@@ -132,7 +132,7 @@ var _ = Describe("ParameterResolver", func() {
 
 				result, err := resolver.Resolve(parameter, expectedType)
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(NewUnknownTypeReferenceError("foo", `the referenced type "@foo" has not been defined`)))
+				Expect(err).To(MatchError(newUnknownTypeReferenceError("foo", `the referenced type "@foo" has not been defined`)))
 				Expect(result.IsValid()).To(BeFalse())
 			})
 		})

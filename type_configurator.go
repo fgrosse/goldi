@@ -44,19 +44,19 @@ func (c *TypeConfigurator) Configure(thing interface{}, container *Container) er
 	}
 
 	if typeDefined == false {
-		return NewUnknownTypeReferenceError(c.ConfiguratorTypeID, `the configurator type "@%s" has not been defined`, c.ConfiguratorTypeID)
+		return newUnknownTypeReferenceError(c.ConfiguratorTypeID, `the configurator type "@%s" has not been defined`, c.ConfiguratorTypeID)
 	}
 
 	configuratorType := reflect.TypeOf(configurator)
 	configuratorKind := configuratorType.Kind()
 	if configuratorKind != reflect.Struct && !(configuratorKind == reflect.Ptr && configuratorType.Elem().Kind() == reflect.Struct) {
-		return NewTypeReferenceError(c.ConfiguratorTypeID, configuratorType, "the configurator instance is no struct or pointer to struct but a %T", configurator)
+		return newTypeReferenceError(c.ConfiguratorTypeID, configuratorType, "the configurator instance is no struct or pointer to struct but a %T", configurator)
 	}
 
 	configuratorValue := reflect.ValueOf(configurator)
 	configuratorMethod := configuratorValue.MethodByName(c.MethodName)
 	if configuratorMethod.IsValid() == false {
-		return NewTypeReferenceError(c.ConfiguratorTypeID, configuratorType, "the configurator does not have a method %q", c.MethodName)
+		return newTypeReferenceError(c.ConfiguratorTypeID, configuratorType, "the configurator does not have a method %q", c.MethodName)
 	}
 
 	result := configuratorMethod.Call([]reflect.Value{reflect.ValueOf(thing)})

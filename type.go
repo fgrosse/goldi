@@ -82,7 +82,7 @@ func buildFactoryCallArguments(t reflect.Type, allParameters []interface{}) ([]r
 
 		args[i] = reflect.ValueOf(argument)
 		if args[i].Kind() != expectedArgumentType.Kind() {
-			if stringArg, isString := argument.(string); isString && !isParameterOrTypeReference(stringArg) {
+			if stringArg, isString := argument.(string); isString && !IsParameterOrTypeReference(stringArg) {
 				return nil, fmt.Errorf("input argument %d is of type %s but needs to be a %s", i+1, args[i].Kind(), expectedArgumentType.Kind())
 			}
 		}

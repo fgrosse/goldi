@@ -29,11 +29,11 @@ func (r *ParameterResolver) Resolve(parameter reflect.Value, expectedType reflec
 	}
 
 	stringParameter := parameter.Interface().(string)
-	if isParameterOrTypeReference(stringParameter) == false {
+	if IsParameterOrTypeReference(stringParameter) == false {
 		return parameter, nil
 	}
 
-	if isTypeReference(stringParameter) {
+	if IsTypeReference(stringParameter) {
 		return r.resolveTypeReference(stringParameter, expectedType)
 	} else {
 		return r.resolveParameter(parameter, stringParameter, expectedType), nil
@@ -42,7 +42,7 @@ func (r *ParameterResolver) Resolve(parameter reflect.Value, expectedType reflec
 
 func (r *ParameterResolver) resolveParameter(parameter reflect.Value, stringParameter string, expectedType reflect.Type) reflect.Value {
 	parameterName := stringParameter[1 : len(stringParameter)-1]
-	configuredValue, isConfigured := r.Container.config[parameterName]
+	configuredValue, isConfigured := r.Container.Config[parameterName]
 	if isConfigured == false {
 		return parameter
 	}
@@ -65,21 +65,21 @@ func (r *ParameterResolver) resolveTypeReference(typeIDAndPrefix string, expecte
 			return reflect.Zero(expectedType), nil
 		}
 
-		return reflect.Value{}, NewUnknownTypeReferenceError(t.ID, `the referenced type "@%s" has not been defined`, t.ID)
+		return reflect.Value{}, newUnknownTypeReferenceError(t.ID, `the referenced type "@%s" has not been defined`, t.ID)
 	}
 
 	if t.IsFuncReference {
 		method := reflect.ValueOf(typeInstance).MethodByName(t.FuncReferenceMethod)
 
 		if method.IsValid() == false {
-			return reflect.Value{}, NewTypeReferenceError(t.ID, typeInstance, `the referenced method %q does not exist or is not exported`, t.Raw)
+			return reflect.Value{}, newTypeReferenceError(t.ID, typeInstance, `the referenced method %q does not exist or is not exported`, t.Raw)
 		}
 
 		return method, nil
 	}
 
 	if reflect.TypeOf(typeInstance).AssignableTo(expectedType) == false {
-		return reflect.Value{}, NewTypeReferenceError(t.ID, typeInstance,
+		return reflect.Value{}, newTypeReferenceError(t.ID, typeInstance,
 			`the referenced type %q (type %T) is not assignable to the expected type %v`, t.Raw, typeInstance, expectedType,
 		)
 	}

@@ -5,9 +5,10 @@ import (
 	"time"
 
 	"github.com/fgrosse/goldi"
+	"github.com/fgrosse/goldi/validation"
 )
 
-func Example_Usage_Goldi() {
+func Example() {
 	// create a new container when your application loads
 	registry := goldi.NewTypeRegistry()
 	config := map[string]interface{}{
@@ -33,7 +34,7 @@ func Example_Usage_Goldi() {
 	}))
 
 	// once you are done registering all your types you should probably validate the container
-	validator := goldi.NewContainerValidator()
+	validator := validation.NewContainerValidator()
 	validator.MustValidate(container) // will panic, use validator.Validate to get the error
 
 	// whoever has access to the container can request these types now
@@ -48,13 +49,16 @@ func Example_Usage_Goldi() {
 	container.InjectInstance("logger", myLogger)
 }
 
+// Example_ prevents godoc from printing the whole content of this file as example
+func Example_() {}
+
 type LoggerInterface interface {
-	DoStuff(message string)
+	DoStuff(message string) string
 }
 
 type SimpleLogger struct{}
 
-func (l *SimpleLogger) DoStuff(_ string) {}
+func (l *SimpleLogger) DoStuff(input string) string { return input }
 
 type NullLogger struct{}
 
@@ -62,7 +66,7 @@ func NewNullLogger() *NullLogger {
 	return &NullLogger{}
 }
 
-func (l *NullLogger) DoStuff(_ string) {}
+func (l *NullLogger) DoStuff(input string) string { return input }
 
 type AwesomeMailer struct {
 	arg1, arg2 string
@@ -93,6 +97,4 @@ func (M *TimePackageMock) NewSystemClock() *time.Time {
 
 type ExamplePackageMock struct{}
 
-func (M *ExamplePackageMock) HandleHTTP() {
-	// foo
-}
+func (M *ExamplePackageMock) HandleHTTP() {}

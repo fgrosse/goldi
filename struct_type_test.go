@@ -44,8 +44,8 @@ var _ = Describe("StructType", func() {
 
 		It("should return an invalid type if more factory arguments were provided than the struct has fields", func() {
 			t := NewStructType(&tests.MockType{}, "foo", true, "bar")
-			Expect(t).To(BeAssignableToTypeOf(&invalidType{}))
-			Expect(t.(*invalidType).Err).To(MatchError("the struct MockType has only 2 fields but 3 arguments where provided"))
+			Expect(IsValid(t)).To(BeFalse())
+			Expect(t).To(MatchError("the struct MockType has only 2 fields but 3 arguments where provided"))
 		})
 	})
 
