@@ -1,34 +1,34 @@
-package generator_test
+package main_test
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/fgrosse/goldi/goldigen/generator"
+	"github.com/fgrosse/goldi/goldigen"
 )
 
 var _ = Describe("TypesConfiguration", func() {
 	Describe("validation", func() {
 		It("should return an error if no types have been defined", func() {
-			c := generator.TypesConfiguration{
-				Types: map[string]generator.TypeDefinition{},
+			c := main.TypesConfiguration{
+				Types: map[string]main.TypeDefinition{},
 			}
 			Expect(c.Validate()).To(MatchError("no types have been defined: please define at least one type"))
 		})
 
 		It("should return an error if a type definition is missing a package", func() {
-			c := generator.TypesConfiguration{
-				Types: map[string]generator.TypeDefinition{
-					"foo": generator.TypeDefinition{},
+			c := main.TypesConfiguration{
+				Types: map[string]main.TypeDefinition{
+					"foo": main.TypeDefinition{},
 				},
 			}
 			Expect(c.Validate()).To(MatchError(`type definition of "foo" is missing the required "package" key`))
 		})
 
 		It("should return an error if a type definition is missing the factory method", func() {
-			c := generator.TypesConfiguration{
-				Types: map[string]generator.TypeDefinition{
-					"foo": generator.TypeDefinition{
+			c := main.TypesConfiguration{
+				Types: map[string]main.TypeDefinition{
+					"foo": main.TypeDefinition{
 						Package: "foo/bar",
 					},
 				},
@@ -37,9 +37,9 @@ var _ = Describe("TypesConfiguration", func() {
 		})
 
 		It("should return an error if a type is an alias and contains a factory method", func() {
-			c := generator.TypesConfiguration{
-				Types: map[string]generator.TypeDefinition{
-					"foo": generator.TypeDefinition{
+			c := main.TypesConfiguration{
+				Types: map[string]main.TypeDefinition{
+					"foo": main.TypeDefinition{
 						AliasForType:  "bar",
 						FactoryMethod: "NewFoo",
 					},
@@ -49,9 +49,9 @@ var _ = Describe("TypesConfiguration", func() {
 		})
 
 		It("should return an error if a type is an alias and contains a package name", func() {
-			c := generator.TypesConfiguration{
-				Types: map[string]generator.TypeDefinition{
-					"foo": generator.TypeDefinition{
+			c := main.TypesConfiguration{
+				Types: map[string]main.TypeDefinition{
+					"foo": main.TypeDefinition{
 						AliasForType: "bar",
 						Package:      "github.com/fgrosse/foo",
 					},
@@ -61,9 +61,9 @@ var _ = Describe("TypesConfiguration", func() {
 		})
 
 		It("should return an error if a type is an alias and contains a func", func() {
-			c := generator.TypesConfiguration{
-				Types: map[string]generator.TypeDefinition{
-					"foo": generator.TypeDefinition{
+			c := main.TypesConfiguration{
+				Types: map[string]main.TypeDefinition{
+					"foo": main.TypeDefinition{
 						AliasForType: "bar",
 						FuncName:     "DoStuff",
 					},
@@ -73,9 +73,9 @@ var _ = Describe("TypesConfiguration", func() {
 		})
 
 		It("should return an error if a type is an alias and contains arguments", func() {
-			c := generator.TypesConfiguration{
-				Types: map[string]generator.TypeDefinition{
-					"foo": generator.TypeDefinition{
+			c := main.TypesConfiguration{
+				Types: map[string]main.TypeDefinition{
+					"foo": main.TypeDefinition{
 						AliasForType: "bar",
 						RawArguments: []interface{}{"a", "b", "c"},
 					},
@@ -87,21 +87,21 @@ var _ = Describe("TypesConfiguration", func() {
 
 	Describe("retrieving all packages", func() {
 		It("should return an empty list if no types were defined", func() {
-			c := generator.TypesConfiguration{}
+			c := main.TypesConfiguration{}
 			Expect(c.Packages()).To(BeEmpty())
 		})
 
 		Context("with each type package appearing only once", func() {
 			It("should return the packages alphabetically sorted", func() {
-				c := generator.TypesConfiguration{
-					Types: map[string]generator.TypeDefinition{
-						"foo": generator.TypeDefinition{
+				c := main.TypesConfiguration{
+					Types: map[string]main.TypeDefinition{
+						"foo": main.TypeDefinition{
 							Package: "foo/test/package1",
 						},
-						"bar": generator.TypeDefinition{
+						"bar": main.TypeDefinition{
 							Package: "bar/test/package2",
 						},
-						"baz": generator.TypeDefinition{
+						"baz": main.TypeDefinition{
 							Package: "baz/test/package3",
 						},
 					},
@@ -116,15 +116,15 @@ var _ = Describe("TypesConfiguration", func() {
 
 		Context("with packages appearing multiple times", func() {
 			It("should return the packages", func() {
-				c := generator.TypesConfiguration{
-					Types: map[string]generator.TypeDefinition{
-						"foo.1": generator.TypeDefinition{
+				c := main.TypesConfiguration{
+					Types: map[string]main.TypeDefinition{
+						"foo.1": main.TypeDefinition{
 							Package: "foo/test/package1",
 						},
-						"foo.2": generator.TypeDefinition{
+						"foo.2": main.TypeDefinition{
 							Package: "foo/test/package1",
 						},
-						"bar": generator.TypeDefinition{
+						"bar": main.TypeDefinition{
 							Package: "bar/test/package2",
 						},
 					},
@@ -137,9 +137,9 @@ var _ = Describe("TypesConfiguration", func() {
 
 		Context("with packages from the arguments appearing in the configuration", func() {
 			It("should return the packages", func() {
-				c := generator.TypesConfiguration{
-					Types: map[string]generator.TypeDefinition{
-						"some_goldi_type": generator.TypeDefinition{
+				c := main.TypesConfiguration{
+					Types: map[string]main.TypeDefinition{
+						"some_goldi_type": main.TypeDefinition{
 							Package: "github.com/fgrosse/goldi",
 						},
 					},

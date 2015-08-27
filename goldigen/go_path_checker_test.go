@@ -1,4 +1,4 @@
-package generator_test
+package main_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -6,7 +6,7 @@ import (
 
 	"os"
 
-	"github.com/fgrosse/goldi/goldigen/generator"
+	"github.com/fgrosse/goldi/goldigen"
 )
 
 var _ = Describe("GoPathChecker", func() {
@@ -14,7 +14,7 @@ var _ = Describe("GoPathChecker", func() {
 
 	Context("without GOPATH environment variable", func() {
 		It("should return an empty string if $GOPATH is not set", func() {
-			checker := generator.NewGoPathChecker(verbose)
+			checker := main.NewGoPathChecker(verbose)
 			Expect(checker.PackageName("")).To(BeEmpty())
 			Expect(checker.PackageName("/home/fgrosse/go/src/foo/bar/baz/goldi.go")).To(BeEmpty())
 		})
@@ -36,17 +36,17 @@ var _ = Describe("GoPathChecker", func() {
 		})
 
 		It("should return an empty string if the given output path is empty", func() {
-			checker := generator.NewGoPathChecker(verbose)
+			checker := main.NewGoPathChecker(verbose)
 			Expect(checker.PackageName("")).To(BeEmpty())
 		})
 
 		It("should return an empty string if the given output path is not inside the $GOPATH", func() {
-			checker := generator.NewGoPathChecker(verbose)
+			checker := main.NewGoPathChecker(verbose)
 			Expect(checker.PackageName("/usr/lib/go/src/foo/bar/baz/goldi.go")).To(BeEmpty())
 		})
 
 		It("should return the correct package name if the given output path is inside $GOPATH", func() {
-			checker := generator.NewGoPathChecker(verbose)
+			checker := main.NewGoPathChecker(verbose)
 			Expect(checker.PackageName("/home/fgrosse/go/src/foo/bar/baz/goldi.go")).To(Equal("foo/bar/baz"))
 		})
 
@@ -56,23 +56,23 @@ var _ = Describe("GoPathChecker", func() {
 			})
 
 			It("should return the correct package name", func() {
-				checker := generator.NewGoPathChecker(verbose)
-				Expect(checker.PackageName("some_file.go")).To(Equal("github.com/fgrosse/goldi/goldigen/generator"))
+				checker := main.NewGoPathChecker(verbose)
+				Expect(checker.PackageName("some_file.go")).To(Equal("github.com/fgrosse/goldi/goldigen"))
 			})
 
 			It("should return the correct package name when navigating up the file tree", func() {
-				checker := generator.NewGoPathChecker(verbose)
-				Expect(checker.PackageName("../some_file.go")).To(Equal("github.com/fgrosse/goldi/goldigen"))
+				checker := main.NewGoPathChecker(verbose)
+				Expect(checker.PackageName("../some_file.go")).To(Equal("github.com/fgrosse/goldi"))
 			})
 
 			It("should return the correct package name when navigating up and down the file tree", func() {
-				checker := generator.NewGoPathChecker(verbose)
-				Expect(checker.PackageName("../generator/some_file.go")).To(Equal("github.com/fgrosse/goldi/goldigen/generator"))
+				checker := main.NewGoPathChecker(verbose)
+				Expect(checker.PackageName("../goldigen/some_file.go")).To(Equal("github.com/fgrosse/goldi/goldigen"))
 			})
 
 			It("should return the correct package name when navigating into different directories of the file tree", func() {
-				checker := generator.NewGoPathChecker(verbose)
-				Expect(checker.PackageName("../some_dir/some_file.go")).To(Equal("github.com/fgrosse/goldi/goldigen/some_dir"))
+				checker := main.NewGoPathChecker(verbose)
+				Expect(checker.PackageName("../some_dir/some_file.go")).To(Equal("github.com/fgrosse/goldi/some_dir"))
 			})
 		})
 	})

@@ -1,4 +1,4 @@
-package generator_test
+package main_test
 
 import (
 	. "github.com/fgrosse/gomega-matchers"
@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fgrosse/goldi/goldigen/generator"
+	"github.com/fgrosse/goldi/goldigen"
 )
 
 var _ = Describe("Generator", func() {
 	var (
-		gen               *generator.Generator
+		gen               *main.Generator
 		output            *bytes.Buffer
 		inputPath         = "/absolute/path/conf/servo_types.yml"
 		outputPath        = "/absolute/path/servo_types.go"
@@ -49,8 +49,8 @@ var _ = Describe("Generator", func() {
 	)
 
 	BeforeEach(func() {
-		config := generator.NewConfig(outputPackageName, "RegisterTypes", inputPath, outputPath)
-		gen = generator.New(config)
+		config := main.NewConfig(outputPackageName, "RegisterTypes", inputPath, outputPath)
+		gen = main.New(config)
 		output = &bytes.Buffer{}
 	})
 
