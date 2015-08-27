@@ -1,72 +1,59 @@
-package goldi
+package goldi_test
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"net/http"
-	"net/http/httptest"
+	"github.com/fgrosse/goldi"
 )
 
-var _ = Describe("FuncType", func() {
-	Describe("Short usage example", func() {
-		container := NewContainer(NewTypeRegistry(), map[string]interface{}{})
-		resolver := NewParameterResolver(container)
+func ExampleNewFuncType() {
+	container := goldi.NewContainer(goldi.NewTypeRegistry(), map[string]interface{}{})
 
-		It("should work with a defined function", func() {
-			// define the type
-			typeDef := NewFuncType(SomeFunctionForFuncTypeTest)
+	// define the type
+	container.Register("my_func", goldi.NewFuncType(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "test" {
+			w.WriteHeader(http.StatusAccepted)
+		}
+	}))
 
-			// generate it
-			result, err := typeDef.Generate(resolver)
-			Expect(result).NotTo(BeNil())
-			Expect(err).NotTo(HaveOccurred())
+	// generate it
+	result, err := container.Get("my_func")
+	if err != nil {
+		return
+	}
 
-			// call it
-			f := result.(func(name string, age int) (bool, error))
-			ok, err := f("foo", 42)
+	// call it
+	f := result.(func(name string, age int) (bool, error))
+	ok, err := f("foo", 42)
+	if ok != true || err != nil {
+		panic("!!!")
+	}
+}
 
-			Expect(ok).To(BeTrue())
-			Expect(err).NotTo(HaveOccurred())
-		})
+// ExampleNewFuncType_ prevents godoc from printing the whole content of this file as example
+func ExampleNewFuncType_() {}
 
-		It("should work with closures", func() {
-			typeDef := NewFuncType(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "test" {
-					w.WriteHeader(http.StatusAccepted)
-				}
-			})
-
-			request, _ := http.NewRequest("GET", "test", nil)
-			response := httptest.NewRecorder()
-			result, err := typeDef.Generate(resolver)
-			Expect(result).NotTo(BeNil())
-			Expect(err).NotTo(HaveOccurred())
-
-			handler := result.(func(w http.ResponseWriter, r *http.Request))
-			handler(response, request)
-			Expect(response.Code).To(Equal(http.StatusAccepted))
-		})
-	})
-
+var _ = Describe("funcType", func() {
 	It("should implement the TypeFactory interface", func() {
-		var factory TypeFactory
-		factory = NewFuncType(SomeFunctionForFuncTypeTest)
+		var factory goldi.TypeFactory
+		factory = goldi.NewFuncType(SomeFunctionForFuncTypeTest)
 
 		// if this compiles the test passes (next expectation only to make compiler happy)
 		Expect(factory).NotTo(BeNil())
 	})
 
-	Describe("NewFuncType()", func() {
+	Describe("goldi.NewFuncType()", func() {
 		Context("with invalid argument", func() {
 			It("should return an invalid type if the argument is no function", func() {
-				Expect(IsValid(NewFuncType(42))).To(BeFalse())
+				Expect(goldi.IsValid(goldi.NewFuncType(42))).To(BeFalse())
 			})
 		})
 
 		Context("with argument beeing a function", func() {
 			It("should create the type", func() {
-				typeDef := NewFuncType(SomeFunctionForFuncTypeTest)
+				typeDef := goldi.NewFuncType(SomeFunctionForFuncTypeTest)
 				Expect(typeDef).NotTo(BeNil())
 			})
 		})
@@ -74,7 +61,7 @@ var _ = Describe("FuncType", func() {
 
 	Describe("Arguments()", func() {
 		It("should return an empty list", func() {
-			typeDef := NewFuncType(SomeFunctionForFuncTypeTest)
+			typeDef := goldi.NewFuncType(SomeFunctionForFuncTypeTest)
 			Expect(typeDef.Arguments()).NotTo(BeNil())
 			Expect(typeDef.Arguments()).To(BeEmpty())
 		})
@@ -83,17 +70,17 @@ var _ = Describe("FuncType", func() {
 	Describe("Generate()", func() {
 		var (
 			config    = map[string]interface{}{}
-			container *Container
-			resolver  *ParameterResolver
+			container *goldi.Container
+			resolver  *goldi.ParameterResolver
 		)
 
 		BeforeEach(func() {
-			container = NewContainer(NewTypeRegistry(), config)
-			resolver = NewParameterResolver(container)
+			container = goldi.NewContainer(goldi.NewTypeRegistry(), config)
+			resolver = goldi.NewParameterResolver(container)
 		})
 
 		It("should just return the function", func() {
-			typeDef := NewFuncType(SomeFunctionForFuncTypeTest)
+			typeDef := goldi.NewFuncType(SomeFunctionForFuncTypeTest)
 			Expect(typeDef.Generate(resolver)).To(BeAssignableToTypeOf(SomeFunctionForFuncTypeTest))
 		})
 	})

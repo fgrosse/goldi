@@ -1,3 +1,4 @@
+// Goldi utility code
 package util
 
 // The HashSet is a little utility type to manage string sets

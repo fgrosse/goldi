@@ -10,20 +10,21 @@ import "fmt"
 // You must use goldi.NewContainer to get a initialized instance of a Container!
 type Container struct {
 	TypeRegistry
-	config            map[string]interface{}
-	parameterResolver *ParameterResolver
-	typeCache         map[string]interface{}
+	Config   map[string]interface{}
+	Resolver *ParameterResolver
+
+	typeCache map[string]interface{}
 }
 
 // NewContainer creates a new container instance using the provided arguments
 func NewContainer(registry TypeRegistry, config map[string]interface{}) *Container {
 	c := &Container{
 		TypeRegistry: registry,
-		config:       config,
+		Config:       config,
 		typeCache:    map[string]interface{}{},
 	}
 
-	c.parameterResolver = NewParameterResolver(c)
+	c.Resolver = NewParameterResolver(c)
 	return c
 }
 
@@ -55,7 +56,7 @@ func (c *Container) Get(typeID string) (interface{}, error) {
 	}
 
 	if isDefined == false {
-		return nil, NewUnknownTypeReferenceError(typeID, "no such type has been defined", typeID)
+		return nil, newUnknownTypeReferenceError(typeID, "no such type has been defined", typeID)
 	}
 
 	return instance, nil
@@ -72,9 +73,9 @@ func (c *Container) get(typeID string) (interface{}, bool, error) {
 		return nil, false, nil
 	}
 
-	instance, err := generator.Generate(c.parameterResolver)
+	instance, err := generator.Generate(c.Resolver)
 	if err != nil {
-		return nil, false, fmt.Errorf("goldi: error while genereating type %q: %s", typeID, err)
+		return nil, false, fmt.Errorf("goldi: error while generating type %q: %s", typeID, err)
 	}
 
 	c.typeCache[typeID] = instance

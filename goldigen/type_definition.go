@@ -1,4 +1,4 @@
-package generator
+package main
 
 import (
 	"fmt"
@@ -23,61 +23,6 @@ type TypeDefinition struct {
 	ForcePackageName string `yaml:"package-name,omitempty"`
 }
 
-// RegistrationCode returns the go code that is necessary to register this type
-// To avoid any unexpected behavior you should call TypeDefinition.Validate first
-func (t *TypeDefinition) RegistrationCode(typeID, outputPackageName string) string {
-	var typeFactoryCode string
-
-	// TODO refactor this mess:
-
-	if t.FuncName != "" && t.FuncName[0] != '@' {
-		funcName := t.FuncName
-		if t.Package != outputPackageName {
-			funcName = fmt.Sprintf("%s.%s", t.PackageName(), funcName)
-		}
-		typeFactoryCode = fmt.Sprintf("goldi.NewFuncType(%s)", funcName)
-	} else if t.FuncName != "" && t.FuncName[0] == '@' {
-		parts := strings.SplitN(t.FuncName, "::", 2)
-		typeFactoryCode = fmt.Sprintf("goldi.NewFuncReferenceType(%q, %q)", parts[0][1:], parts[1])
-	} else if t.AliasForType != "" {
-		alias := t.AliasForType
-		if alias[0] == '@' {
-			alias = alias[1:]
-		}
-		typeFactoryCode = fmt.Sprintf("goldi.NewAliasType(%q)", alias)
-	} else {
-		var factoryMethod string
-		if t.FactoryMethod != "" {
-			factoryMethod = t.FactoryMethod
-			if t.Package != outputPackageName {
-				factoryMethod = fmt.Sprintf("%s.%s", t.PackageName(), t.FactoryMethod)
-			}
-
-			arguments := []string{factoryMethod}
-			arguments = append(arguments, t.Arguments()...)
-			typeFactoryCode = fmt.Sprintf("goldi.NewType(%s)", strings.Join(arguments, ", "))
-		} else if t.TypeName != "" {
-			factoryMethod = fmt.Sprintf("new(%s)", t.TypeName)
-			if t.Package != outputPackageName {
-				factoryMethod = fmt.Sprintf("new(%s.%s)", t.PackageName(), t.TypeName)
-			}
-
-			arguments := []string{factoryMethod}
-			arguments = append(arguments, t.Arguments()...)
-			typeFactoryCode = fmt.Sprintf("goldi.NewStructType(%s)", strings.Join(arguments, ", "))
-		}
-	}
-
-	if len(t.Configurator) == 2 {
-		configuratorID := t.Configurator[0][1:]
-		configuratorMethod := t.Configurator[1]
-
-		typeFactoryCode = fmt.Sprintf("goldi.NewConfiguredType(\n\t\t%s,\n\t\t%q, %q,\n\t)", typeFactoryCode, configuratorID, configuratorMethod)
-	}
-
-	return fmt.Sprintf("types.Register(%q, %s)", typeID, typeFactoryCode)
-}
-
 // Validate checks if this type definition contains all required fields
 func (t *TypeDefinition) Validate(typeID string) error {
 	if t.AliasForType != "" {
@@ -85,8 +30,10 @@ func (t *TypeDefinition) Validate(typeID string) error {
 	}
 
 	if t.FuncName == "" || t.FuncName[0] != '@' {
-		if err := t.requireField("package", t.Package, typeID); err != nil {
-			return err
+		if !(t.FactoryMethod != "" && t.FactoryMethod[0] == '@' && strings.Contains(t.FactoryMethod, "::")) {
+			if err := t.requireField("package", t.Package, typeID); err != nil {
+				return err
+			}
 		}
 	}
 

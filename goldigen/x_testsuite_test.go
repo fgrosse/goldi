@@ -1,4 +1,4 @@
-package generator_test
+package main_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -9,5 +9,5 @@ import (
 
 func TestGenerator(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Generator Test Suite")
+	RunSpecs(t, "Goldigen Test Suite")
 }

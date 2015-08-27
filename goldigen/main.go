@@ -1,15 +1,19 @@
+// The goldigen binary
+// See https://github.com/fgrosse/goldi#the-goldigen-binary
 package main
 
 import (
 	"bytes"
 	"fmt"
-	"github.com/fgrosse/goldi/goldigen/generator"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"gopkg.in/alecthomas/kingpin.v2"
 )
+
+const Version = "0.9.4"
 
 var (
 	app = kingpin.New("goldigen", "The goldi dependency injection container generator.\n\nSee https://github.com/fgrosse/goldi for further information.")
@@ -17,7 +21,7 @@ var (
 	inputFile     = app.Flag("in", "The input yaml file to generate type definitions from").Required().File()
 	outputPath    = app.Flag("out", "The output file to save the generated go code").String()
 	packageName   = app.Flag("package", "The name of the genarated package").String()
-	functionName  = app.Flag("function", fmt.Sprintf("The name of the generated function that must be called to register your types (default %q)", generator.DefaultFunctionName)).String()
+	functionName  = app.Flag("function", fmt.Sprintf("The name of the generated function that must be called to register your types (default %q)", DefaultFunctionName)).String()
 	noInteraction = app.Flag("nointeraction", "Do not ask for any user input").Default("false").Bool()
 	verbose       = app.Flag("verbose", "Print verbose output").Default("false").Bool()
 	overwrite     = app.Flag("overwrite", "Overwrite any existing files").Default("false").Short('y').Bool()
@@ -26,7 +30,7 @@ var (
 
 func main() {
 	defer panicHandler()
-	app.Version(generator.Version)
+	app.Version(Version)
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 
@@ -36,8 +40,8 @@ func main() {
 	}
 
 	outputPackageName := determineOutputPackageName()
-	config := generator.NewConfig(outputPackageName, *functionName, inputPath, *outputPath)
-	gen := generator.New(config)
+	config := NewConfig(outputPackageName, *functionName, inputPath, *outputPath)
+	gen := New(config)
 	output := &bytes.Buffer{}
 
 	if *verbose {
@@ -73,7 +77,7 @@ func determineOutputPackageName() string {
 		return outputPackageName
 	}
 
-	goPathChecker := generator.NewGoPathChecker(*verbose)
+	goPathChecker := NewGoPathChecker(*verbose)
 	outputPackageName = goPathChecker.PackageName(*outputPath)
 	logVerbose("Package name for output path %q is %q", *outputPath, outputPackageName)
 

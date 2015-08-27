@@ -9,6 +9,12 @@ type funcType struct {
 	function interface{}
 }
 
+// NewFuncType creates a new TypeFactory that will return a method value
+//
+// Goldigen yaml syntax example:
+//     my_func_type:
+//         package: github.com/fgrosse/foobar
+//         func:    DoStuff
 func NewFuncType(function interface{}) TypeFactory {
 	structType := reflect.TypeOf(function)
 	if structType.Kind() != reflect.Func {

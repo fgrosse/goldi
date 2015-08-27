@@ -18,11 +18,23 @@ type typeFactory struct {
 // NewType creates a new TypeFactory.
 //
 // This function will return an invalid type if:
-//   - the factoryFunction is no function,
+//   - the factoryFunction is nil or no function,
 //   - the factoryFunction returns zero or more than one parameter
 //   - the factoryFunctions return parameter is no pointer or interface type.
 //   - the number of given factoryParameters does not match the number of arguments of the factoryFunction
+//
+// Goldigen yaml syntax example:
+//     my_type:
+//         package: github.com/fgrosse/foobar
+//         factory: NewType
+//         args:
+//             - "Hello World"
+//             - true
 func NewType(factoryFunction interface{}, factoryParameters ...interface{}) TypeFactory {
+	if factoryFunction == nil {
+		return newInvalidType(fmt.Errorf("the given factoryFunction is nil"))
+	}
+
 	factoryType := reflect.TypeOf(factoryFunction)
 	kind := factoryType.Kind()
 	switch {
@@ -82,7 +94,7 @@ func buildFactoryCallArguments(t reflect.Type, allParameters []interface{}) ([]r
 
 		args[i] = reflect.ValueOf(argument)
 		if args[i].Kind() != expectedArgumentType.Kind() {
-			if stringArg, isString := argument.(string); isString && !isParameterOrTypeReference(stringArg) {
+			if stringArg, isString := argument.(string); isString && !IsParameterOrTypeReference(stringArg) {
 				return nil, fmt.Errorf("input argument %d is of type %s but needs to be a %s", i+1, args[i].Kind(), expectedArgumentType.Kind())
 			}
 		}
@@ -101,8 +113,8 @@ func (t *typeFactory) Arguments() []interface{} {
 }
 
 // Generate will instantiate a new instance of the according type.
-func (t *typeFactory) Generate(parameterResolver *ParameterResolver) (interface{}, error) {
-	args, err := t.generateFactoryArguments(parameterResolver)
+func (t *typeFactory) Generate(resolver *ParameterResolver) (interface{}, error) {
+	args, err := t.generateFactoryArguments(resolver)
 	if err != nil {
 		return nil, err
 	}
@@ -114,24 +126,20 @@ func (t *typeFactory) Generate(parameterResolver *ParameterResolver) (interface{
 		result = t.factory.Call(args)
 	}
 
-	if len(result) == 0 {
-		// in theory this condition can never evaluate to true since we check the number of return arguments in NewType
-		panic(fmt.Errorf("no return parameter found. this should never ever happen ò.Ó"))
-	}
-
+	// we check the number of return arguments in NewType so there is always exactly one result
 	return result[0].Interface(), nil
 }
 
-func (t *typeFactory) generateFactoryArguments(parameterResolver *ParameterResolver) ([]reflect.Value, error) {
+func (t *typeFactory) generateFactoryArguments(resolver *ParameterResolver) ([]reflect.Value, error) {
 	if t.factoryType.IsVariadic() {
-		return t.generateVariadicFactoryArguments(parameterResolver)
+		return t.generateVariadicFactoryArguments(resolver)
 	}
 
 	args := make([]reflect.Value, len(t.factoryArguments))
 	var err error
 
 	for i, argument := range t.factoryArguments {
-		args[i], err = parameterResolver.Resolve(argument, t.factoryType.In(i))
+		args[i], err = resolver.Resolve(argument, t.factoryType.In(i))
 
 		switch errorType := err.(type) {
 		case nil:
@@ -146,13 +154,13 @@ func (t *typeFactory) generateFactoryArguments(parameterResolver *ParameterResol
 	return args, nil
 }
 
-func (t *typeFactory) generateVariadicFactoryArguments(parameterResolver *ParameterResolver) ([]reflect.Value, error) {
+func (t *typeFactory) generateVariadicFactoryArguments(resolver *ParameterResolver) ([]reflect.Value, error) {
 	args := make([]reflect.Value, t.factoryType.NumIn())
 	var err error
 
 	actualNumberOfArgs := t.factoryType.NumIn()
 	for i, argument := range t.factoryArguments[:actualNumberOfArgs-1] {
-		args[i], err = parameterResolver.Resolve(argument, t.factoryType.In(i))
+		args[i], err = resolver.Resolve(argument, t.factoryType.In(i))
 
 		switch errorType := err.(type) {
 		case nil:
@@ -169,7 +177,7 @@ func (t *typeFactory) generateVariadicFactoryArguments(parameterResolver *Parame
 	variadicSlice := reflect.MakeSlice(variadicType, n, n)
 	expectedType := variadicType.Elem()
 	for i, argument := range t.factoryArguments[actualNumberOfArgs-1:] {
-		resolvedArgument, err := parameterResolver.Resolve(argument, expectedType)
+		resolvedArgument, err := resolver.Resolve(argument, expectedType)
 		if err != nil {
 			switch errorType := err.(type) {
 			case TypeReferenceError:

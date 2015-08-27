@@ -1,37 +1,77 @@
-package goldi
+package goldi_test
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/fgrosse/goldi/tests"
+	"fmt"
+	"github.com/fgrosse/goldi"
 )
+
+func ExampleContainer() {
+	registry := goldi.NewTypeRegistry()
+	config := map[string]interface{}{}
+	container := goldi.NewContainer(registry, config)
+
+	container.Register("logger", goldi.NewType(NewNullLogger))
+
+	l := container.MustGet("logger")
+	fmt.Printf("%T", l)
+	// Output:
+	// *goldi_test.NullLogger
+}
+
+func ExampleContainer_Get() {
+	registry := goldi.NewTypeRegistry()
+	config := map[string]interface{}{}
+	container := goldi.NewContainer(registry, config)
+
+	container.Register("logger", goldi.NewType(NewNullLogger))
+
+	l, err := container.Get("logger")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	// do stuff with the logger. usually you need a type assertion
+	fmt.Printf("%T", l.(*NullLogger))
+
+	// Output:
+	// *goldi_test.NullLogger
+}
 
 var _ = Describe("Container", func() {
 	var (
-		registry  TypeRegistry
+		registry  goldi.TypeRegistry
 		config    map[string]interface{}
-		container *Container
+		container *goldi.Container
 	)
 
 	BeforeEach(func() {
-		registry = NewTypeRegistry()
+		registry = goldi.NewTypeRegistry()
 		config = map[string]interface{}{}
-		container = NewContainer(registry, config)
+		container = goldi.NewContainer(registry, config)
 	})
 
 	It("should panic if a type can not be resolved", func() {
 		Expect(func() { container.MustGet("foo.bar") }).To(Panic())
 	})
 
+	It("should return an error if there was an issue generating the type", func() {
+		container.Register("foo", goldi.NewStructType(nil))
+		_, err := container.Get("foo")
+		Expect(err).To(MatchError(`goldi: error while generating type "foo": the given struct is nil`))
+	})
+
 	It("should resolve simple types", func() {
-		registry.RegisterType("test_type", tests.NewMockType)
-		Expect(container.MustGet("test_type")).To(BeAssignableToTypeOf(&tests.MockType{}))
+		registry.RegisterType("test_type", NewMockType)
+		Expect(container.MustGet("test_type")).To(BeAssignableToTypeOf(&MockType{}))
 	})
 
 	It("should build the types lazily", func() {
 		typeID := "test_type"
-		generator := &tests.MockTypeFactory{}
+		generator := &MockTypeFactory{}
 		registry.RegisterType(typeID, generator.NewMockType)
 
 		generatorWrapper, typeIsRegistered := registry[typeID]
@@ -45,7 +85,7 @@ var _ = Describe("Container", func() {
 
 	It("should build the types as singletons (one instance per type ID)", func() {
 		typeID := "test_type"
-		generator := &tests.MockTypeFactory{}
+		generator := &MockTypeFactory{}
 		registry.RegisterType(typeID, generator.NewMockType)
 
 		generatorWrapper, typeIsRegistered := registry[typeID]
@@ -61,21 +101,21 @@ var _ = Describe("Container", func() {
 
 	It("should pass static parameters as arguments when generating types", func() {
 		typeID := "test_type"
-		typeDef := NewType(tests.NewMockTypeWithArgs, "parameter1", true)
+		typeDef := goldi.NewType(NewMockTypeWithArgs, "parameter1", true)
 		registry.Register(typeID, typeDef)
 
 		generatedType := container.MustGet("test_type")
 		Expect(generatedType).NotTo(BeNil())
-		Expect(generatedType).To(BeAssignableToTypeOf(&tests.MockType{}))
+		Expect(generatedType).To(BeAssignableToTypeOf(&MockType{}))
 
-		generatedMock := generatedType.(*tests.MockType)
+		generatedMock := generatedType.(*MockType)
 		Expect(generatedMock.StringParameter).To(Equal("parameter1"))
 		Expect(generatedMock.BoolParameter).To(Equal(true))
 	})
 
 	It("should be able to use parameters as arguments when generating types", func() {
 		typeID := "test_type"
-		typeDef := NewType(tests.NewMockTypeWithArgs, "%parameter1%", "%parameter2%")
+		typeDef := goldi.NewType(NewMockTypeWithArgs, "%parameter1%", "%parameter2%")
 		registry.Register(typeID, typeDef)
 
 		config["parameter1"] = "test"
@@ -83,49 +123,49 @@ var _ = Describe("Container", func() {
 
 		generatedType := container.MustGet("test_type")
 		Expect(generatedType).NotTo(BeNil())
-		Expect(generatedType).To(BeAssignableToTypeOf(&tests.MockType{}))
+		Expect(generatedType).To(BeAssignableToTypeOf(&MockType{}))
 
-		generatedMock := generatedType.(*tests.MockType)
+		generatedMock := generatedType.(*MockType)
 		Expect(generatedMock.StringParameter).To(Equal(config["parameter1"]))
 		Expect(generatedMock.BoolParameter).To(Equal(config["parameter2"]))
 	})
 
 	It("should be able to inject already defined types into other types", func() {
-		registry.Register("injected_type", NewType(tests.NewMockType))
-		registry.Register("main_type", NewType(tests.NewTypeForServiceInjection, "@injected_type"))
+		registry.Register("injected_type", goldi.NewType(NewMockType))
+		registry.Register("main_type", goldi.NewType(NewTypeForServiceInjection, "@injected_type"))
 
 		generatedType := container.MustGet("main_type")
 		Expect(generatedType).NotTo(BeNil())
-		Expect(generatedType).To(BeAssignableToTypeOf(&tests.TypeForServiceInjection{}))
+		Expect(generatedType).To(BeAssignableToTypeOf(&TypeForServiceInjection{}))
 
-		generatedMock := generatedType.(*tests.TypeForServiceInjection)
-		Expect(generatedMock.InjectedType).To(BeAssignableToTypeOf(&tests.MockType{}))
+		generatedMock := generatedType.(*TypeForServiceInjection)
+		Expect(generatedMock.InjectedType).To(BeAssignableToTypeOf(&MockType{}))
 	})
 
 	It("should inject the same instance when it is used by different services", func() {
-		registry.RegisterType("foo", tests.NewMockType)
-		registry.RegisterType("type1", tests.NewTypeForServiceInjection, "@foo")
-		registry.RegisterType("type2", tests.NewTypeForServiceInjection, "@foo")
+		registry.RegisterType("foo", NewMockType)
+		registry.RegisterType("type1", NewTypeForServiceInjection, "@foo")
+		registry.RegisterType("type2", NewTypeForServiceInjection, "@foo")
 
 		generatedType1 := container.MustGet("type1")
 		generatedType2 := container.MustGet("type2")
-		Expect(generatedType1).To(BeAssignableToTypeOf(&tests.TypeForServiceInjection{}))
-		Expect(generatedType2).To(BeAssignableToTypeOf(&tests.TypeForServiceInjection{}))
+		Expect(generatedType1).To(BeAssignableToTypeOf(&TypeForServiceInjection{}))
+		Expect(generatedType2).To(BeAssignableToTypeOf(&TypeForServiceInjection{}))
 
-		generatedMock1 := generatedType1.(*tests.TypeForServiceInjection)
-		generatedMock2 := generatedType2.(*tests.TypeForServiceInjection)
+		generatedMock1 := generatedType1.(*TypeForServiceInjection)
+		generatedMock2 := generatedType2.(*TypeForServiceInjection)
 
 		Expect(generatedMock1.InjectedType == generatedMock2.InjectedType).To(BeTrue(), "Both generated types should have the same instance of @foo")
 	})
 
 	It("should inject nil when using optional types that are not defined", func() {
-		registry.Register("main_type", NewType(tests.NewTypeForServiceInjection, "@?optional_type"))
+		registry.Register("main_type", goldi.NewType(NewTypeForServiceInjection, "@?optional_type"))
 
 		generatedType := container.MustGet("main_type")
 		Expect(generatedType).NotTo(BeNil())
-		Expect(generatedType).To(BeAssignableToTypeOf(&tests.TypeForServiceInjection{}))
+		Expect(generatedType).To(BeAssignableToTypeOf(&TypeForServiceInjection{}))
 
-		generatedMock := generatedType.(*tests.TypeForServiceInjection)
+		generatedMock := generatedType.(*TypeForServiceInjection)
 		Expect(generatedMock.InjectedType).To(BeNil())
 	})
 })

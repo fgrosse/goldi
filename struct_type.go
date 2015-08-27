@@ -18,7 +18,16 @@ type structType struct {
 //   - structT is no struct or pointer to a struct,
 //   - the number of given structParameters exceed the number of field of structT
 //   - the structParameters types do not match the fields of structT
+//
+// Goldigen yaml syntax example:
+//     logger:
+//         package: github.com/fgrosse/foobar
+//         type:    MyType
 func NewStructType(structT interface{}, structParameters ...interface{}) TypeFactory {
+	if structT == nil {
+		return newInvalidType(fmt.Errorf("the given struct is nil"))
+	}
+
 	structType := reflect.TypeOf(structT)
 	if structType.Kind() == reflect.Ptr {
 		structType = structType.Elem()

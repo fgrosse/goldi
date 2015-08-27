@@ -42,6 +42,14 @@ func (r TypeRegistry) Register(typeID string, typeDef TypeFactory) {
 	r[typeID] = typeDef
 }
 
+// RegisterAll will register all given type factories under the mapped type ID
+// It uses TypeRegistry.Register internally
+func (r TypeRegistry) RegisterAll(factories map[string]TypeFactory) {
+	for typeID, typeDef := range factories {
+		r.Register(typeID, typeDef)
+	}
+}
+
 // InjectInstance enables you to inject type instances.
 // If instance is nil an error is returned
 func (r TypeRegistry) InjectInstance(typeID string, instance interface{}) {

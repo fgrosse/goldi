@@ -1,30 +1,30 @@
-package goldi
+package goldi_test
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"fmt"
-	"github.com/fgrosse/goldi/tests"
+	"github.com/fgrosse/goldi"
 )
 
 var _ = Describe("TypeRegistry", func() {
 	var (
-		registry TypeRegistry
-		resolver *ParameterResolver
+		registry goldi.TypeRegistry
+		resolver *goldi.ParameterResolver
 	)
 
 	BeforeEach(func() {
-		registry = NewTypeRegistry()
-		container := NewContainer(registry, map[string]interface{}{})
-		resolver = NewParameterResolver(container)
+		registry = goldi.NewTypeRegistry()
+		container := goldi.NewContainer(registry, map[string]interface{}{})
+		resolver = goldi.NewParameterResolver(container)
 	})
 
 	Describe("RegisterType", func() {
 		Context("with factory function type", func() {
 			It("should store the type", func() {
 				typeID := "test_type"
-				factory := &tests.MockTypeFactory{}
+				factory := &MockTypeFactory{}
 				registry.RegisterType(typeID, factory.NewMockType)
 
 				factoryWrapper, typeIsRegistered := registry[typeID]
@@ -37,20 +37,20 @@ var _ = Describe("TypeRegistry", func() {
 
 			It("should pass parameters to the new type", func() {
 				typeID := "test_type"
-				registry.RegisterType(typeID, tests.NewMockTypeWithArgs, "foo", true)
+				registry.RegisterType(typeID, NewMockTypeWithArgs, "foo", true)
 				Expect(registry).To(HaveKey(typeID))
 
 				result, err := registry["test_type"].Generate(resolver)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(result.(*tests.MockType).StringParameter).To(Equal("foo"))
-				Expect(result.(*tests.MockType).BoolParameter).To(Equal(true))
+				Expect(result.(*MockType).StringParameter).To(Equal("foo"))
+				Expect(result.(*MockType).BoolParameter).To(Equal(true))
 			})
 		})
 
 		Context("with struct type", func() {
 			It("should store the type", func() {
 				typeID := "test_type"
-				foo := tests.Foo{}
+				foo := Foo{}
 				registry.RegisterType(typeID, foo)
 
 				fooType, typeIsRegistered := registry[typeID]
@@ -64,12 +64,12 @@ var _ = Describe("TypeRegistry", func() {
 
 			It("should pass parameters to the new type", func() {
 				typeID := "test_type"
-				registry.RegisterType(typeID, tests.Baz{}, "param1", "param2")
+				registry.RegisterType(typeID, Baz{}, "param1", "param2")
 				Expect(registry).To(HaveKey(typeID))
 
 				result, err := registry["test_type"].Generate(resolver)
 				Expect(err).NotTo(HaveOccurred())
-				newBaz := result.(*tests.Baz)
+				newBaz := result.(*Baz)
 				Expect(newBaz.Parameter1).To(Equal("param1"))
 				Expect(newBaz.Parameter2).To(Equal("param2"))
 			})
@@ -78,7 +78,7 @@ var _ = Describe("TypeRegistry", func() {
 		Context("with pointer to struct type", func() {
 			It("should store the type", func() {
 				typeID := "test_type"
-				foo := &tests.Foo{}
+				foo := &Foo{}
 				registry.RegisterType(typeID, foo)
 
 				fooType, typeIsRegistered := registry[typeID]
@@ -92,12 +92,12 @@ var _ = Describe("TypeRegistry", func() {
 
 			It("should pass parameters to the new type", func() {
 				typeID := "test_type"
-				registry.RegisterType(typeID, &tests.Baz{}, "param1", "param2")
+				registry.RegisterType(typeID, &Baz{}, "param1", "param2")
 				Expect(registry).To(HaveKey(typeID))
 
 				result, err := registry["test_type"].Generate(resolver)
 				Expect(err).NotTo(HaveOccurred())
-				newBaz := result.(*tests.Baz)
+				newBaz := result.(*Baz)
 				Expect(newBaz.Parameter1).To(Equal("param1"))
 				Expect(newBaz.Parameter2).To(Equal("param2"))
 			})
@@ -113,7 +113,7 @@ var _ = Describe("TypeRegistry", func() {
 	Describe("InjectInstance", func() {
 		It("should store the type instance", func() {
 			typeID := "test_type"
-			fooInstance := tests.NewFoo()
+			fooInstance := NewFoo()
 			registry.InjectInstance(typeID, fooInstance)
 
 			factory, typeIsRegistered := registry[typeID]
@@ -125,6 +125,24 @@ var _ = Describe("TypeRegistry", func() {
 			Expect(generateResult == fooInstance).To(BeTrue(),
 				fmt.Sprintf("generateResult (%p) should point to the same instance as fooInstance (%p)", generateResult, fooInstance),
 			)
+		})
+	})
+
+	Describe("RegisterAll", func() {
+		It("should register all factories", func() {
+			registry.RegisterAll(map[string]goldi.TypeFactory{
+				"test_type_1": goldi.NewType(NewFoo),
+				"test_type_2": goldi.NewType(NewBar),
+				"test_type_3": goldi.NewStructType(MockType{}),
+			})
+
+			var typeIsRegistered bool
+			_, typeIsRegistered = registry["test_type_1"]
+			Expect(typeIsRegistered).To(BeTrue())
+			_, typeIsRegistered = registry["test_type_2"]
+			Expect(typeIsRegistered).To(BeTrue())
+			_, typeIsRegistered = registry["test_type_3"]
+			Expect(typeIsRegistered).To(BeTrue())
 		})
 	})
 })

@@ -1,7 +1,6 @@
 package goldi
 
 // A TypeFactory is used to instantiate a certain type.
-// Its primary implementation is currently the Type type
 type TypeFactory interface {
 
 	// Arguments returns all arguments that are used to generate the type.
