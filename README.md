@@ -82,7 +82,7 @@ Use `go get` to install the goldigen binary:
 ```
 $ go get github.com/fgrosse/goldi/goldigen
 ```
-Goldigen depends on [gopkg.in/yaml.v2][4] for the parsing of the yaml files and [Kingpin][6] for the command line flag parsing.
+Goldigen depends on [gopkg.in/yaml.v2][4] (LGPLv3) for the parsing of the yaml files and [Kingpin][6] (MIT licensed) for the command line flag parsing.
 
 You then need to define your types like this:
 
@@ -186,6 +186,10 @@ If you prefer to use `go test` directly you can run the following from the repos
 ```
 $ go test ./tests/...
 ```
+
+### License
+
+Goldi is licensed under the the MIT license. Please see the LICENSE file for details.
 
 ## Contributing
 

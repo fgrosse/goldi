@@ -56,7 +56,15 @@ type LoggerInterface interface {
 	DoStuff(message string) string
 }
 
-type SimpleLogger struct{}
+type LoggerProvider struct{}
+
+func (p *LoggerProvider) GetLogger(name string) LoggerInterface {
+	return &SimpleLogger{name}
+}
+
+type SimpleLogger struct{
+	Name string
+}
 
 func (l *SimpleLogger) DoStuff(input string) string { return input }
 

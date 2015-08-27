@@ -29,7 +29,7 @@ func ExampleNewConfiguredType() {
 // ExampleNewConfiguredType_ prevents godoc from printing the whole content of this file as example
 func ExampleNewConfiguredType_() {}
 
-var _ = Describe("ConfiguredType", func() {
+var _ = Describe("configuredType", func() {
 	var embeddedType goldi.TypeFactory
 	BeforeEach(func() {
 		embeddedType = goldi.NewStructType(Foo{})

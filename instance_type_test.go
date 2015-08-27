@@ -8,7 +8,7 @@ import (
 	"github.com/fgrosse/goldi"
 )
 
-var _ = Describe("InstanceType", func() {
+var _ = Describe("instanceType", func() {
 	var resolver *goldi.ParameterResolver
 
 	BeforeEach(func() {

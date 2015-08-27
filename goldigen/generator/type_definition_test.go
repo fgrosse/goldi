@@ -98,6 +98,13 @@ var _ = Describe("TypeDefinition", func() {
 			}
 			Expect(t.Validate("foobar")).To(Succeed())
 		})
+
+		It("should not return an error if a proxy type does not contain a package name", func() {
+			t := generator.TypeDefinition{
+				FactoryMethod: "@blup::DoStuff",
+			}
+			Expect(t.Validate("foobar")).To(Succeed())
+		})
 	})
 
 	Describe("PackageName", func() {
@@ -168,45 +175,6 @@ var _ = Describe("TypeDefinition", func() {
 			Expect(arguments[3]).To(Equal(`3.1415`))
 			Expect(arguments[4]).To(Equal(`"%some_parameter%"`))
 			Expect(arguments[5]).To(Equal("\"Hello\t\tWorld\""))
-		})
-	})
-
-	Describe("RegistrationCode", func() {
-		var typeDef generator.TypeDefinition
-		BeforeEach(func() {
-			typeDef = generator.TypeDefinition{
-				Package:      "foo/bar",
-				RawArguments: []interface{}{"foo", "%bar%", 42},
-			}
-		})
-
-		It("should return the golang code to register a struct type", func() {
-			typeDef.TypeName = "Baz"
-			Expect(typeDef.RegistrationCode("test_type", "some/package/lib")).To(Equal(`types.Register("test_type", goldi.NewStructType(new(bar.Baz), "foo", "%bar%", 42))`))
-			Expect(typeDef.RegistrationCode("test_type", typeDef.Package)).To(Equal(`types.Register("test_type", goldi.NewStructType(new(Baz), "foo", "%bar%", 42))`))
-		})
-
-		It("should return the golang code to register a type using a factory function", func() {
-			typeDef.FactoryMethod = "NewBaz"
-			Expect(typeDef.RegistrationCode("test_type", "some/package/lib")).To(Equal(`types.Register("test_type", goldi.NewType(bar.NewBaz, "foo", "%bar%", 42))`))
-			Expect(typeDef.RegistrationCode("test_type", typeDef.Package)).To(Equal(`types.Register("test_type", goldi.NewType(NewBaz, "foo", "%bar%", 42))`))
-		})
-
-		It("should return the golang code to register a function type", func() {
-			typeDef.FuncName = "DoFoo"
-			typeDef.RawArguments = nil
-			Expect(typeDef.RegistrationCode("test_type", "some/package/lib")).To(Equal(`types.Register("test_type", goldi.NewFuncType(bar.DoFoo))`))
-			Expect(typeDef.RegistrationCode("test_type", typeDef.Package)).To(Equal(`types.Register("test_type", goldi.NewFuncType(DoFoo))`))
-		})
-
-		It("should return the golang code to register a type alias", func() {
-			typeDef.AliasForType = "@test_type"
-			Expect(typeDef.RegistrationCode("my_alias", "some/package/lib")).To(Equal(`types.Register("my_alias", goldi.NewAliasType("test_type"))`))
-		})
-
-		It("should return the golang code to register a func reference type", func() {
-			typeDef.FuncName = "@my_controller::FancyAction"
-			Expect(typeDef.RegistrationCode("test_type", "some/package/lib")).To(Equal(`types.Register("test_type", goldi.NewFuncReferenceType("my_controller", "FancyAction"))`))
 		})
 	})
 })

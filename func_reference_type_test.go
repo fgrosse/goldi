@@ -24,7 +24,7 @@ func ExampleNewFuncReferenceType() {
 // ExampleNewFuncReferenceType_ prevents godoc from printing the whole content of this file as example
 func ExampleNewFuncReferenceType_() {}
 
-var _ = Describe("FuncReferenceType", func() {
+var _ = Describe("funcReferenceType", func() {
 	It("should implement the TypeFactory interface", func() {
 		var factory goldi.TypeFactory
 		factory = goldi.NewFuncReferenceType("my_controller", "FancyAction")

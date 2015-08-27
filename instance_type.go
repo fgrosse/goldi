@@ -2,7 +2,7 @@ package goldi
 
 import "fmt"
 
-// InstanceType is a trivial implementation of the TypeFactory interface.
+// instanceType is a trivial implementation of the TypeFactory interface.
 // It will always `generate` the same instance of some previously instantiated type.
 type instanceType struct {
 
@@ -10,7 +10,7 @@ type instanceType struct {
 	Instance interface{}
 }
 
-// NewInstanceType creates a new InstanceType which will return the given instance on each call to Generate.
+// NewInstanceType creates a new TypeFactory which will return the given instance on each call to Generate.
 // It will return an invalid type factory if the given instance is nil
 func NewInstanceType(instance interface{}) TypeFactory {
 	if instance == nil {

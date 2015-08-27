@@ -101,8 +101,8 @@ func (t *typeFactory) Arguments() []interface{} {
 }
 
 // Generate will instantiate a new instance of the according type.
-func (t *typeFactory) Generate(parameterResolver *ParameterResolver) (interface{}, error) {
-	args, err := t.generateFactoryArguments(parameterResolver)
+func (t *typeFactory) Generate(resolver *ParameterResolver) (interface{}, error) {
+	args, err := t.generateFactoryArguments(resolver)
 	if err != nil {
 		return nil, err
 	}
@@ -122,16 +122,16 @@ func (t *typeFactory) Generate(parameterResolver *ParameterResolver) (interface{
 	return result[0].Interface(), nil
 }
 
-func (t *typeFactory) generateFactoryArguments(parameterResolver *ParameterResolver) ([]reflect.Value, error) {
+func (t *typeFactory) generateFactoryArguments(resolver *ParameterResolver) ([]reflect.Value, error) {
 	if t.factoryType.IsVariadic() {
-		return t.generateVariadicFactoryArguments(parameterResolver)
+		return t.generateVariadicFactoryArguments(resolver)
 	}
 
 	args := make([]reflect.Value, len(t.factoryArguments))
 	var err error
 
 	for i, argument := range t.factoryArguments {
-		args[i], err = parameterResolver.Resolve(argument, t.factoryType.In(i))
+		args[i], err = resolver.Resolve(argument, t.factoryType.In(i))
 
 		switch errorType := err.(type) {
 		case nil:
@@ -146,13 +146,13 @@ func (t *typeFactory) generateFactoryArguments(parameterResolver *ParameterResol
 	return args, nil
 }
 
-func (t *typeFactory) generateVariadicFactoryArguments(parameterResolver *ParameterResolver) ([]reflect.Value, error) {
+func (t *typeFactory) generateVariadicFactoryArguments(resolver *ParameterResolver) ([]reflect.Value, error) {
 	args := make([]reflect.Value, t.factoryType.NumIn())
 	var err error
 
 	actualNumberOfArgs := t.factoryType.NumIn()
 	for i, argument := range t.factoryArguments[:actualNumberOfArgs-1] {
-		args[i], err = parameterResolver.Resolve(argument, t.factoryType.In(i))
+		args[i], err = resolver.Resolve(argument, t.factoryType.In(i))
 
 		switch errorType := err.(type) {
 		case nil:
@@ -169,7 +169,7 @@ func (t *typeFactory) generateVariadicFactoryArguments(parameterResolver *Parame
 	variadicSlice := reflect.MakeSlice(variadicType, n, n)
 	expectedType := variadicType.Elem()
 	for i, argument := range t.factoryArguments[actualNumberOfArgs-1:] {
-		resolvedArgument, err := parameterResolver.Resolve(argument, expectedType)
+		resolvedArgument, err := resolver.Resolve(argument, expectedType)
 		if err != nil {
 			switch errorType := err.(type) {
 			case TypeReferenceError:

@@ -27,7 +27,7 @@ func ExampleNewAliasType() {
 // ExampleNewAliasType_ prevents godoc from printing the whole content of this file as example
 func ExampleNewAliasType_() {}
 
-var _ = Describe("AliasType", func() {
+var _ = Describe("aliasType", func() {
 	It("should implement the TypeFactory interface", func() {
 		var factory goldi.TypeFactory
 		factory = goldi.NewAliasType("foo")

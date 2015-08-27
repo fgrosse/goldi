@@ -7,7 +7,7 @@ import (
 	"github.com/fgrosse/goldi"
 )
 
-var _ = Describe("Type", func() {
+var _ = Describe("type", func() {
 	It("should implement the TypeFactory interface", func() {
 		var factory goldi.TypeFactory
 		factory = goldi.NewType(NewFoo)

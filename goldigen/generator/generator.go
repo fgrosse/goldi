@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const Version = "0.9.2"
+const Version = "0.9.3"
 
 // The Generator is used to generate compilable go code from a yaml configuration
 type Generator struct {
@@ -142,7 +142,7 @@ func (g *Generator) generateTypeRegistrationFunction(conf *TypesConfiguration, o
 	for _, typeID := range typeIDs {
 		typeDef := conf.Types[typeID]
 		fmt.Fprint(output, "\t")
-		fmt.Fprint(output, typeDef.RegistrationCode(typeID, g.Config.Package))
+		fmt.Fprint(output, RegistrationCode(typeDef, typeID, g.Config.Package))
 		fmt.Fprint(output, "\n")
 	}
 	fmt.Fprint(output, "}\n")

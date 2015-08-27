@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-var _ = Describe("InvalidType", func() {
+var _ = Describe("invalidType", func() {
 	It("should implement the TypeFactory interface", func() {
 		var factory TypeFactory
 		factory = newInvalidType(fmt.Errorf("Something bad happened"))

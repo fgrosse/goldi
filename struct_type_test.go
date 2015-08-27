@@ -8,7 +8,7 @@ import (
 	"github.com/fgrosse/goldi"
 )
 
-var _ = Describe("StructType", func() {
+var _ = Describe("structType", func() {
 	It("should implement the TypeFactory interface", func() {
 		var factory goldi.TypeFactory
 		factory = goldi.NewStructType(MockType{})

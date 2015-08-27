@@ -1,3 +1,5 @@
+// The goldigen binary
+// See https://github.com/fgrosse/goldi#the-goldigen-binary
 package main
 
 import (
