@@ -69,6 +69,14 @@ var _ = Describe("funcReferenceType", func() {
 			Expect(generated.(func(string) string)("TEST")).To(Equal("I was created by @foo TEST"))
 		})
 
+		It("should return an error if the referenced type can not be generated", func() {
+			container.Register("foo", goldi.NewStructType(nil))
+			typeDef := goldi.NewFuncReferenceType("foo", "DoStuff")
+
+			_, err := typeDef.Generate(resolver)
+			Expect(err).To(MatchError(`could not generate func reference type @foo::DoStuff : goldi: error while generating type "foo": the given struct is nil`))
+		})
+
 		It("should return an error if the referenced type has no such method", func() {
 			container.Register("foo", goldi.NewStructType(Foo{}))
 			typeDef := goldi.NewFuncReferenceType("foo", "ThisMethodDoesNotExist")

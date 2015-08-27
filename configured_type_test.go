@@ -103,5 +103,26 @@ var _ = Describe("configuredType", func() {
 			Expect(generatedType).To(BeAssignableToTypeOf(&Foo{}))
 			Expect(generatedType.(*Foo).Value).To(Equal("success!"))
 		})
+
+		It("should return an error if the embedded type can not be generated", func() {
+			invalidType := goldi.NewStructType(nil)
+			typeDef := goldi.NewConfiguredType(invalidType, "configurator_type", "Configure")
+			configurator := &MyConfigurator{ConfiguredValue: "should not happen"}
+			container.Register("configurator_type", goldi.NewInstanceType(configurator))
+
+			generatedType, err := typeDef.Generate(resolver)
+			Expect(err).To(MatchError("can not generate configured type: the given struct is nil"))
+			Expect(generatedType).To(BeNil())
+		})
+
+		It("should return an error if the configurator returns an error", func() {
+			typeDef := goldi.NewConfiguredType(embeddedType, "configurator_type", "Configure")
+			configurator := &MyConfigurator{ReturnError: true}
+			container.Register("configurator_type", goldi.NewInstanceType(configurator))
+
+			generatedType, err := typeDef.Generate(resolver)
+			Expect(err).To(MatchError("can not configure type: this is the error message from the tests.MockTypeConfigurator"))
+			Expect(generatedType).To(BeNil())
+		})
 	})
 })

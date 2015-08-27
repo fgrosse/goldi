@@ -24,6 +24,10 @@ type structType struct {
 //         package: github.com/fgrosse/foobar
 //         type:    MyType
 func NewStructType(structT interface{}, structParameters ...interface{}) TypeFactory {
+	if structT == nil {
+		return newInvalidType(fmt.Errorf("the given struct is nil"))
+	}
+
 	structType := reflect.TypeOf(structT)
 	if structType.Kind() == reflect.Ptr {
 		structType = structType.Elem()

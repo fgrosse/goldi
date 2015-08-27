@@ -30,7 +30,7 @@ func (t *funcReferenceType) Arguments() []interface{} {
 func (t *funcReferenceType) Generate(resolver *ParameterResolver) (interface{}, error) {
 	referencedType, err := resolver.Container.Get(t.typeID.ID)
 	if err != nil {
-		return nil, fmt.Errorf("could not generate func reference type %s : type %s does not exist", t.typeID.ID)
+		return nil, fmt.Errorf("could not generate func reference type %s : %s", t.typeID, err)
 	}
 
 	v := reflect.ValueOf(referencedType)

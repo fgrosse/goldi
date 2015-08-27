@@ -18,7 +18,7 @@ type typeFactory struct {
 // NewType creates a new TypeFactory.
 //
 // This function will return an invalid type if:
-//   - the factoryFunction is no function,
+//   - the factoryFunction is nil or no function,
 //   - the factoryFunction returns zero or more than one parameter
 //   - the factoryFunctions return parameter is no pointer or interface type.
 //   - the number of given factoryParameters does not match the number of arguments of the factoryFunction
@@ -31,6 +31,10 @@ type typeFactory struct {
 //             - "Hello World"
 //             - true
 func NewType(factoryFunction interface{}, factoryParameters ...interface{}) TypeFactory {
+	if factoryFunction == nil {
+		return newInvalidType(fmt.Errorf("the given factoryFunction is nil"))
+	}
+
 	factoryType := reflect.TypeOf(factoryFunction)
 	kind := factoryType.Kind()
 	switch {
@@ -122,11 +126,7 @@ func (t *typeFactory) Generate(resolver *ParameterResolver) (interface{}, error)
 		result = t.factory.Call(args)
 	}
 
-	if len(result) == 0 {
-		// in theory this condition can never evaluate to true since we check the number of return arguments in NewType
-		panic(fmt.Errorf("no return parameter found. this should never ever happen ò.Ó"))
-	}
-
+	// we check the number of return arguments in NewType so there is always exactly one result
 	return result[0].Interface(), nil
 }
 

@@ -47,13 +47,12 @@ var _ = Describe("ParameterResolver", func() {
 
 		Context("when parameter has not been defined", func() {
 			It("should return the parameter as is", func() {
-				config["foo"] = "success"
 				parameter := reflect.ValueOf("%foo%")
 				expectedType := parameter.Type()
 
 				result, err := resolver.Resolve(parameter, expectedType)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(result.Interface()).To(Equal(config["foo"]))
+				Expect(result.Interface()).To(Equal("%foo%"))
 			})
 		})
 
@@ -103,7 +102,6 @@ var _ = Describe("ParameterResolver", func() {
 					expectedType := reflect.TypeOf(NewBar())
 
 					result, err := resolver.Resolve(parameter, expectedType)
-					Expect(err).To(HaveOccurred())
 					Expect(result.IsValid()).To(BeFalse())
 					Expect(err).To(MatchError(`the referenced type "@foo" (type *goldi_test.Foo) is not assignable to the expected type *goldi_test.Bar`))
 					Expect(err.(goldi.TypeReferenceError).TypeID).To(Equal("foo"))
@@ -123,6 +121,17 @@ var _ = Describe("ParameterResolver", func() {
 					Expect(result.Interface()).To(BeAssignableToTypeOf(foo.ReturnString))
 					Expect(result.Interface().(func(string) string)("YEAH")).To(Equal("Success! YEAH"))
 				})
+
+				It("should return an error if the method does not exist", func() {
+					container.InjectInstance("foo", new(Foo))
+
+					parameter := reflect.ValueOf("@foo::ThisMethodDoesNotExist")
+					expectedType := reflect.TypeOf(func() {})
+
+					result, err := resolver.Resolve(parameter, expectedType)
+					Expect(result.IsValid()).To(BeFalse())
+					Expect(err).To(MatchError(`the referenced method "@foo::ThisMethodDoesNotExist" does not exist or is not exported`))
+				})
 			})
 		})
 
@@ -136,6 +145,18 @@ var _ = Describe("ParameterResolver", func() {
 				Expect(result.IsValid()).To(BeFalse())
 				Expect(err).To(MatchError(`the referenced type "@foo" has not been defined`))
 				Expect(err.(goldi.UnknownTypeReferenceError).TypeID).To(Equal("foo"))
+			})
+		})
+
+		Context("when the type has is invalid", func() {
+			It("should return an error", func() {
+				parameter := reflect.ValueOf("@foo")
+				expectedType := reflect.TypeOf(&Foo{})
+
+				container.Register("foo", goldi.NewType(nil)) // foo will be invalid
+				result, err := resolver.Resolve(parameter, expectedType)
+				Expect(result).To(Equal(reflect.Zero(expectedType)))
+				Expect(err).To(MatchError(`goldi: error while generating type "foo": the given factoryFunction is nil`))
 			})
 		})
 	})

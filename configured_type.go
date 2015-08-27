@@ -58,7 +58,7 @@ func (t *configuredType) Generate(parameterResolver *ParameterResolver) (interfa
 	}
 
 	if err = t.Configure(embedded, parameterResolver.Container); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("can not configure type: %s", err)
 	}
 
 	return embedded, nil

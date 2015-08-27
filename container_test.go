@@ -58,6 +58,12 @@ var _ = Describe("Container", func() {
 		Expect(func() { container.MustGet("foo.bar") }).To(Panic())
 	})
 
+	It("should return an error if there was an issue generating the type", func() {
+		container.Register("foo", goldi.NewStructType(nil))
+		_, err := container.Get("foo")
+		Expect(err).To(MatchError(`goldi: error while generating type "foo": the given struct is nil`))
+	})
+
 	It("should resolve simple types", func() {
 		registry.RegisterType("test_type", NewMockType)
 		Expect(container.MustGet("test_type")).To(BeAssignableToTypeOf(&MockType{}))
