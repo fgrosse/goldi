@@ -12,6 +12,11 @@ type proxyType struct {
 }
 
 // NewProxyType returns a TypeFactory that uses a function of another type to generate a result.
+//
+// Goldigen yaml syntax example:
+//     logger:
+//         factory: "@logger_provider::GetLogger"
+//         args:    [ "My Logger" ]
 func NewProxyType(typeID, functionName string, args ...interface{}) TypeFactory {
 	if functionName == "" || unicode.IsLower(rune(functionName[0])) {
 		return newInvalidType(fmt.Errorf("can not use unexported method %q as second argument to NewProxyType", functionName))

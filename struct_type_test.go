@@ -8,6 +8,27 @@ import (
 	"github.com/fgrosse/goldi"
 )
 
+func ExampleNewStructType() {
+	container := goldi.NewContainer(goldi.NewTypeRegistry(), map[string]interface{}{})
+
+	// all of the following types are semantically identical
+	container.Register("foo_1", goldi.NewStructType(Foo{}))
+	container.Register("foo_2", goldi.NewStructType(&Foo{}))
+	container.Register("foo_3", goldi.NewStructType(new(Foo)))
+
+	// each reference to the "logger" type will now be resolved to that instance
+	fmt.Printf("foo_1: %T\n", container.MustGet("foo_1"))
+	fmt.Printf("foo_2: %T\n", container.MustGet("foo_2"))
+	fmt.Printf("foo_3: %T\n", container.MustGet("foo_3"))
+	// Output:
+	// foo_1: *goldi_test.Foo
+	// foo_2: *goldi_test.Foo
+	// foo_3: *goldi_test.Foo
+}
+
+// ExampleNewStructType_ prevents godoc from printing the whole content of this file as example
+func ExampleNewStructType_() {}
+
 var _ = Describe("structType", func() {
 	It("should implement the TypeFactory interface", func() {
 		var factory goldi.TypeFactory

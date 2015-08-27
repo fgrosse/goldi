@@ -12,6 +12,8 @@ type instanceType struct {
 
 // NewInstanceType creates a new TypeFactory which will return the given instance on each call to Generate.
 // It will return an invalid type factory if the given instance is nil
+//
+// You can not generate this type using goldigen
 func NewInstanceType(instance interface{}) TypeFactory {
 	if instance == nil {
 		return newInvalidType(fmt.Errorf("refused to create a new InstanceType with instance being nil"))

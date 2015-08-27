@@ -11,6 +11,10 @@ type funcReferenceType struct {
 }
 
 // NewFuncReferenceType returns a TypeFactory that returns a method of another type as method value (function).
+//
+// Goldigen yaml syntax example:
+//     my_func_type:
+//         func: "@some_type::FancyAction"
 func NewFuncReferenceType(typeID, functionName string) TypeFactory {
 	if functionName == "" || unicode.IsLower(rune(functionName[0])) {
 		return newInvalidType(fmt.Errorf("can not use unexported method %q as second argument to NewFuncReferenceType", functionName))

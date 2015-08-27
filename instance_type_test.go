@@ -8,6 +8,24 @@ import (
 	"github.com/fgrosse/goldi"
 )
 
+func ExampleNewInstanceType() {
+	container := goldi.NewContainer(goldi.NewTypeRegistry(), map[string]interface{}{})
+
+	myInstance := new(SimpleLogger)
+	myInstance.Name = "Foobar" // you can configure the instance in your code
+
+	// now register this instance as a type
+	container.Register("logger", goldi.NewInstanceType(myInstance))
+
+	// each reference to the "logger" type will now be resolved to that instance
+	fmt.Println(container.MustGet("logger").(*SimpleLogger).Name)
+	// Output:
+	// Foobar
+}
+
+// ExampleNewInstanceType_ prevents godoc from printing the whole content of this file as example
+func ExampleNewInstanceType_() {}
+
 var _ = Describe("instanceType", func() {
 	var resolver *goldi.ParameterResolver
 

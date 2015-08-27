@@ -8,10 +8,17 @@ import (
 	"github.com/fgrosse/goldi"
 )
 
+// Let's assume that we have a LoggerProvider type that produces configured instances
+// of a Logger each time we call LoggerProvider.GetLogger(loggerName string).
+//
+// The example shows how to register a `logger` as proxy for a specific call to this LoggerProvider.
 func ExampleNewProxyType() {
 	container := goldi.NewContainer(goldi.NewTypeRegistry(), map[string]interface{}{})
 
+	// register some type as always
 	container.Register("logger_provider", goldi.NewStructType(LoggerProvider{}))
+
+	// register a proxy type that references the method of previously defined type and append call arguments if any
 	container.Register("logger", goldi.NewProxyType("logger_provider", "GetLogger", "My logger"))
 
 	l := container.MustGet("logger").(*SimpleLogger)

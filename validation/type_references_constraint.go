@@ -35,7 +35,7 @@ func (c *TypeReferencesConstraint) validateTypeReferences(typeID string, contain
 			continue
 		}
 
-		referencedTypeFactory, err := c.checkTypeIsDefined(goldi.NewTypeID(typeID), goldi.NewTypeID(referencedTypeID), container)
+		referencedTypeFactory, err := c.checkTypeIsDefined(goldi.NewTypeID(typeID).ID, goldi.NewTypeID(referencedTypeID).ID, container)
 		if err != nil {
 			return err
 		}
@@ -62,10 +62,10 @@ func (c *TypeReferencesConstraint) typeReferenceArguments(allArguments []interfa
 	return typeRefParameters
 }
 
-func (c *TypeReferencesConstraint) checkTypeIsDefined(t, referencedType *goldi.TypeID, container *goldi.Container) (goldi.TypeFactory, error) {
-	typeDef, isDefined := container.TypeRegistry[referencedType.ID]
+func (c *TypeReferencesConstraint) checkTypeIsDefined(t, referencedType string, container *goldi.Container) (goldi.TypeFactory, error) {
+	typeDef, isDefined := container.TypeRegistry[referencedType]
 	if isDefined == false {
-		return nil, fmt.Errorf("type %q references unknown type %q", t.ID, referencedType.ID)
+		return nil, fmt.Errorf("type %q references unknown type %q", t, referencedType)
 	}
 
 	return typeDef, nil
@@ -76,7 +76,7 @@ func (c *TypeReferencesConstraint) checkCircularDependency(typeFactory goldi.Typ
 	typeRefParameters := c.typeReferenceArguments(allArguments)
 
 	for _, referencedTypeID := range typeRefParameters {
-		referencedType, err := c.checkTypeIsDefined(goldi.NewTypeID(typeID), goldi.NewTypeID(referencedTypeID), container)
+		referencedType, err := c.checkTypeIsDefined(goldi.NewTypeID(typeID).ID, goldi.NewTypeID(referencedTypeID).ID, container)
 		if err != nil {
 			// TEST: test this for improved code coverage
 			return nil

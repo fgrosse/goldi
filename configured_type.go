@@ -19,6 +19,12 @@ type configuredType struct {
 //
 // The method removes any leading or trailing whitespace from configurator type ID and method.
 // NewConfiguredType will return an invalid type when embeddedType is nil or the trimmed configurator typeID or method is empty.
+//
+// Goldigen yaml syntax example:
+//     my_type:
+//         package: github.com/fgrosse/foobar
+//         type:    MyType
+//         configurator: [ "@my_configurator", Configure ]
 func NewConfiguredType(embeddedType TypeFactory, configuratorTypeID, configuratorMethod string) TypeFactory {
 	if embeddedType == nil {
 		return newInvalidType(fmt.Errorf("refusing to create a new ConfiguredType with nil as embedded type"))

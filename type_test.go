@@ -5,7 +5,23 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/fgrosse/goldi"
+	"fmt"
 )
+
+func ExampleNewType() {
+	container := goldi.NewContainer(goldi.NewTypeRegistry(), map[string]interface{}{})
+
+	// register the type using the factory function NewMockTypeWithArgs and pass two arguments
+	container.Register("my_type", goldi.NewType(NewMockTypeWithArgs, "Hello World", true))
+
+	t := container.MustGet("my_type").(*MockType)
+	fmt.Printf("%#v", t)
+	// Output:
+	// &goldi_test.MockType{StringParameter:"Hello World", BoolParameter:true}
+}
+
+// ExampleNewType_ prevents godoc from printing the whole content of this file as example
+func ExampleNewType_() {}
 
 var _ = Describe("type", func() {
 	It("should implement the TypeFactory interface", func() {

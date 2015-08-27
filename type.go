@@ -22,6 +22,14 @@ type typeFactory struct {
 //   - the factoryFunction returns zero or more than one parameter
 //   - the factoryFunctions return parameter is no pointer or interface type.
 //   - the number of given factoryParameters does not match the number of arguments of the factoryFunction
+//
+// Goldigen yaml syntax example:
+//     my_type:
+//         package: github.com/fgrosse/foobar
+//         factory: NewType
+//         args:
+//             - "Hello World"
+//             - true
 func NewType(factoryFunction interface{}, factoryParameters ...interface{}) TypeFactory {
 	factoryType := reflect.TypeOf(factoryFunction)
 	kind := factoryType.Kind()
