@@ -127,4 +127,22 @@ var _ = Describe("TypeRegistry", func() {
 			)
 		})
 	})
+
+	Describe("RegisterAll", func() {
+		It("should register all factories", func() {
+			registry.RegisterAll(map[string]goldi.TypeFactory{
+				"test_type_1": goldi.NewType(NewFoo),
+				"test_type_2": goldi.NewType(NewBar),
+				"test_type_3": goldi.NewStructType(MockType{}),
+			})
+
+			var typeIsRegistered bool
+			_, typeIsRegistered = registry["test_type_1"]
+			Expect(typeIsRegistered).To(BeTrue())
+			_, typeIsRegistered = registry["test_type_2"]
+			Expect(typeIsRegistered).To(BeTrue())
+			_, typeIsRegistered = registry["test_type_3"]
+			Expect(typeIsRegistered).To(BeTrue())
+		})
+	})
 })
