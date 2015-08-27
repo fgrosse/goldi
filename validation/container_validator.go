@@ -1,3 +1,4 @@
+// Goldi container validation
 package validation
 
 import (

@@ -19,6 +19,7 @@ $ go get github.com/fgrosse/goldi
 ```
 
 No additional dependencies are required to use the library.
+The full documentation is available at [godoc.org][3]. It is almost complete and includes a lot of examples on how to use goldi.
 
 ### Usage
 First you need to define the types you are going to use later
@@ -166,26 +167,6 @@ Using the [`ContainerValidator`][8] is always the preferred option since it will
 like undefined parameters or circular type dependencies.
 
 Note that using goldigen is completely optional. If you do not like the idea of having an extra build step for your application just use goldis API directly.
-
-## Source Code Documentation
-
-A generated documentation is available at [godoc.org][3]
-
-## Running the tests
-
-Goldi uses the awesome [ginkgo][1] framework for its tests.
-If you want to run the tests you need to go get [ginkgo][1] and [gomega][2]
-You can execute the tests running:
-```
-$ go get github.com/onsi/ginkgo/ginkgo
-$ go get github.com/onsi/gomega
-$ ginkgo -r tests
-```
-
-If you prefer to use `go test` directly you can run the following from the repository root directory:
-```
-$ go test ./tests/...
-```
 
 ### License
 
