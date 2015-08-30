@@ -164,3 +164,8 @@ func checkUserWantsToOverwriteFile() {
 		os.Exit(1)
 	}
 }
+
+// EnableVerboseLog can be used when debugging the code in the tests
+func EnableVerboseLog() {
+	*verbose = true
+}

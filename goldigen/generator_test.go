@@ -54,6 +54,28 @@ var _ = Describe("Generator", func() {
 		output = &bytes.Buffer{}
 	})
 
+	It("should not be necessary to quote type references because of the @", func() {
+		// the @ has some special significance in yaml which we are going to ignore in goldigen
+		yaml := `
+			types:
+				goldi.test.foo:
+					package: test
+					factory: @foo_provider::NewFoo
+					args:
+						- @bar
+						- john.doe@example.com
+						- 'alice@example.com'
+						- "mallory@example.com"
+						- There is an @ here`
+
+		Expect(gen.Generate(strings.NewReader(yaml), output)).To(Succeed())
+		Expect(output).To(ContainCode(`
+			func RegisterTypes(types goldi.TypeRegistry) {
+				types.Register("goldi.test.foo", goldi.NewProxyType("foo_provider", "NewFoo", "@bar", "john.doe@example.com", "alice@example.com", "mallory@example.com", "There is an @ here"))
+			}
+		`))
+	})
+
 	It("should generate valid go code", func() {
 		Expect(gen.Generate(strings.NewReader(exampleYaml), output)).To(Succeed())
 		Expect(output).To(BeValidGoCode())
