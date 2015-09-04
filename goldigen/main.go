@@ -13,7 +13,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const Version = "0.9.5"
+const Version = "0.9.7"
 
 var (
 	app = kingpin.New("goldigen", "The goldi dependency injection container generator.\n\nSee https://github.com/fgrosse/goldi for further information.")
@@ -41,7 +41,7 @@ func main() {
 
 	outputPackageName := determineOutputPackageName()
 	config := NewConfig(outputPackageName, *functionName, inputPath, *outputPath)
-	gen := New(config)
+	gen := NewGenerator(config)
 	output := &bytes.Buffer{}
 
 	if *verbose {

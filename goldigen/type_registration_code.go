@@ -7,7 +7,7 @@ import (
 
 // RegistrationCode returns the go code that is necessary to register this type
 // To avoid any unexpected behavior you should call TypeDefinition.Validate first
-func RegistrationCode(t TypeDefinition, typeID, outputPackageName string) string {
+func FactoryCode(t TypeDefinition, outputPackageName string) string {
 	var typeFactoryCode string
 
 	switch {
@@ -34,7 +34,7 @@ func RegistrationCode(t TypeDefinition, typeID, outputPackageName string) string
 		typeFactoryCode = fmt.Sprintf("goldi.NewConfiguredType(\n\t\t%s,\n\t\t%q, %q,\n\t)", typeFactoryCode, configuratorID, configuratorMethod)
 	}
 
-	return fmt.Sprintf("types.Register(%q, %s)", typeID, typeFactoryCode)
+	return typeFactoryCode
 }
 
 func funcTypeCode(t TypeDefinition, outputPackageName string) string {

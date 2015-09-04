@@ -19,7 +19,7 @@ type Generator struct {
 }
 
 // NewGenerator creates a new Generator instance
-func New(config Config) *Generator {
+func NewGenerator(config Config) *Generator {
 	return &Generator{
 		Config: config,
 		Debug:  false,
@@ -173,18 +173,34 @@ func (g *Generator) generateTypeRegistrationFunction(conf *TypesConfiguration, o
 	fmt.Fprintf(output, "func %s(types goldi.TypeRegistry) {\n", g.Config.FunctionName)
 	typeIDs := make([]string, len(conf.Types))
 	i := 0
+	maxIDLength := 0
 	for typeID, _ := range conf.Types {
 		typeIDs[i] = typeID
 		i++
+		if len(typeID) > maxIDLength {
+			maxIDLength = len(typeID)
+		}
 	}
 	sort.Strings(typeIDs)
 
-	for _, typeID := range typeIDs {
+	if len(conf.Types) == 1 {
+		typeID := typeIDs[0]
 		typeDef := conf.Types[typeID]
 		fmt.Fprint(output, "\t")
-		fmt.Fprint(output, RegistrationCode(typeDef, typeID, g.Config.Package))
+		fmt.Fprintf(output, "types.Register(%q, %s)", typeID, FactoryCode(typeDef, g.Config.Package))
 		fmt.Fprint(output, "\n")
+	} else {
+		fmt.Fprint(output, "\ttypes.RegisterAll(map[string]goldi.TypeFactory{\n")
+		for _, typeID := range typeIDs {
+			typeDef := conf.Types[typeID]
+			spaces := strings.Repeat(" ", maxIDLength - len(typeID))
+			fmt.Fprintf(output, "\t\t%q: %s%s,\n", typeID, spaces, FactoryCode(typeDef, g.Config.Package))
+		}
+
+		fmt.Fprint(output, "\t})\n")
 	}
+
+	// close the outmost surrounding function
 	fmt.Fprint(output, "}\n")
 }
 

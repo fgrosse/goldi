@@ -50,7 +50,7 @@ var _ = Describe("Generator", func() {
 
 	BeforeEach(func() {
 		config := main.NewConfig(outputPackageName, "RegisterTypes", inputPath, outputPath)
-		gen = main.New(config)
+		gen = main.NewGenerator(config)
 		output = &bytes.Buffer{}
 	})
 
@@ -118,11 +118,13 @@ var _ = Describe("Generator", func() {
 		// Note that NewFoo has no explicit package name since it is defined within the given outputPackageName
 		Expect(output).To(ContainCode(`
 			func RegisterTypes(types goldi.TypeRegistry) {
-				types.Register("goldi.test.foo", goldi.NewType(NewFoo))
-				types.Register("graphigo.client", goldi.NewType(graphigo.NewClient))
-				types.Register("http_handler", goldi.NewFuncType(example.HandleHTTP))
-				types.Register("logger", goldi.NewType(log.New, "test"))
-				types.Register("simple.struct", goldi.NewStructType(new(example.MyStruct)))
+				types.RegisterAll(map[string]goldi.TypeFactory{
+					"goldi.test.foo":  goldi.NewType(NewFoo),
+					"graphigo.client": goldi.NewType(graphigo.NewClient),
+					"http_handler":    goldi.NewFuncType(example.HandleHTTP),
+					"logger":          goldi.NewType(log.New, "test"),
+					"simple.struct":   goldi.NewStructType(new(example.MyStruct)),
+				})
 			}
 		`))
 	})
