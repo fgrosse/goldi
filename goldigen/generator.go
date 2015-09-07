@@ -19,7 +19,7 @@ type Generator struct {
 }
 
 // NewGenerator creates a new Generator instance
-func New(config Config) *Generator {
+func NewGenerator(config Config) *Generator {
 	return &Generator{
 		Config: config,
 		Debug:  false,
@@ -63,20 +63,23 @@ func (g *Generator) parseInput(input io.Reader) (*TypesConfiguration, error) {
 
 	var config TypesConfiguration
 	err = yaml.Unmarshal(inputData, &config)
+
+	captureStrings(&config)
+
 	return &config, err
 }
 
 func (g *Generator) sanitizeInput(input []byte) []byte {
 	g.logVerbose("Sanitizing input..")
-	sanitizedInput := &bytes.Buffer{}
+	var sanitizedInput = newSanitizer()
+
 	line := &bytes.Buffer{}
 	lineBeginning := true
 	for _, c := range input {
 		switch c {
 		case '\n':
 			if strings.TrimSpace(line.String()) != "" {
-				sanitizedInput.Write(line.Bytes())
-				sanitizedInput.WriteByte('\n')
+				sanitizedInput.Write(append(line.Bytes(), '\n'))
 				line.Reset()
 				lineBeginning = true
 			}
@@ -95,7 +98,46 @@ func (g *Generator) sanitizeInput(input []byte) []byte {
 	}
 
 	sanitizedInput.Write(line.Bytes())
-	return sanitizedInput.Bytes()
+
+	s := sanitizedInput.Bytes()
+	g.logVerbose("Sanitized input is:\n%s", string(s))
+	return s
+}
+
+// captureStrings reverts any escape sequences that were introduced during the input sanitizing.
+func captureStrings(config *TypesConfiguration) {
+	unescape := func(input string) string {
+		output := strings.Replace(input, `\@`, `@`, -1)
+		return output
+	}
+
+	for id, t := range config.Types {
+		t.TypeName = unescape(t.TypeName)
+		t.FuncName = unescape(t.FuncName)
+		t.FactoryMethod = unescape(t.FactoryMethod)
+		t.AliasForType = unescape(t.AliasForType)
+
+		for i, s := range t.Configurator {
+			t.Configurator[i] = unescape(s)
+		}
+
+		for i, a := range t.RawArguments {
+			s, isString := a.(string)
+			if !isString {
+				continue
+			}
+			t.RawArguments[i] = unescape(s)
+		}
+		for i, a := range t.RawArgumentsShort {
+			s, isString := a.(string)
+			if !isString {
+				continue
+			}
+			t.RawArgumentsShort[i] = unescape(s)
+		}
+
+		config.Types[id] = t
+	}
 }
 
 func (g *Generator) generateGoGenerateLine(output io.Writer) {
@@ -131,18 +173,34 @@ func (g *Generator) generateTypeRegistrationFunction(conf *TypesConfiguration, o
 	fmt.Fprintf(output, "func %s(types goldi.TypeRegistry) {\n", g.Config.FunctionName)
 	typeIDs := make([]string, len(conf.Types))
 	i := 0
+	maxIDLength := 0
 	for typeID, _ := range conf.Types {
 		typeIDs[i] = typeID
 		i++
+		if len(typeID) > maxIDLength {
+			maxIDLength = len(typeID)
+		}
 	}
 	sort.Strings(typeIDs)
 
-	for _, typeID := range typeIDs {
+	if len(conf.Types) == 1 {
+		typeID := typeIDs[0]
 		typeDef := conf.Types[typeID]
 		fmt.Fprint(output, "\t")
-		fmt.Fprint(output, RegistrationCode(typeDef, typeID, g.Config.Package))
+		fmt.Fprintf(output, "types.Register(%q, %s)", typeID, FactoryCode(typeDef, g.Config.Package))
 		fmt.Fprint(output, "\n")
+	} else {
+		fmt.Fprint(output, "\ttypes.RegisterAll(map[string]goldi.TypeFactory{\n")
+		for _, typeID := range typeIDs {
+			typeDef := conf.Types[typeID]
+			spaces := strings.Repeat(" ", maxIDLength - len(typeID))
+			fmt.Fprintf(output, "\t\t%q: %s%s,\n", typeID, spaces, FactoryCode(typeDef, g.Config.Package))
+		}
+
+		fmt.Fprint(output, "\t})\n")
 	}
+
+	// close the outmost surrounding function
 	fmt.Fprint(output, "}\n")
 }
 

@@ -50,8 +50,30 @@ var _ = Describe("Generator", func() {
 
 	BeforeEach(func() {
 		config := main.NewConfig(outputPackageName, "RegisterTypes", inputPath, outputPath)
-		gen = main.New(config)
+		gen = main.NewGenerator(config)
 		output = &bytes.Buffer{}
+	})
+
+	It("should not be necessary to quote type references because of the @", func() {
+		// the @ has some special significance in yaml which we are going to ignore in goldigen
+		yaml := `
+			types:
+				goldi.test.foo:
+					package: test
+					factory: @foo_provider::NewFoo
+					args:
+						- @bar
+						- john.doe@example.com
+						- 'alice@example.com'
+						- "mallory@example.com"
+						- There is an @ here`
+
+		Expect(gen.Generate(strings.NewReader(yaml), output)).To(Succeed())
+		Expect(output).To(ContainCode(`
+			func RegisterTypes(types goldi.TypeRegistry) {
+				types.Register("goldi.test.foo", goldi.NewProxyType("foo_provider", "NewFoo", "@bar", "john.doe@example.com", "alice@example.com", "mallory@example.com", "There is an @ here"))
+			}
+		`))
 	})
 
 	It("should generate valid go code", func() {
@@ -96,11 +118,13 @@ var _ = Describe("Generator", func() {
 		// Note that NewFoo has no explicit package name since it is defined within the given outputPackageName
 		Expect(output).To(ContainCode(`
 			func RegisterTypes(types goldi.TypeRegistry) {
-				types.Register("goldi.test.foo", goldi.NewType(NewFoo))
-				types.Register("graphigo.client", goldi.NewType(graphigo.NewClient))
-				types.Register("http_handler", goldi.NewFuncType(example.HandleHTTP))
-				types.Register("logger", goldi.NewType(log.New, "test"))
-				types.Register("simple.struct", goldi.NewStructType(new(example.MyStruct)))
+				types.RegisterAll(map[string]goldi.TypeFactory{
+					"goldi.test.foo":  goldi.NewType(NewFoo),
+					"graphigo.client": goldi.NewType(graphigo.NewClient),
+					"http_handler":    goldi.NewFuncType(example.HandleHTTP),
+					"logger":          goldi.NewType(log.New, "test"),
+					"simple.struct":   goldi.NewStructType(new(example.MyStruct)),
+				})
 			}
 		`))
 	})
