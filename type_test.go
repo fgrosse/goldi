@@ -52,6 +52,10 @@ var _ = Describe("type", func() {
 			It("should not return an invalid type if the return parameter is an interface", func() {
 				Expect(goldi.IsValid(goldi.NewType(func() interface{} { return MockType{} }))).To(BeTrue())
 			})
+
+			It("should not return an invalid type if the return parameter is a function", func() {
+				Expect(goldi.IsValid(goldi.NewType(func() func() { return func(){} }))).To(BeTrue())
+			})
 		})
 
 		Context("without factory function arguments", func() {
