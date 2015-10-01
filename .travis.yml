@@ -8,6 +8,10 @@ go:
   - 1.5
   - tip
 
+matrix:
+  allow_failures:
+    - go: tip
+
 install:
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/modocache/gover
