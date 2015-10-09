@@ -13,6 +13,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
+// Version contains the goldigen version.
 const Version = "0.9.8"
 
 var (

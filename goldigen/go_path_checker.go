@@ -39,9 +39,9 @@ func (c *GoPathChecker) PackageName(outputPath string) string {
 			c.log("Found %q in GOPATH %q", outputDir, goPath)
 			packageName := strings.TrimPrefix(outputDir, goPath)
 			return packageName
-		} else {
-			c.log("%q is not contained in GOPATH %q", outputDir, goPath)
 		}
+
+		c.log("%q is not contained in GOPATH %q", outputDir, goPath)
 	}
 
 	return ""

@@ -48,7 +48,7 @@ var _ = Describe("TypeDefinition", func() {
 				FuncName:     "DoFoo",
 				RawArguments: []interface{}{"test", 42},
 			}
-			Expect(t.Validate("foobar")).To(MatchError(`type definition of "foobar" is a function type but contains arguments. Function types do not accept arguments!`))
+			Expect(t.Validate("foobar")).To(MatchError(`type definition of "foobar" is a function type but contains arguments. Function types do not accept arguments`))
 		})
 
 		It("should return an error if the definition does not contain a factory method or a type or func name", func() {

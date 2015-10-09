@@ -13,6 +13,7 @@ type TypeReferencesConstraint struct {
 	circularDependencyCheckMap gotility.StringSet
 }
 
+// Validate implements the Constraint interface by checking if all referenced types have been defined.
 func (c *TypeReferencesConstraint) Validate(container *goldi.Container) (err error) {
 	for typeID, typeFactory := range container.TypeRegistry {
 		// reset the validation type cache

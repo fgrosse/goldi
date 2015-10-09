@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// RegistrationCode returns the go code that is necessary to register this type
+// FactoryCode returns the go code that is necessary to register this type
 // To avoid any unexpected behavior you should call TypeDefinition.Validate first
 func FactoryCode(t TypeDefinition, outputPackageName string) string {
 	var typeFactoryCode string
