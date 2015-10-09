@@ -48,7 +48,7 @@ var _ = Describe("TypeDefinition", func() {
 				FuncName:     "DoFoo",
 				RawArguments: []interface{}{"test", 42},
 			}
-			Expect(t.Validate("foobar")).To(MatchError(`type definition of "foobar" is a function type but contains arguments. Function types do not accept arguments!`))
+			Expect(t.Validate("foobar")).To(MatchError(`type definition of "foobar" is a function type but contains arguments. Function types do not accept arguments`))
 		})
 
 		It("should return an error if the definition does not contain a factory method or a type or func name", func() {
@@ -68,7 +68,7 @@ var _ = Describe("TypeDefinition", func() {
 
 		It("should return an error if one of the configurator arguments or both are empty", func() {
 			t := main.TypeDefinition{Package: "foo/bar", TypeName: "Blup"}
-			invalidArguments := [][]string{[]string{"", ""}, []string{"@foo", ""}, []string{"", "Blup"}, []string{"\t", "  \n "}}
+			invalidArguments := [][]string{{"", ""}, {"@foo", ""}, {"", "Blup"}, {"\t", "  \n "}}
 			for _, invalid := range invalidArguments {
 				t.Configurator = invalid
 				Expect(t.Validate("foobar")).To(MatchError(`configurator of type "foobar" can not have empty arguments`))

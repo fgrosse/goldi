@@ -35,9 +35,9 @@ func (r *ParameterResolver) Resolve(parameter reflect.Value, expectedType reflec
 
 	if IsTypeReference(stringParameter) {
 		return r.resolveTypeReference(stringParameter, expectedType)
-	} else {
-		return r.resolveParameter(parameter, stringParameter, expectedType), nil
 	}
+
+	return r.resolveParameter(parameter, stringParameter, expectedType), nil
 }
 
 func (r *ParameterResolver) resolveParameter(parameter reflect.Value, stringParameter string, expectedType reflect.Type) reflect.Value {

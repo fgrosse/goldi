@@ -49,7 +49,7 @@ func (t *TypeDefinition) Validate(typeID string) error {
 		}
 
 		if len(t.RawArguments) != 0 {
-			return fmt.Errorf("type definition of %q is a function type but contains arguments. Function types do not accept arguments!", typeID)
+			return fmt.Errorf("type definition of %q is a function type but contains arguments. Function types do not accept arguments", typeID)
 		}
 	}
 
@@ -94,9 +94,9 @@ func (t *TypeDefinition) validateTypeAlias(typeID string) error {
 	return nil
 }
 
-func (t *TypeDefinition) requireField(fieldName, value, typeId string) error {
+func (t *TypeDefinition) requireField(fieldName, value, typeID string) error {
 	if strings.TrimSpace(value) == "" {
-		return fmt.Errorf("type definition of %q is missing the required %q key", typeId, fieldName)
+		return fmt.Errorf("type definition of %q is missing the required %q key", typeID, fieldName)
 	}
 	return nil
 }

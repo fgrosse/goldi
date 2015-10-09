@@ -9,6 +9,7 @@ import (
 // The TypeParametersConstraint is used in a ContainerValidator to check if all used parameters do exist.
 type TypeParametersConstraint struct{}
 
+// Validate implements the Constraint interface by checking if all referenced parameters have been defined.
 func (c *TypeParametersConstraint) Validate(container *goldi.Container) (err error) {
 	for typeID, typeFactory := range container.TypeRegistry {
 		allArguments := typeFactory.Arguments()

@@ -13,7 +13,8 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
-const Version = "0.9.7"
+// Version contains the goldigen version.
+const Version = "0.9.9"
 
 var (
 	app = kingpin.New("goldigen", "The goldi dependency injection container generator.\n\nSee https://github.com/fgrosse/goldi for further information.")

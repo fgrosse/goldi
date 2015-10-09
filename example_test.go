@@ -62,7 +62,7 @@ func (p *LoggerProvider) GetLogger(name string) LoggerInterface {
 	return &SimpleLogger{name}
 }
 
-type SimpleLogger struct{
+type SimpleLogger struct {
 	Name string
 }
 

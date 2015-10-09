@@ -4,8 +4,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"testing"
 	"strings"
+	"testing"
 )
 
 func TestFactories(t *testing.T) {
@@ -21,7 +21,7 @@ func NewFoo() *Foo {
 }
 
 // Foo is an example type that is used in the tests only
-type Foo struct{
+type Foo struct {
 	Value, AnotherParameter string
 }
 

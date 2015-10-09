@@ -20,7 +20,7 @@ type typeFactory struct {
 // This function will return an invalid type if:
 //   - the factoryFunction is nil or no function,
 //   - the factoryFunction returns zero or more than one parameter
-//   - the factoryFunctions return parameter is no pointer or interface type.
+//   - the factoryFunctions return parameter is no pointer, interface  or function type.
 //   - the number of given factoryParameters does not match the number of arguments of the factoryFunction
 //
 // Goldigen yaml syntax example:
@@ -51,8 +51,8 @@ func newTypeFromFactoryFunction(function interface{}, factoryType reflect.Type, 
 	}
 
 	kindOfGeneratedType := factoryType.Out(0).Kind()
-	if kindOfGeneratedType != reflect.Interface && kindOfGeneratedType != reflect.Ptr {
-		return newInvalidType(fmt.Errorf("return parameter is no interface or pointer but a %v", kindOfGeneratedType))
+	if kindOfGeneratedType != reflect.Interface && kindOfGeneratedType != reflect.Ptr && kindOfGeneratedType != reflect.Func {
+		return newInvalidType(fmt.Errorf("return parameter is no interface, pointer or function but a %v", kindOfGeneratedType))
 	}
 
 	if factoryType.IsVariadic() {

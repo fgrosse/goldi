@@ -4,8 +4,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"reflect"
 	"github.com/fgrosse/goldi"
+	"reflect"
 )
 
 var _ = Describe("ParameterResolver", func() {

@@ -174,7 +174,7 @@ func (g *Generator) generateTypeRegistrationFunction(conf *TypesConfiguration, o
 	typeIDs := make([]string, len(conf.Types))
 	i := 0
 	maxIDLength := 0
-	for typeID, _ := range conf.Types {
+	for typeID := range conf.Types {
 		typeIDs[i] = typeID
 		i++
 		if len(typeID) > maxIDLength {
@@ -193,7 +193,7 @@ func (g *Generator) generateTypeRegistrationFunction(conf *TypesConfiguration, o
 		fmt.Fprint(output, "\ttypes.RegisterAll(map[string]goldi.TypeFactory{\n")
 		for _, typeID := range typeIDs {
 			typeDef := conf.Types[typeID]
-			spaces := strings.Repeat(" ", maxIDLength - len(typeID))
+			spaces := strings.Repeat(" ", maxIDLength-len(typeID))
 			fmt.Fprintf(output, "\t\t%q: %s%s,\n", typeID, spaces, FactoryCode(typeDef, g.Config.Package))
 		}
 

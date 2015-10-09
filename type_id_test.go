@@ -10,7 +10,7 @@ import (
 var _ = Describe("TypeID", func() {
 	Describe("NewTypeID", func() {
 		It("should panic if given an empty string", func() {
-			Expect(func() {goldi.NewTypeID("")}).To(Panic())
+			Expect(func() { goldi.NewTypeID("") }).To(Panic())
 		})
 	})
 

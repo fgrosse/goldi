@@ -1,4 +1,4 @@
-// Goldi container validation
+// Package validation provides simple validation of goldi containers
 package validation
 
 import (
@@ -7,20 +7,21 @@ import (
 	"github.com/fgrosse/goldi"
 )
 
-type ValidationConstraint interface {
+// A Constraint represents a certain criteria that a container needs to fulfill in order to be valid.
+type Constraint interface {
 	Validate(*goldi.Container) error
 }
 
 // The ContainerValidator can be used to determine whether a container passes a set of validation constraints.
 type ContainerValidator struct {
-	Constraints []ValidationConstraint
+	Constraints []Constraint
 }
 
 // NewContainerValidator creates a new ContainerValidator.
 // The validator will be initialized with the NoInvalidTypesConstraint, TypeParametersConstraint and TypeReferencesConstraint
 func NewContainerValidator() *ContainerValidator {
 	return &ContainerValidator{
-		Constraints: []ValidationConstraint{
+		Constraints: []Constraint{
 			new(NoInvalidTypesConstraint),
 			new(TypeParametersConstraint),
 			new(TypeReferencesConstraint),
@@ -29,7 +30,7 @@ func NewContainerValidator() *ContainerValidator {
 }
 
 // Add another constraint to this validator
-func (v *ContainerValidator) Add(constraint ValidationConstraint) {
+func (v *ContainerValidator) Add(constraint Constraint) {
 	v.Constraints = append(v.Constraints, constraint)
 }
 
