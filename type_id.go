@@ -2,6 +2,7 @@ package goldi
 
 import "strings"
 
+// TypeID represents a parsed type identifier and associated meta data.
 type TypeID struct {
 	ID, Raw             string
 	FuncReferenceMethod string
@@ -39,6 +40,7 @@ func NewTypeID(s string) *TypeID {
 	return t
 }
 
+// String implements the fmt.Stringer interface by returning the raw representation of this type ID.
 func (t *TypeID) String() string {
 	if t.Raw != "" {
 		return t.Raw
@@ -51,10 +53,15 @@ func (t *TypeID) String() string {
 	return "@" + t.ID
 }
 
+// IsParameterOrTypeReference is a utility function that returns whether the given string represents a parameter or a reference to a type.
+// See IsParameter and IsTypeReference for further details
 func IsParameterOrTypeReference(p string) bool {
 	return IsParameter(p) || IsTypeReference(p)
 }
 
+// IsParameter returns whether the given type ID represents a parameter.
+// A goldi parameter is recognized by the leading and trailing percent sign
+// Example: %foobar%
 func IsParameter(p string) bool {
 	if len(p) < 3 {
 		return false
@@ -63,6 +70,9 @@ func IsParameter(p string) bool {
 	return p[0] == '%' && p[len(p)-1] == '%'
 }
 
+// IsTypeReference returns whether the given string represents a reference to a type.
+// A goldi type reference is recognized by the leading @ sign.
+// Example: @foobar
 func IsTypeReference(p string) bool {
 	if len(p) < 2 {
 		return false

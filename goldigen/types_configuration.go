@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/fgrosse/goldi/util"
 	"sort"
+
+	"github.com/fgrosse/gotility"
 )
 
 // The TypesConfiguration is the struct that holds the complete dependency injection configuration
@@ -31,7 +32,7 @@ func (c *TypesConfiguration) Validate() (err error) {
 // Packages returns an alphabetically ordered list of unique package names that are referenced by this type configuration.
 func (c *TypesConfiguration) Packages(additionalPackages ...string) []string {
 	packages := additionalPackages
-	seenPackages := util.StringSet{}
+	seenPackages := gotility.StringSet{}
 	for _, additionalPackage := range additionalPackages {
 		seenPackages.Set(additionalPackage)
 	}
