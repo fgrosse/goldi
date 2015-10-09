@@ -4,8 +4,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/fgrosse/goldi"
 	"fmt"
+	"github.com/fgrosse/goldi"
 )
 
 func ExampleNewType() {
@@ -54,7 +54,7 @@ var _ = Describe("type", func() {
 			})
 
 			It("should not return an invalid type if the return parameter is a function", func() {
-				Expect(goldi.IsValid(goldi.NewType(func() func() { return func(){} }))).To(BeTrue())
+				Expect(goldi.IsValid(goldi.NewType(func() func() { return func() {} }))).To(BeTrue())
 			})
 		})
 

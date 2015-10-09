@@ -19,7 +19,7 @@ var _ = Describe("TypesConfiguration", func() {
 		It("should return an error if a type definition is missing a package", func() {
 			c := main.TypesConfiguration{
 				Types: map[string]main.TypeDefinition{
-					"foo": main.TypeDefinition{},
+					"foo": {},
 				},
 			}
 			Expect(c.Validate()).To(MatchError(`type definition of "foo" is missing the required "package" key`))
@@ -28,7 +28,7 @@ var _ = Describe("TypesConfiguration", func() {
 		It("should return an error if a type definition is missing the factory method", func() {
 			c := main.TypesConfiguration{
 				Types: map[string]main.TypeDefinition{
-					"foo": main.TypeDefinition{
+					"foo": {
 						Package: "foo/bar",
 					},
 				},
@@ -39,7 +39,7 @@ var _ = Describe("TypesConfiguration", func() {
 		It("should return an error if a type is an alias and contains a factory method", func() {
 			c := main.TypesConfiguration{
 				Types: map[string]main.TypeDefinition{
-					"foo": main.TypeDefinition{
+					"foo": {
 						AliasForType:  "bar",
 						FactoryMethod: "NewFoo",
 					},
@@ -51,7 +51,7 @@ var _ = Describe("TypesConfiguration", func() {
 		It("should return an error if a type is an alias and contains a package name", func() {
 			c := main.TypesConfiguration{
 				Types: map[string]main.TypeDefinition{
-					"foo": main.TypeDefinition{
+					"foo": {
 						AliasForType: "bar",
 						Package:      "github.com/fgrosse/foo",
 					},
@@ -63,7 +63,7 @@ var _ = Describe("TypesConfiguration", func() {
 		It("should return an error if a type is an alias and contains a func", func() {
 			c := main.TypesConfiguration{
 				Types: map[string]main.TypeDefinition{
-					"foo": main.TypeDefinition{
+					"foo": {
 						AliasForType: "bar",
 						FuncName:     "DoStuff",
 					},
@@ -75,7 +75,7 @@ var _ = Describe("TypesConfiguration", func() {
 		It("should return an error if a type is an alias and contains arguments", func() {
 			c := main.TypesConfiguration{
 				Types: map[string]main.TypeDefinition{
-					"foo": main.TypeDefinition{
+					"foo": {
 						AliasForType: "bar",
 						RawArguments: []interface{}{"a", "b", "c"},
 					},
@@ -95,13 +95,13 @@ var _ = Describe("TypesConfiguration", func() {
 			It("should return the packages alphabetically sorted", func() {
 				c := main.TypesConfiguration{
 					Types: map[string]main.TypeDefinition{
-						"foo": main.TypeDefinition{
+						"foo": {
 							Package: "foo/test/package1",
 						},
-						"bar": main.TypeDefinition{
+						"bar": {
 							Package: "bar/test/package2",
 						},
-						"baz": main.TypeDefinition{
+						"baz": {
 							Package: "baz/test/package3",
 						},
 					},
@@ -118,13 +118,13 @@ var _ = Describe("TypesConfiguration", func() {
 			It("should return the packages", func() {
 				c := main.TypesConfiguration{
 					Types: map[string]main.TypeDefinition{
-						"foo.1": main.TypeDefinition{
+						"foo.1": {
 							Package: "foo/test/package1",
 						},
-						"foo.2": main.TypeDefinition{
+						"foo.2": {
 							Package: "foo/test/package1",
 						},
-						"bar": main.TypeDefinition{
+						"bar": {
 							Package: "bar/test/package2",
 						},
 					},
@@ -139,7 +139,7 @@ var _ = Describe("TypesConfiguration", func() {
 			It("should return the packages", func() {
 				c := main.TypesConfiguration{
 					Types: map[string]main.TypeDefinition{
-						"some_goldi_type": main.TypeDefinition{
+						"some_goldi_type": {
 							Package: "github.com/fgrosse/goldi",
 						},
 					},

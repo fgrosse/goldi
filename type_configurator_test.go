@@ -4,8 +4,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/fgrosse/goldi"
 	"fmt"
+	"github.com/fgrosse/goldi"
 )
 
 var _ = Describe("TypeConfigurator", func() {
@@ -87,7 +87,7 @@ var _ = Describe("TypeConfigurator", func() {
 
 type MyConfigurator struct {
 	ConfiguredValue string
-	ReturnError bool
+	ReturnError     bool
 }
 
 func (c *MyConfigurator) Configure(f *Foo) error {

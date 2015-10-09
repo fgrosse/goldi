@@ -20,7 +20,7 @@ func NewFuncReferenceType(typeID, functionName string) TypeFactory {
 		return newInvalidType(fmt.Errorf("can not use unexported method %q as second argument to NewFuncReferenceType", functionName))
 	}
 
-	return &funcReferenceType{NewTypeID("@"+typeID + "::" + functionName)}
+	return &funcReferenceType{NewTypeID("@" + typeID + "::" + functionName)}
 }
 
 func (t *funcReferenceType) Arguments() []interface{} {

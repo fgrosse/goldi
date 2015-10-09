@@ -2,13 +2,13 @@ package goldi
 
 import (
 	"fmt"
-	"unicode"
 	"reflect"
+	"unicode"
 )
 
 type proxyType struct {
 	typeID *TypeID
-	args []interface{}
+	args   []interface{}
 }
 
 // NewProxyType returns a TypeFactory that uses a function of another type to generate a result.
@@ -23,7 +23,7 @@ func NewProxyType(typeID, functionName string, args ...interface{}) TypeFactory 
 	}
 
 	return &proxyType{
-		typeID: NewTypeID("@"+typeID + "::" + functionName),
+		typeID: NewTypeID("@" + typeID + "::" + functionName),
 		args:   args,
 	}
 }
