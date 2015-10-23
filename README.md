@@ -1,5 +1,3 @@
-![Goldi](http://fgrosse.github.io/goldi/images/goldi_wide.png)
-
 [![Build Status](https://secure.travis-ci.org/fgrosse/goldi.png?branch=master)](http://travis-ci.org/fgrosse/goldi)
 [![Coverage Status](https://coveralls.io/repos/fgrosse/goldi/badge.svg?branch=master)](https://coveralls.io/r/fgrosse/goldi?branch=master)
 [![GoDoc](https://godoc.org/github.com/fgrosse/goldi?status.svg)](https://godoc.org/github.com/fgrosse/goldi)
