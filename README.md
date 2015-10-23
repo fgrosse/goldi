@@ -144,7 +144,7 @@ func RegisterTypes(types goldi.TypeRegistry) {
 }
 ```
 
-Ask you might have noticed goldigen has created a [go generate][7] comment for you.
+As you might have noticed goldigen has created a [go generate][7] comment for you.
 Next time you want to update `dependency_injection.go` you can simply run `go generate`.
 
 Goldigen tries its best to determine the output files package by looking into your `GOPATH`.
