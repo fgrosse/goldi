@@ -2,6 +2,7 @@
 [![Coverage Status](https://coveralls.io/repos/fgrosse/goldi/badge.svg?branch=master)](https://coveralls.io/r/fgrosse/goldi?branch=master)
 [![GoDoc](https://godoc.org/github.com/fgrosse/goldi?status.svg)](https://godoc.org/github.com/fgrosse/goldi)
 [![license](https://img.shields.io/badge/license-MIT-4183c4.svg)](https://github.com/fgrosse/goldi/blob/master/LICENSE)
+[![Join the chat at https://gitter.im/fgrosse/goldi](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/fgrosse/goldi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 **Go**ldi: **l**azy **d**ependency **i**njection framework for go.
 
