@@ -19,9 +19,9 @@ install:
   - go get -v -t ./...
 
 script:
-  - go test .            -cover -coverpkg github.com/fgrosse/goldi            -coverprofile goldi.coverprofile
-  - go test ./goldigen   -cover -coverpkg github.com/fgrosse/goldi/goldigen   -coverprofile goldigen.coverprofile
-  - go test ./validation -cover -coverpkg github.com/fgrosse/goldi/validation -coverprofile validation.coverprofile
+  - go test -cover -coverpkg github.com/fgrosse/goldi            -coverprofile goldi.coverprofile      .
+  - go test -cover -coverpkg github.com/fgrosse/goldi/goldigen   -coverprofile goldigen.coverprofile   ./goldigen
+  - go test -cover -coverpkg github.com/fgrosse/goldi/validation -coverprofile validation.coverprofile ./validation
 
 after_script:
   - gover
