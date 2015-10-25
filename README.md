@@ -119,7 +119,7 @@ $ goldigen --in config/types.yml --out lib/dependency_injection.go
 This will generate the following output and write it to `lib/dependency_injection.go`:
 
 ```go
-//go:goldigen --in "../config/types.yml" --out "dependency_injection.go" --package github.com/fgrosse/goldi-example/lib --function RegisterTypes --overwrite --nointeraction
+//go:generate goldigen --in "../config/types.yml" --out "dependency_injection.go" --package github.com/fgrosse/goldi-example/lib --function RegisterTypes --overwrite --nointeraction
 package lib
 
 import (
