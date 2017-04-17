@@ -12,6 +12,8 @@ It helps to make your code modular, flexible and ensures that you can reuse comp
 If you are familiar with the [Symfony][5] dependency injection framework you should feel at home here.
 
 ## The goldi API
+
+[![Join the chat at https://gitter.im/fgrosse/goldi](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/fgrosse/goldi?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 Use `go get` to get the goldi API:
 ```
 $ go get github.com/fgrosse/goldi
