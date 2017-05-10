@@ -71,6 +71,22 @@ var _ = Describe("ContainerValidator", func() {
 		Expect(validator.Validate(container)).NotTo(Succeed())
 	})
 
+	It("should succeed if topsort used, instead of set ", func() {
+		typeID1 := "type_1"
+		typeDef1 := goldi.NewType(NewTypeForServiceInjection, "@type_2")
+		registry.Register(typeID1, typeDef1)
+
+		typeID2 := "type_2"
+		typeDef2 := goldi.NewType(NewTypeForServiceInjection)
+		registry.Register(typeID2, typeDef2)
+
+		typeID3 := "type_3"
+		typeDef3 := goldi.NewType(NewTypeForServiceInjection, "@type_1", "@type_2")
+		registry.Register(typeID3, typeDef3)
+
+		Expect(validator.Validate(container)).NotTo(Succeed())
+	})
+
 	It("should not return an error when everything is OK", func() {
 		config["param"] = true
 		registry.Register("injected_type",
@@ -86,6 +102,26 @@ var _ = Describe("ContainerValidator", func() {
 		)
 
 		Expect(validator.Validate(container)).To(Succeed())
+	})
+
+	It("should succeed ", func() {
+		typeID1 := "type_1"
+		typeDef1 := goldi.NewType(NewTypeForServiceInjection, "@type_2")
+		registry.Register(typeID1, typeDef1)
+
+		typeID2 := "type_2"
+		typeDef2 := goldi.NewType(NewTypeForServiceInjection)
+		registry.Register(typeID2, typeDef2)
+
+		typeID3 := "type_3"
+		typeDef3 := goldi.NewType(NewTypeForServiceInjection, "@type_1", "@type_2")
+		registry.Register(typeID3, typeDef3)
+
+		typeID4 := "type4"
+		typeDef4 := goldi.NewType(NewTypeForServiceInjection, "@type_3")
+		registry.Register(typeID4, typeDef4)
+
+		Expect(validator.Validate(container)).NotTo(Succeed())
 	})
 
 	Describe("MustValidate", func() {
