@@ -41,7 +41,10 @@ func (c *TypeReferencesConstraint) validateTypeReferences(typeID string, contain
 		if err != nil {
 			return err
 		}
-
+		if g.IsNodePresent(referencedTypeID) {
+			g.AddEdge(typeID, referencedTypeID)
+			continue
+		}
 		g.AddNode(referencedTypeID)
 		g.AddEdge(typeID, referencedTypeID)
 		if err = c.checkCircularDependency(referencedTypeFactory, referencedTypeID, container, g); err != nil {

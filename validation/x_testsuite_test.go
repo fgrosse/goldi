@@ -38,3 +38,13 @@ type TypeForServiceInjection struct {
 func NewTypeForServiceInjection(injectedType *MockType) *TypeForServiceInjection {
 	return &TypeForServiceInjection{injectedType}
 }
+
+type TypeForServiceInjectionMultiple struct {
+	InjectedTypes []*TypeForServiceInjectionMultiple
+}
+
+func NewTypeForServiceInjectionMultipleArgs(injectedTypes ...*TypeForServiceInjectionMultiple) *TypeForServiceInjectionMultiple {
+	t := &TypeForServiceInjectionMultiple{}
+	t.InjectedTypes = injectedTypes
+	return t
+}
