@@ -9,8 +9,7 @@ import (
 
 // The TypeReferencesConstraint is used in a ContainerValidator to check if all referenced types in the container have been defined.
 type TypeReferencesConstraint struct {
-	checkedTypes               gotility.StringSet
-	circularDependencyCheckMap gotility.StringSet
+	checkedTypes gotility.StringSet
 }
 
 // Validate implements the Constraint interface by checking if all referenced types have been defined.
@@ -30,6 +29,8 @@ func (c *TypeReferencesConstraint) Validate(container *goldi.Container) (err err
 
 func (c *TypeReferencesConstraint) validateTypeReferences(typeID string, container *goldi.Container, allArguments []interface{}) error {
 	typeRefParameters := c.typeReferenceArguments(allArguments)
+	g := NewGraph()
+	g.AddNode(typeID)
 	for _, referencedTypeID := range typeRefParameters {
 		if c.checkedTypes.Contains(referencedTypeID) {
 			// TEST: test this for improved code coverage
@@ -40,14 +41,21 @@ func (c *TypeReferencesConstraint) validateTypeReferences(typeID string, contain
 		if err != nil {
 			return err
 		}
-
-		c.circularDependencyCheckMap = gotility.StringSet{}
-		c.circularDependencyCheckMap.Set(typeID)
-		if err = c.checkCircularDependency(referencedTypeFactory, referencedTypeID, container); err != nil {
+		if g.IsNodePresent(referencedTypeID) {
+			g.AddEdge(typeID, referencedTypeID)
+			continue
+		}
+		g.AddNode(referencedTypeID)
+		g.AddEdge(typeID, referencedTypeID)
+		if err = c.checkCircularDependency(referencedTypeFactory, referencedTypeID, container, g); err != nil {
 			return err
 		}
 
 		c.checkedTypes.Set(referencedTypeID)
+	}
+	sortArray, success := g.Toposort()
+	if !success {
+		return fmt.Errorf("Circular dependency %#v", sortArray)
 	}
 	return nil
 }
@@ -72,23 +80,22 @@ func (c *TypeReferencesConstraint) checkTypeIsDefined(t, referencedType string, 
 	return typeDef, nil
 }
 
-func (c *TypeReferencesConstraint) checkCircularDependency(typeFactory goldi.TypeFactory, typeID string, container *goldi.Container) error {
+func (c *TypeReferencesConstraint) checkCircularDependency(typeFactory goldi.TypeFactory, typeID string, container *goldi.Container, g *Graph) error {
 	allArguments := typeFactory.Arguments()
 	typeRefParameters := c.typeReferenceArguments(allArguments)
-
 	for _, referencedTypeID := range typeRefParameters {
 		referencedType, err := c.checkTypeIsDefined(goldi.NewTypeID(typeID).ID, goldi.NewTypeID(referencedTypeID).ID, container)
 		if err != nil {
 			// TEST: test this for improved code coverage
 			return nil
 		}
-
-		if c.circularDependencyCheckMap.Contains(referencedTypeID) {
-			return fmt.Errorf("detected circular dependency for type %q (referenced by %q)", referencedTypeID, typeID)
+		if g.IsNodePresent(referencedTypeID) {
+			g.AddEdge(typeID, referencedTypeID)
+			continue
 		}
-
-		c.circularDependencyCheckMap.Set(typeID)
-		if err = c.checkCircularDependency(referencedType, referencedTypeID, container); err != nil {
+		g.AddNode(referencedTypeID)
+		g.AddEdge(typeID, referencedTypeID)
+		if err = c.checkCircularDependency(referencedType, referencedTypeID, container, g); err != nil {
 			return err
 		}
 	}

@@ -71,6 +71,23 @@ var _ = Describe("ContainerValidator", func() {
 		Expect(validator.Validate(container)).NotTo(Succeed())
 	})
 
+	It("should succeed if topsort used, instead of set ", func() {
+		typeID1 := "type_1"
+		typeDef1 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@type_2")
+		registry.Register(typeID1, typeDef1)
+
+		definedType := &TypeForServiceInjectionMultiple{}
+		typeID2 := "type_2"
+		typeDef2 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, definedType)
+		registry.Register(typeID2, typeDef2)
+
+		typeID3 := "type_3"
+		typeDef3 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@type_1", "@type_2")
+		registry.Register(typeID3, typeDef3)
+
+		Expect(validator.Validate(container)).To(Succeed())
+	})
+
 	It("should not return an error when everything is OK", func() {
 		config["param"] = true
 		registry.Register("injected_type",
@@ -84,6 +101,54 @@ var _ = Describe("ContainerValidator", func() {
 		registry.Register("foo_type",
 			goldi.NewType(NewMockTypeWithArgs, "@injected_type::DoStuff", true),
 		)
+
+		Expect(validator.Validate(container)).To(Succeed())
+	})
+
+	It("should succeed ", func() {
+		typeID1 := "type_1"
+		typeDef1 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@type_2")
+		registry.Register(typeID1, typeDef1)
+
+		definedType := &TypeForServiceInjectionMultiple{}
+
+		typeID2 := "type_2"
+		typeDef2 := goldi.NewType(NewTypeForServiceInjection, definedType)
+		registry.Register(typeID2, typeDef2)
+
+		typeID3 := "type_3"
+		typeDef3 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@type_1", "@type_2")
+		registry.Register(typeID3, typeDef3)
+
+		typeID4 := "type_4"
+		typeDef4 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@type_3")
+		registry.Register(typeID4, typeDef4)
+
+		Expect(validator.Validate(container)).To(Succeed())
+	})
+
+	It("Multiple level reference should succeed", func() {
+		typeID1 := "type_1"
+		typeDef1 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@type_2", "@type_3", "@type_4", "@type_5")
+		registry.Register(typeID1, typeDef1)
+
+		typeID2 := "type_2"
+		typeDef2 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@type_3", "@type_5")
+		registry.Register(typeID2, typeDef2)
+
+		typeID3 := "type_3"
+		typeDef3 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@type_5")
+		registry.Register(typeID3, typeDef3)
+
+		typeID4 := "type_4"
+		typeDef4 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@type_5")
+		registry.Register(typeID4, typeDef4)
+
+		definedType := &TypeForServiceInjectionMultiple{}
+
+		typeID5 := "type_5"
+		typeDef5 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, definedType)
+		registry.Register(typeID5, typeDef5)
 
 		Expect(validator.Validate(container)).To(Succeed())
 	})
