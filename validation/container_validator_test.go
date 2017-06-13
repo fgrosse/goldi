@@ -88,6 +88,50 @@ var _ = Describe("ContainerValidator", func() {
 		Expect(validator.Validate(container)).To(Succeed())
 	})
 
+	It("should not return an error given a simple DAG", func() {
+		// Given the following graph:
+		//    --- a ---
+		//    ↓   ↓   ↓
+		//    b → c   d
+		a := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@b", "@c", "@d")
+		b := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@c")
+		c := goldi.NewType(NewTypeForServiceInjection, new(MockType))
+		d := goldi.NewType(NewTypeForServiceInjection, new(MockType))
+
+		registry.Register("a", a)
+		registry.Register("b", b)
+		registry.Register("c", c)
+		registry.Register("d", d)
+
+		Expect(validator.Validate(container)).To(Succeed())
+	})
+
+	It("should validate multiple level references correctly", func() {
+		typeID1 := "type_1"
+		typeDef1 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@type_2", "@type_3", "@type_4", "@type_5")
+		registry.Register(typeID1, typeDef1)
+
+		typeID2 := "type_2"
+		typeDef2 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@type_3", "@type_5")
+		registry.Register(typeID2, typeDef2)
+
+		typeID3 := "type_3"
+		typeDef3 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@type_5")
+		registry.Register(typeID3, typeDef3)
+
+		typeID4 := "type_4"
+		typeDef4 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, "@type_5")
+		registry.Register(typeID4, typeDef4)
+
+		definedType := &TypeForServiceInjectionMultiple{}
+
+		typeID5 := "type_5"
+		typeDef5 := goldi.NewType(NewTypeForServiceInjectionMultipleArgs, definedType)
+		registry.Register(typeID5, typeDef5)
+
+		Expect(validator.Validate(container)).To(Succeed())
+	})
+
 	Describe("MustValidate", func() {
 		It("should panic if an error occurs", func() {
 			typeDef := goldi.NewType(NewMockTypeWithArgs, "hello world", "%param%")
