@@ -54,6 +54,18 @@ var _ = Describe("Generator", func() {
 		output = &bytes.Buffer{}
 	})
 
+	It("should return error for invalid definition", func() {
+		yaml := `
+			types:
+				goldi.test.foo:
+					package: test
+					factory: @foo_provider::NewFoo
+					args:
+						invalid yml`
+
+		Expect(gen.Generate(strings.NewReader(yaml), output)).To(MatchError("could not parse type definition: yaml: unmarshal errors:\n  line 6: cannot unmarshal !!str `invalid...` into []interface {}"))
+	})
+
 	It("should not be necessary to quote type references because of the @", func() {
 		// the @ has some special significance in yaml which we are going to ignore in goldigen
 		yaml := `
