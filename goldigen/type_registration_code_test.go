@@ -58,4 +58,9 @@ var _ = Describe("FactoryCode", func() {
 		}
 		Expect(main.FactoryCode(typeDef, "some/package/lib")).To(Equal(`goldi.NewProxyType("logger_provider", "GetLogger", "foo", "%bar%", 42)`))
 	})
+
+	It("should panic when type definition is not configured", func() {
+		typeDef := main.TypeDefinition{}
+		Expect(func() { main.FactoryCode(typeDef, "some/package/lib") }).To(Panic())
+	})
 })
