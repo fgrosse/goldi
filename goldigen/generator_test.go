@@ -238,4 +238,15 @@ var _ = Describe("Generator", func() {
 			}
 		`))
 	})
+
+	It("should log message in debug mode", func() {
+		stdErrorBytes = []byte(``)
+		osStderr = &stderrMock{}
+
+		gen.Debug = true
+		gen.Generate(strings.NewReader(exampleYaml), output)
+		Expect(stdErrorBytes).NotTo(BeEmpty())
+		gen.Debug = false
+	})
+
 })

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"sort"
 	"strings"
 
@@ -208,10 +207,10 @@ func (g *Generator) generateTypeRegistrationFunction(conf *TypesConfiguration, o
 
 func (g *Generator) logVerbose(message string, args ...interface{}) {
 	if g.Debug {
-		fmt.Fprintf(os.Stderr, message+"\n", args...)
+		fmt.Fprintf(osStderr, message+"\n", args...)
 	}
 }
 
 func (g *Generator) logWarn(message string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, message+"\n", args...)
+	fmt.Fprintf(osStderr, message+"\n", args...)
 }
