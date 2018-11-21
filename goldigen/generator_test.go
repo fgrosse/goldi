@@ -1,20 +1,21 @@
-package main_test
+package main
 
 import (
+	"errors"
 	. "github.com/fgrosse/gomega-matchers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"io"
+	"io/ioutil"
 
 	"bytes"
 	"fmt"
 	"strings"
-
-	"github.com/fgrosse/goldi/goldigen"
 )
 
 var _ = Describe("Generator", func() {
 	var (
-		gen               *main.Generator
+		gen               *Generator
 		output            *bytes.Buffer
 		inputPath         = "/absolute/path/conf/servo_types.yml"
 		outputPath        = "/absolute/path/servo_types.go"
@@ -49,8 +50,8 @@ var _ = Describe("Generator", func() {
 	)
 
 	BeforeEach(func() {
-		config := main.NewConfig(outputPackageName, "RegisterTypes", inputPath, outputPath)
-		gen = main.NewGenerator(config)
+		config := NewConfig(outputPackageName, "RegisterTypes", inputPath, outputPath)
+		gen = NewGenerator(config)
 		output = &bytes.Buffer{}
 	})
 
@@ -64,6 +65,16 @@ var _ = Describe("Generator", func() {
 						invalid yml`
 
 		Expect(gen.Generate(strings.NewReader(yaml), output)).To(MatchError("could not parse type definition: yaml: unmarshal errors:\n  line 6: cannot unmarshal !!str `invalid...` into []interface {}"))
+	})
+
+	It("should return error when cannot read from input", func() {
+		ioutilReadAll = func(r io.Reader) ([]byte, error) {
+			return nil, errors.New("err")
+		}
+		yaml := ``
+
+		Expect(gen.Generate(strings.NewReader(yaml), output)).To(MatchError("could not parse type definition: err"))
+		ioutilReadAll = ioutil.ReadAll
 	})
 
 	It("should not be necessary to quote type references because of the @", func() {

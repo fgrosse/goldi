@@ -12,6 +12,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var ioutilReadAll = ioutil.ReadAll
+
 // The Generator is used to generate compilable go code from a yaml configuration
 type Generator struct {
 	Config Config
@@ -54,7 +56,7 @@ func (g *Generator) Generate(input io.Reader, output io.Writer) error {
 
 func (g *Generator) parseInput(input io.Reader) (*TypesConfiguration, error) {
 	g.logVerbose("Parsing input..")
-	inputData, err := ioutil.ReadAll(input)
+	inputData, err := ioutilReadAll(input)
 	if err != nil {
 		return nil, err
 	}
