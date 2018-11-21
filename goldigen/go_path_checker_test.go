@@ -1,20 +1,30 @@
-package main_test
+package main
 
 import (
+	"errors"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"path/filepath"
 
 	"os"
-
-	"github.com/fgrosse/goldi/goldigen"
 )
+
+var stdErrorBytes []byte
+
+type stderrMock struct {
+}
+
+func (s *stderrMock) Write(p []byte) (n int, err error) {
+	stdErrorBytes = p
+	return len(p), nil
+}
 
 var _ = Describe("GoPathChecker", func() {
 	var verbose = false
 
 	Context("without GOPATH environment variable", func() {
 		It("should return an empty string if $GOPATH is not set", func() {
-			checker := main.NewGoPathChecker(verbose)
+			checker := NewGoPathChecker(verbose)
 			Expect(checker.PackageName("")).To(BeEmpty())
 			Expect(checker.PackageName("/home/fgrosse/go/src/foo/bar/baz/goldi.go")).To(BeEmpty())
 		})
@@ -36,18 +46,35 @@ var _ = Describe("GoPathChecker", func() {
 		})
 
 		It("should return an empty string if the given output path is empty", func() {
-			checker := main.NewGoPathChecker(verbose)
+			checker := NewGoPathChecker(verbose)
 			Expect(checker.PackageName("")).To(BeEmpty())
 		})
 
 		It("should return an empty string if the given output path is not inside the $GOPATH", func() {
-			checker := main.NewGoPathChecker(verbose)
+			checker := NewGoPathChecker(verbose)
 			Expect(checker.PackageName("/usr/lib/go/src/foo/bar/baz/goldi.go")).To(BeEmpty())
 		})
 
 		It("should return the correct package name if the given output path is inside $GOPATH", func() {
-			checker := main.NewGoPathChecker(verbose)
+			checker := NewGoPathChecker(verbose)
 			Expect(checker.PackageName("/home/fgrosse/go/src/foo/bar/baz/goldi.go")).To(Equal("foo/bar/baz"))
+		})
+
+		It("should panic if cannot get absolute file path", func() {
+			filepathAbs = func(path string) (string, error) {
+				return "", errors.New("err")
+			}
+			checker := NewGoPathChecker(verbose)
+			Expect(func() { checker.PackageName("/home/fgrosse/go/src/foo/bar/baz/goldi.go") }).To(Panic())
+			filepathAbs = filepath.Abs
+		})
+
+		It("should log message in verbose mode", func() {
+			stdErrorBytes = []byte(``)
+			osStderr = &stderrMock{}
+			checker := NewGoPathChecker(true)
+			checker.PackageName("/home/fgrosse/go/src/foo/bar/baz/goldi.go")
+			Expect(stdErrorBytes).NotTo(BeEmpty())
 		})
 
 		Context("with relative output dirs inside the $GOPATH", func() {
@@ -56,22 +83,22 @@ var _ = Describe("GoPathChecker", func() {
 			})
 
 			It("should return the correct package name", func() {
-				checker := main.NewGoPathChecker(verbose)
+				checker := NewGoPathChecker(verbose)
 				Expect(checker.PackageName("some_file.go")).To(Equal("github.com/fgrosse/goldi/goldigen"))
 			})
 
 			It("should return the correct package name when navigating up the file tree", func() {
-				checker := main.NewGoPathChecker(verbose)
+				checker := NewGoPathChecker(verbose)
 				Expect(checker.PackageName("../some_file.go")).To(Equal("github.com/fgrosse/goldi"))
 			})
 
 			It("should return the correct package name when navigating up and down the file tree", func() {
-				checker := main.NewGoPathChecker(verbose)
+				checker := NewGoPathChecker(verbose)
 				Expect(checker.PackageName("../goldigen/some_file.go")).To(Equal("github.com/fgrosse/goldi/goldigen"))
 			})
 
 			It("should return the correct package name when navigating into different directories of the file tree", func() {
-				checker := main.NewGoPathChecker(verbose)
+				checker := NewGoPathChecker(verbose)
 				Expect(checker.PackageName("../some_dir/some_file.go")).To(Equal("github.com/fgrosse/goldi/some_dir"))
 			})
 		})
