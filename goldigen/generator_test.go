@@ -89,12 +89,13 @@ var _ = Describe("Generator", func() {
 						- john.doe@example.com
 						- 'alice@example.com'
 						- "mallory@example.com"
-						- There is an @ here`
+						- There is an @ here
+						- 1`
 
 		Expect(gen.Generate(strings.NewReader(yaml), output)).To(Succeed())
 		Expect(output).To(ContainCode(`
 			func RegisterTypes(types goldi.TypeRegistry) {
-				types.Register("goldi.test.foo", goldi.NewProxyType("foo_provider", "NewFoo", "@bar", "john.doe@example.com", "alice@example.com", "mallory@example.com", "There is an @ here"))
+				types.Register("goldi.test.foo", goldi.NewProxyType("foo_provider", "NewFoo", "@bar", "john.doe@example.com", "alice@example.com", "mallory@example.com", "There is an @ here", 1))
 			}
 		`))
 	})
