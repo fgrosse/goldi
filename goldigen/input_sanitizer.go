@@ -3,16 +3,10 @@ package main
 import "bytes"
 
 type sanitizer struct {
-	buf writer
+	buf *bytes.Buffer
 
 	inQuotes  bool
 	quoteChar byte
-}
-
-type writer interface {
-	WriteString(string) (int, error)
-	WriteByte(c byte) error
-	Bytes() []byte
 }
 
 func newSanitizer() *sanitizer {
