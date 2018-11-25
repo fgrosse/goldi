@@ -10,15 +10,11 @@ import (
 
 type GoPathChecker struct {
 	Verbose bool
+	Logger  io.Writer
 }
 
-var (
-	filepathAbs           = filepath.Abs
-	osStderr    io.Writer = os.Stderr
-)
-
 func NewGoPathChecker(isVerbose bool) *GoPathChecker {
-	return &GoPathChecker{isVerbose}
+	return &GoPathChecker{isVerbose, os.Stderr}
 }
 
 func (c *GoPathChecker) PackageName(outputPath string) string {
@@ -30,7 +26,7 @@ func (c *GoPathChecker) PackageName(outputPath string) string {
 		return ""
 	}
 
-	outputPath, err := filepathAbs(outputPath)
+	outputPath, err := filepath.Abs(outputPath)
 	if err != nil {
 		// this can only happen if go has trouble determining the current working directory on this OS
 		panic(fmt.Errorf("Could not get absolut file path from %q: %s", outputPath, err))
@@ -55,6 +51,6 @@ func (c *GoPathChecker) PackageName(outputPath string) string {
 
 func (c *GoPathChecker) log(message string, args ...interface{}) {
 	if c.Verbose {
-		fmt.Fprintf(osStderr, message+"\n", args...)
+		fmt.Fprintf(c.Logger, message+"\n", args...)
 	}
 }
