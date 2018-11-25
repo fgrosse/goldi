@@ -1,17 +1,20 @@
 package main
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	. "github.com/fgrosse/gomega-matchers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"io"
-	"io/ioutil"
-
-	"bytes"
-	"fmt"
 	"strings"
 )
+
+type errorReader struct{}
+
+func (errorReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("error from errorReader")
+}
 
 var _ = Describe("Generator", func() {
 	var (
@@ -70,13 +73,7 @@ var _ = Describe("Generator", func() {
 	})
 
 	It("should return error when cannot read from input", func() {
-		ioutilReadAll = func(r io.Reader) ([]byte, error) {
-			return nil, errors.New("err")
-		}
-		yaml := ``
-
-		Expect(gen.Generate(strings.NewReader(yaml), output)).To(MatchError("could not parse type definition: err"))
-		ioutilReadAll = ioutil.ReadAll
+		Expect(gen.Generate(errorReader{}, output)).To(MatchError("could not parse type definition: error from errorReader"))
 	})
 
 	It("should not be necessary to quote type references because of the @", func() {
