@@ -64,7 +64,9 @@ var _ = Describe("Generator", func() {
 					args:
 						invalid yml`
 
-		Expect(gen.Generate(strings.NewReader(yaml), output)).To(MatchError("could not parse type definition: yaml: unmarshal errors:\n  line 6: cannot unmarshal !!str `invalid...` into []interface {}"))
+		err := gen.Generate(strings.NewReader(yaml), output)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(HavePrefix("could not parse type definition: yaml: unmarshal errors:"))
 	})
 
 	It("should return error when cannot read from input", func() {
