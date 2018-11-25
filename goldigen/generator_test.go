@@ -1,9 +1,10 @@
-package main
+package main_test
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/fgrosse/goldi/goldigen"
 	. "github.com/fgrosse/gomega-matchers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,7 +19,7 @@ func (errorReader) Read(p []byte) (n int, err error) {
 
 var _ = Describe("Generator", func() {
 	var (
-		gen               *Generator
+		gen               *main.Generator
 		output            *bytes.Buffer
 		inputPath         = "/absolute/path/conf/servo_types.yml"
 		outputPath        = "/absolute/path/servo_types.go"
@@ -53,8 +54,8 @@ var _ = Describe("Generator", func() {
 	)
 
 	BeforeEach(func() {
-		config := NewConfig(outputPackageName, "RegisterTypes", inputPath, outputPath)
-		gen = NewGenerator(config)
+		config := main.NewConfig(outputPackageName, "RegisterTypes", inputPath, outputPath)
+		gen = main.NewGenerator(config)
 		output = &bytes.Buffer{}
 	})
 
@@ -239,12 +240,11 @@ var _ = Describe("Generator", func() {
 	})
 
 	It("should log message in debug mode", func() {
-		stdErrorBytes = []byte(``)
-		osStderr = &stderrMock{}
-
+		logger := new(bytes.Buffer)
 		gen.Debug = true
+		gen.Logger = logger
 		gen.Generate(strings.NewReader(exampleYaml), output)
-		Expect(stdErrorBytes).NotTo(BeEmpty())
+		Expect(logger.String()).NotTo(BeEmpty())
 		gen.Debug = false
 	})
 
