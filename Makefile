@@ -1,3 +1,4 @@
+.PHONY: all test install test coverage
 all: test
 
 install:
