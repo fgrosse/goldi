@@ -56,7 +56,7 @@ func (c *Container) Get(typeID string) (interface{}, error) {
 	}
 
 	if isDefined == false {
-		return nil, newUnknownTypeReferenceError(typeID, "no such type has been defined", typeID)
+		return nil, newUnknownTypeReferenceError(typeID, "no such type has been defined")
 	}
 
 	return instance, nil
