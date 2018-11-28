@@ -33,6 +33,13 @@ var _ = Describe("TypeDefinition", func() {
 			Expect(t.Validate("foobar")).To(Succeed())
 		})
 
+		It("should not return an error if the definition contains a type alias", func() {
+			t := main.TypeDefinition{
+				AliasForType: "type",
+			}
+			Expect(t.Validate("foobar")).To(Succeed())
+		})
+
 		It("should return an error if the definition both contains a func name and a factory method", func() {
 			t := main.TypeDefinition{
 				Package:       "foo/bar",

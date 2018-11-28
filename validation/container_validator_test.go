@@ -88,6 +88,28 @@ var _ = Describe("ContainerValidator", func() {
 		Expect(validator.Validate(container)).To(Succeed())
 	})
 
+	It("should not return an error when constraints are added from outside", func() {
+		config["param"] = true
+		registry.Register("injected_type",
+			goldi.NewType(NewMockTypeWithArgs, "hello world", "%param%"),
+		)
+
+		registry.Register("main_type",
+			goldi.NewType(NewTypeForServiceInjection, "@injected_type"),
+		)
+
+		registry.Register("foo_type",
+			goldi.NewType(NewMockTypeWithArgs, "@injected_type::DoStuff", true),
+		)
+
+		validator = &validation.ContainerValidator{}
+		validator.Add(new(validation.NoInvalidTypesConstraint))
+		validator.Add(new(validation.TypeParametersConstraint))
+		validator.Add(new(validation.TypeReferencesConstraint))
+
+		Expect(validator.Validate(container)).To(Succeed())
+	})
+
 	It("should not return an error given a simple DAG", func() {
 		// Given the following graph:
 		//    --- a ---

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -9,10 +10,11 @@ import (
 
 type GoPathChecker struct {
 	Verbose bool
+	Logger  io.Writer
 }
 
 func NewGoPathChecker(isVerbose bool) *GoPathChecker {
-	return &GoPathChecker{isVerbose}
+	return &GoPathChecker{isVerbose, os.Stderr}
 }
 
 func (c *GoPathChecker) PackageName(outputPath string) string {
@@ -49,6 +51,6 @@ func (c *GoPathChecker) PackageName(outputPath string) string {
 
 func (c *GoPathChecker) log(message string, args ...interface{}) {
 	if c.Verbose {
-		fmt.Fprintf(os.Stderr, message+"\n", args...)
+		fmt.Fprintf(c.Logger, message+"\n", args...)
 	}
 }

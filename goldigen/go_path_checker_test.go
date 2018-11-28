@@ -1,12 +1,11 @@
 package main_test
 
 import (
+	"bytes"
+	"github.com/fgrosse/goldi/goldigen"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	"os"
-
-	"github.com/fgrosse/goldi/goldigen"
 )
 
 var _ = Describe("GoPathChecker", func() {
@@ -48,6 +47,15 @@ var _ = Describe("GoPathChecker", func() {
 		It("should return the correct package name if the given output path is inside $GOPATH", func() {
 			checker := main.NewGoPathChecker(verbose)
 			Expect(checker.PackageName("/home/fgrosse/go/src/foo/bar/baz/goldi.go")).To(Equal("foo/bar/baz"))
+		})
+
+		It("should log message in verbose mode", func() {
+			logger := new(bytes.Buffer)
+			checker := main.NewGoPathChecker(true)
+			checker.Logger = logger
+
+			checker.PackageName("/home/fgrosse/go/src/foo/bar/baz/goldi.go")
+			Expect(logger.String()).NotTo(BeEmpty())
 		})
 
 		Context("with relative output dirs inside the $GOPATH", func() {

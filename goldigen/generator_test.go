@@ -1,16 +1,21 @@
 package main_test
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
+	"github.com/fgrosse/goldi/goldigen"
 	. "github.com/fgrosse/gomega-matchers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"bytes"
-	"fmt"
 	"strings"
-
-	"github.com/fgrosse/goldi/goldigen"
 )
+
+type errorReader struct{}
+
+func (errorReader) Read(p []byte) (n int, err error) {
+	return 0, errors.New("error from errorReader")
+}
 
 var _ = Describe("Generator", func() {
 	var (
@@ -54,6 +59,24 @@ var _ = Describe("Generator", func() {
 		output = &bytes.Buffer{}
 	})
 
+	It("should return error for invalid definition", func() {
+		yaml := `
+			types:
+				goldi.test.foo:
+					package: test
+					factory: @foo_provider::NewFoo
+					args:
+						invalid yml`
+
+		err := gen.Generate(strings.NewReader(yaml), output)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(HavePrefix("could not parse type definition: yaml: unmarshal errors:"))
+	})
+
+	It("should return error when cannot read from input", func() {
+		Expect(gen.Generate(errorReader{}, output)).To(MatchError("could not parse type definition: error from errorReader"))
+	})
+
 	It("should not be necessary to quote type references because of the @", func() {
 		// the @ has some special significance in yaml which we are going to ignore in goldigen
 		yaml := `
@@ -66,12 +89,13 @@ var _ = Describe("Generator", func() {
 						- john.doe@example.com
 						- 'alice@example.com'
 						- "mallory@example.com"
-						- There is an @ here`
+						- There is an @ here
+						- 1`
 
 		Expect(gen.Generate(strings.NewReader(yaml), output)).To(Succeed())
 		Expect(output).To(ContainCode(`
 			func RegisterTypes(types goldi.TypeRegistry) {
-				types.Register("goldi.test.foo", goldi.NewProxyType("foo_provider", "NewFoo", "@bar", "john.doe@example.com", "alice@example.com", "mallory@example.com", "There is an @ here"))
+				types.Register("goldi.test.foo", goldi.NewProxyType("foo_provider", "NewFoo", "@bar", "john.doe@example.com", "alice@example.com", "mallory@example.com", "There is an @ here", 1))
 			}
 		`))
 	})
@@ -214,4 +238,14 @@ var _ = Describe("Generator", func() {
 			}
 		`))
 	})
+
+	It("should log message in debug mode", func() {
+		logger := new(bytes.Buffer)
+		gen.Debug = true
+		gen.Logger = logger
+		gen.Generate(strings.NewReader(exampleYaml), output)
+		Expect(logger.String()).NotTo(BeEmpty())
+		gen.Debug = false
+	})
+
 })

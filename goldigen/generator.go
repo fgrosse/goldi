@@ -16,6 +16,7 @@ import (
 type Generator struct {
 	Config Config
 	Debug  bool
+	Logger io.Writer
 }
 
 // NewGenerator creates a new Generator instance
@@ -23,6 +24,7 @@ func NewGenerator(config Config) *Generator {
 	return &Generator{
 		Config: config,
 		Debug:  false,
+		Logger: os.Stderr,
 	}
 }
 
@@ -206,10 +208,10 @@ func (g *Generator) generateTypeRegistrationFunction(conf *TypesConfiguration, o
 
 func (g *Generator) logVerbose(message string, args ...interface{}) {
 	if g.Debug {
-		fmt.Fprintf(os.Stderr, message+"\n", args...)
+		fmt.Fprintf(g.Logger, message+"\n", args...)
 	}
 }
 
 func (g *Generator) logWarn(message string, args ...interface{}) {
-	fmt.Fprintf(os.Stderr, message+"\n", args...)
+	fmt.Fprintf(g.Logger, message+"\n", args...)
 }

@@ -39,5 +39,10 @@ var _ = Describe("Config", func() {
 			config := main.NewConfig("github.com/fgrosse/servo", "", "/home/fgrosse/goldi/config/types.yml", "/home/fgrosse/goldi/types.go")
 			Expect(config.InputName()).To(Equal("config/types.yml"))
 		})
+
+		It("should panic if the relative path for the input file cannot be determined", func() {
+			config := main.NewConfig("github.com/fgrosse/servo", "", "\a", "/")
+			Expect(func() { config.InputName() }).To(Panic())
+		})
 	})
 })
