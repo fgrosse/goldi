@@ -2,10 +2,11 @@ package main_test
 
 import (
 	"bytes"
+	"os"
+
 	"github.com/fgrosse/goldi/goldigen"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"os"
 )
 
 var _ = Describe("GoPathChecker", func() {
