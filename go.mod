@@ -5,7 +5,6 @@ require (
 	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fgrosse/gomega-matchers v0.0.0-20181128154939-1c517b178d7c
-	github.com/fgrosse/gotility v0.0.0-20181128154712-dfe22b17d940
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect

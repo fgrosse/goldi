@@ -6,8 +6,6 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/fgrosse/gomega-matchers v0.0.0-20181128154939-1c517b178d7c h1:SuWzTDMvOXp3lGSdczCUe2RIuR2J3RcfwBZQFYrQeU0=
 github.com/fgrosse/gomega-matchers v0.0.0-20181128154939-1c517b178d7c/go.mod h1:b6mQQDCoaxSBmkXpA4iRpV69ZYKkvb/P4irpOSebIcs=
-github.com/fgrosse/gotility v0.0.0-20181128154712-dfe22b17d940 h1:cnUSNRk+fFDBbrESVgbtbzNoSUn3OYO0pzxI4Imt1Ys=
-github.com/fgrosse/gotility v0.0.0-20181128154712-dfe22b17d940/go.mod h1:sFLHLc7JFNdNpFmBFQEYCrtYYipCU1H5GHRji6a7+2M=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/golang/protobuf v1.2.0 h1:P3YflyNX/ehuJFLhxviNdFxQPkGK5cDcApsge1SqnvM=

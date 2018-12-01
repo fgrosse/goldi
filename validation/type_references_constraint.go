@@ -4,20 +4,19 @@ import (
 	"fmt"
 
 	"github.com/fgrosse/goldi"
-	"github.com/fgrosse/gotility"
 )
 
 // The TypeReferencesConstraint is used in a ContainerValidator to check if all referenced types in the container have been defined.
 type TypeReferencesConstraint struct {
-	checkedTypes               gotility.StringSet
-	circularDependencyCheckMap gotility.StringSet
+	checkedTypes               goldi.StringSet
+	circularDependencyCheckMap goldi.StringSet
 }
 
 // Validate implements the Constraint interface by checking if all referenced types have been defined.
 func (c *TypeReferencesConstraint) Validate(container *goldi.Container) (err error) {
 	for typeID, typeFactory := range container.TypeRegistry {
 		// reset the validation type cache
-		c.checkedTypes = gotility.StringSet{}
+		c.checkedTypes = goldi.StringSet{}
 		allArguments := typeFactory.Arguments()
 
 		if err = c.validateTypeReferences(typeID, container, allArguments); err != nil {
@@ -41,7 +40,7 @@ func (c *TypeReferencesConstraint) validateTypeReferences(typeID string, contain
 			return err
 		}
 
-		c.circularDependencyCheckMap = gotility.StringSet{}
+		c.circularDependencyCheckMap = goldi.StringSet{}
 		c.circularDependencyCheckMap.Set(typeID)
 		if err = c.checkCircularDependency(referencedTypeFactory, referencedTypeID, container); err != nil {
 			return err
