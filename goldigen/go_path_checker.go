@@ -29,7 +29,7 @@ func (c *GoPathChecker) PackageName(outputPath string) string {
 	outputPath, err := filepath.Abs(outputPath)
 	if err != nil {
 		// this can only happen if go has trouble determining the current working directory on this OS
-		panic(fmt.Errorf("Could not get absolut file path from %q: %s", outputPath, err))
+		panic(fmt.Errorf("could not get absolut file path from %q: %s", outputPath, err))
 	}
 	c.log("absolute output path is %q", outputPath)
 
