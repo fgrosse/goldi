@@ -1,17 +1,24 @@
 module github.com/fgrosse/goldi
 
+go 1.20
+
 require (
-	github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc // indirect
-	github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/fgrosse/gomega-matchers v0.0.0-20181128154939-1c517b178d7c
-	github.com/mattn/go-colorable v0.0.9 // indirect
-	github.com/mattn/go-isatty v0.0.4 // indirect
-	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
-	github.com/onsi/ginkgo v1.7.0
-	github.com/onsi/gomega v1.4.3
-	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/testify v1.2.2 // indirect
-	gopkg.in/alecthomas/kingpin.v2 v2.2.6
-	gopkg.in/yaml.v2 v2.2.1
+	github.com/alecthomas/kingpin/v2 v2.3.1
+	github.com/fgrosse/gomega-matchers v1.1.0
+	github.com/onsi/ginkgo v1.16.5
+	github.com/onsi/gomega v1.27.2
+	gopkg.in/yaml.v2 v2.4.0
+)
+
+require (
+	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/nxadm/tail v1.4.8 // indirect
+	github.com/xhit/go-str2duration v1.2.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
+	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

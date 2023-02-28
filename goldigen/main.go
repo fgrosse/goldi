@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/alecthomas/kingpin/v2"
 )
 
 // Version contains the goldigen version.
