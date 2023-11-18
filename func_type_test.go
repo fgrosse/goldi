@@ -1,11 +1,11 @@
 package goldi_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"net/http"
 
 	"github.com/fgrosse/goldi"
-	"net/http"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 func ExampleNewFuncType() {

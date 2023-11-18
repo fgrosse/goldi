@@ -21,7 +21,7 @@ jobs:
         run: go get -t
 
       - name: Install ginkgo binary
-        run: go install github.com/onsi/ginkgo/ginkgo
+        run: go install github.com/onsi/ginkgo/v2/ginkgo
 
       - name: Unit Tests
-        run: ginkgo -noisySkippings=false ./...
+        run: ginkgo ./...
