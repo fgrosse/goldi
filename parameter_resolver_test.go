@@ -1,11 +1,11 @@
 package goldi_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"reflect"
 
 	"github.com/fgrosse/goldi"
-	"reflect"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("ParameterResolver", func() {
