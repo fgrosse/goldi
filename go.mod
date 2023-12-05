@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/fgrosse/gomega-matchers v1.2.0
-	github.com/onsi/ginkgo/v2 v2.13.1
+	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.30.0
 	gopkg.in/yaml.v2 v2.4.0
 )
